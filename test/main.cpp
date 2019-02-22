@@ -135,8 +135,10 @@ public:
 		}
 	}
 
-	void Write() {
+	void Write(const char* doctype, int version) {
 		StateSentry sentry(this);
+		Current()["type"] = Json::Value(doctype);
+		Current()["version"] = Json::Value(version);
 		Select("objects") = Json::Value(Json::arrayValue);
 
 		while (!stack_.empty()) {
@@ -230,10 +232,10 @@ void Serializable<T>::Write(Writer& writer) const {
 	writer.Write(static_cast<const T&>(*this));
 }
 
-void Serialize(const Registry& reg, Ref ref) {
+void Serialize(const Registry& reg, Ref ref, const char* doctype, int version) {
 	Writer w(reg);
 	w.Add(ref);
-	w.Write();
+	w.Write(doctype, version);
 }
 
 
@@ -275,6 +277,16 @@ struct Segment : Serializable<Segment> {
 };
 
 
+struct PolyLine : Serializable<PolyLine> {
+	Array<Point> points;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.points, "points");
+	}
+};
+
+
 struct Group : Serializable<Group> {
 	Array<Ref> elements;
 
@@ -290,15 +302,22 @@ void CheckSerial() {
 	reg.Register<Group>("group");
 	reg.Register<Circle>("circle");
 	reg.Register<Segment>("segment");
+	reg.Register<PolyLine>("polyline");
 
 	Circle c1, c2, c3;
 	Segment s1, s2;
+	PolyLine p1;
 
 	c1.radius = 1;
 	c2.radius = 2;
 	c3.radius = 3;
 	s1.start.x = 1;
 	s2.start.y = 2;
+
+	p1.points.push_back({});
+	p1.points.push_back({});
+	p1.points[0].x = 1;
+	p1.points[1].x = 2;
 
 	Group g1;
 	Group g2;
@@ -309,8 +328,9 @@ void CheckSerial() {
 	g1.elements.push_back(&c3);
 	g1.elements.push_back(&g2);
 	g2.elements.push_back(&s2);
+	g2.elements.push_back(&p1);
 
-	Serialize(reg, &g1);
+	Serialize(reg, &g1, "sample", 1);
 }
 
 
