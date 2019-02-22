@@ -5,6 +5,17 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "jsoncpp/json.h"
+
+
+void Dump(Json::Value& root) {
+	Json::StreamWriterBuilder builder;
+	builder.settings_["indentation"] = "  ";
+	std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+	writer->write(root, &std::cout);
+	std::cout << std::endl;
+}
+
 
 class Reader;
 class Writer;
@@ -77,12 +88,29 @@ private:
 };
 
 class Writer {
+	class StateSentry {
+	public:
+		StateSentry(Writer* writer)
+			: parent_(writer)
+			, current_(writer->current_)
+		{}
+
+		~StateSentry() {
+			parent_->current_ = current_;
+		}
+
+	private:
+		Writer* parent_;
+		Json::Value* current_;
+	};
+
 public:
 	Writer(const Registry& reg) : reg_(reg) {}
 
 	template<typename T>
 	void VisitField(const T& value, const char* name) {
-		Output() << "" << name << " = ";
+		StateSentry sentry(this);
+		Select(name);
 		VisitValue(value);
 	}
 
@@ -93,12 +121,11 @@ public:
 
 		assert(name != nullptr && "Invalid type");
 
-		Output() << name << "(" << std::endl;
-		++indent_;
-		Output() << "@" << refid << std::endl;
+		StateSentry sentry(this);
+		Current()["T"] = name;
+		Current()["R"] = Json::Value(refid);
+		Select("V");
 		T::AcceptVisitor(value, *this);
-		--indent_;
-		Output() << ")" << std::endl;
 	}
 
 	void Add(Ref ref) {
@@ -109,15 +136,36 @@ public:
 	}
 
 	void Write() {
+		StateSentry sentry(this);
+		Select("objects") = Json::Value(Json::arrayValue);
+
 		while (!stack_.empty()) {
+			StateSentry sentry2(this);
+			SelectNext();
 			auto p = stack_.begin();
 			auto ref = *p;
 			stack_.erase(p);
 			ref->Write(*this);
 		}
+
+		Dump(root_);
 	}
 
 private:
+	Json::Value& Select(const char* name) {
+		current_ = &Current()[name];
+		return Current();
+	}
+
+	Json::Value& SelectNext() {
+		current_ = &Current().append({});
+		return Current();
+	}
+
+	Json::Value& Current() {
+		return *current_;
+	}
+
 	std::ostream& Output() {
 		return Indent(std::cout);
 	}
@@ -138,40 +186,43 @@ private:
 	template<typename T>
 	void VisitValue(const T& value, RefTag) {
 		Add(value);
-		std::cout << "@" << refids_[value] << std::endl;
+		auto refid = refids_[value];
+		Current() = Json::Value(refid);
 	}
 
 	template<typename T>
 	void VisitValue(const T& value, PrimitiveTag) {
-		std::cout << value << std::endl;
+		Current() = Json::Value(value);
 	}
 
 	template<typename T>
 	void VisitValue(const T& value, ArrayTag) {
-		std::cout << "[" << std::endl;
+		StateSentry sentry(this);
+		Current() = Json::Value(Json::arrayValue);
 		++indent_;
 		for (auto& item : value) {
-			Output();
+			StateSentry sentry2(this);
+			SelectNext();
 			VisitValue(item);
 		}
 		--indent_;
-		Output() << "]" << std::endl;
 	}
 
 	template<typename T>
 	void VisitValue(const T& value, ObjectTag) {
-		std::cout << "{" << std::endl;
 		++indent_;
 		T::AcceptVisitor(value, *this);
 		--indent_;
-		Output() << "}" << std::endl;
 	}
 
-	int indent_ = 0;
 	int next_refid_ = 0;
 	std::unordered_map<Ref, int> refids_;
 	std::unordered_set<Ref> stack_;
 	const Registry& reg_;
+
+	Json::Value root_;
+	Json::Value* current_ = &root_;
+	int indent_ = 0;
 };
 
 template<typename T>
@@ -234,7 +285,7 @@ struct Group : Serializable<Group> {
 };
 
 
-int main() {
+void CheckSerial() {
 	Registry reg;
 	reg.Register<Group>("group");
 	reg.Register<Circle>("circle");
@@ -260,6 +311,19 @@ int main() {
 	g2.elements.push_back(&s2);
 
 	Serialize(reg, &g1);
+}
 
+
+// Json
+
+void CheckJson() {
+	Json::Value root;
+	root["a"];
+	Dump(root);
+}
+
+int main() {
+	// CheckJson();
+	CheckSerial();
 	return 0;
 }
