@@ -429,9 +429,21 @@ public:
 
 	template<typename T>
 	bool Read(T& value) {
+		if (!Current().isObject()) {
+			SetError("Invalid object descriptor");
+			return false;
+		}
+		auto input_count = Current().size();
+
 		StateSentry sentry(this);
 		state_.processed = 0;
 		T::AcceptVisitor(value, *this);
+
+		if (state_.processed < input_count) {
+			SetError("Unexpected field in object");
+			return false;
+		}
+
 		return !failed_;
 	}
 
@@ -446,6 +458,7 @@ public:
 			return;
 		}
 
+		++state_.processed;
 		StateSentry sentry(this);
 		Select(name);
 		VisitValue(value);
@@ -539,7 +552,12 @@ private:
 			return;
 		}
 
+		auto input_count = Current().size();
+		state_.processed = 0;
 		T::AcceptVisitor(value, *this);
+		if (state_.processed < input_count) {
+			SetError("Unexpected field in object");
+		}
 	}
 
 	template<typename T>
