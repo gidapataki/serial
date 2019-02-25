@@ -10,33 +10,37 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapp
 
 add_subdirectory(lib)
 
-# Serialize
+# Serial
 
-file(GLOB serialize_srcs
+file(GLOB serial_srcs
     src/*.cpp
 )
 
-add_library(serialize
-    ${serialize_srcs}
+add_library(serial
+    ${serial_srcs}
 )
 
-target_include_directories(serialize PUBLIC include)
-target_include_directories(serialize PRIVATE src)
+target_link_libraries(serial
+    PUBLIC jsoncpp
+)
+
+target_include_directories(serial PUBLIC include)
+target_include_directories(serial PRIVATE src)
 
 # Tests
 
-file(GLOB serialize_test_srcs
+file(GLOB serial_test_srcs
     test/*.cpp
 )
 
-add_executable(test-serialize
-    ${serialize_test_srcs}
+add_executable(test-serial
+    ${serial_test_srcs}
 )
 
-target_link_libraries(test-serialize
-    PUBLIC serialize jsoncpp
+target_link_libraries(test-serial
+    PUBLIC serial jsoncpp
 )
 
-target_include_directories(test-serialize
+target_include_directories(test-serial
     PUBLIC test
 )
