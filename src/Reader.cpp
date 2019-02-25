@@ -130,7 +130,9 @@ void Reader::ReadObjectInternal(int index, const Registry& reg) {
 		root_id_ = id;
 	}
 
+	reg_ = &reg;
 	p->Read(this);
+	reg_ = nullptr;
 }
 
 bool Reader::ResolveRefs() {

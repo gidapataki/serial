@@ -20,9 +20,7 @@ void Writer::WriteReferable(const T& value) {
 
 	if (name == nullptr) {
 		error_ = ErrorCode::kUnregisteredType;
-		if (enable_asserts_) {
-			assert(false && "Type is not registered");
-		}
+		assert(!enable_asserts_ && "Type is not registered");
 		return;
 	}
 
@@ -66,6 +64,17 @@ void Writer::VisitValue(const T& value, ArrayTag) {
 template<typename T>
 void Writer::VisitValue(const T& value, ObjectTag) {
 	T::AcceptVisitor(value, *this);
+}
+
+template<typename T>
+void Writer::VisitValue(const T& value, EnumTag) {
+	auto name = reg_.EnumToString(value);
+	if (name == nullptr) {
+		error_ = ErrorCode::kUnregisteredEnum;
+		return;
+	}
+
+	Current() = Json::Value(name);
 }
 
 } // namespace serial

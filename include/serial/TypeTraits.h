@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <type_traits>
 #include "serial/SerialFwd.h"
 
 
@@ -8,12 +9,16 @@ namespace serial {
 struct PrimitiveTag {};
 struct ArrayTag {};
 struct ObjectTag {};
+struct EnumTag {};
 struct RefTag {};
 
 
 template<typename T>
 struct TypeTag {
-	using Type = ObjectTag;
+	using Type = typename std::conditional<
+		std::is_enum<T>::value,
+		EnumTag,
+		ObjectTag>::type;
 };
 
 template<typename T>

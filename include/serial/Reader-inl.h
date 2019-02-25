@@ -1,4 +1,5 @@
 #pragma once
+#include "serial/Registry.h"
 
 
 namespace serial {
@@ -77,6 +78,20 @@ void Reader::VisitValue(T& value, ObjectTag) {
 	T::AcceptVisitor(value, *this);
 	if (state_.processed < input_count) {
 		SetError(ErrorCode::kUnexpectedObjectField);
+		return;
+	}
+}
+
+template<typename T>
+void Reader::VisitValue(T& value, EnumTag) {
+	if (!Current().isString()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	if (!reg_->EnumFromString(Current().asString(), value)) {
+		SetError(ErrorCode::kUnregisteredEnum);
+		return;
 	}
 }
 

@@ -18,6 +18,7 @@ constexpr const char* kId = "id";
 enum class ErrorCode {
 	kNone,
 	kUnregisteredType,
+	kUnregisteredEnum,
 	kInvalidDocument,
 	kInvalidHeader,
 	kInvalidObjectHeader,

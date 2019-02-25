@@ -44,6 +44,7 @@ private:
 	template<typename T> void VisitValue(T& value);
 	template<typename T> void VisitValue(T& value, ArrayTag);
 	template<typename T> void VisitValue(T& value, ObjectTag);
+	template<typename T> void VisitValue(T& value, EnumTag);
 
 	void VisitValue(int& value, PrimitiveTag);
 	void VisitValue(std::string& value, PrimitiveTag);
@@ -57,6 +58,7 @@ private:
 	const Json::Value& Select(const Json::Value& value);
 
 	const Json::Value& root_;
+	const Registry* reg_ = nullptr;
 	State state_;
 	ErrorCode error_;
 
