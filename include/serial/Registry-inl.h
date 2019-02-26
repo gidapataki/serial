@@ -17,15 +17,6 @@ UniqueRef Factory<T>::Create() const {
 }
 
 
-// StaticTypeId
-
-template<typename T>
-TypeId StaticTypeId<T>::Get() {
-	static int id;
-	return &id;
-};
-
-
 // Registry
 
 template<typename T>

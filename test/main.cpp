@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <initializer_list>
 #include "serial/Serial.h"
 
 using namespace serial;
@@ -35,7 +34,7 @@ struct Point {
 struct Circle : Referable<Circle> {
 	int radius = 0;
 	Point center;
-	Winding winding;
+	Winding winding = {};
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -68,7 +67,7 @@ struct PolyLine : Referable<PolyLine> {
 
 
 struct Group : Referable<Group> {
-	Array<Ref> elements;
+	Array<BasicRef> elements;
 	std::string name;
 
 	template<typename Self, typename Visitor>
@@ -79,12 +78,25 @@ struct Group : Referable<Group> {
 };
 
 
+struct Link : Referable<Link> {
+	TypedRef<Circle> circ;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.circ, "circ");
+	}
+};
+
+
 void TestSerialize() {
 	Registry reg;
 	reg.Register<Group>("group");
 	reg.Register<Circle>("circle");
 	reg.Register<Segment>("segment");
+
 	reg.Register<PolyLine>("polyline");
+	reg.Register<Link>("link");
+
 	reg.RegisterEnum<Winding>({
 		{Winding::kClockwise, "cw"},
 		{Winding::kCounterClockwise, "ccw"},
@@ -93,6 +105,7 @@ void TestSerialize() {
 	Circle c1, c2, c3;
 	Segment s1, s2;
 	PolyLine p1;
+	Link k1;
 
 	c1.radius = 1;
 	c2.radius = 2;
@@ -100,6 +113,7 @@ void TestSerialize() {
 	c2.winding = Winding::kCounterClockwise;
 	s1.start.x = 1;
 	s2.start.y = 2;
+	k1.circ = &c1;
 
 	p1.points.push_back({});
 	p1.points.push_back({});
@@ -112,7 +126,8 @@ void TestSerialize() {
 	g1.name = "g1";
 	g2.name = "g2";
 
-	g1.elements.push_back(&c1);
+	g1.elements.push_back(&s1);
+	g1.elements.push_back(&k1);
 	g1.elements.push_back(&s1);
 	g1.elements.push_back(&c2);
 	g1.elements.push_back(&c3);
@@ -128,43 +143,44 @@ void TestSerialize() {
 	ErrorCode ec;
 	ec = Serialize(&g1, h, reg, root);
 #if 0
-	Dump(root);
+	if (ec == ErrorCode::kNone) {
+		Dump(root);
+	} else {
+		std::cerr << "error: " << int(ec) << std::endl;
+	}
 #else
-	std::vector<UniqueRef> refs;
-	ec = DeserializeObjects(root, reg, refs);
+	RefContainer refs;
+	Group* gx = nullptr;
+
+	// Dump(root);
+	// std::cerr << root["objects"][1]["type"].asString() << std::endl;
+	// root["objects"][1]["fields"]["circ"] = 1;
+
+	ec = DeserializeObjects(root, reg, refs, gx);
+	if (!gx) {
+		std::cout << "error: " << int(ec) << std::endl;
+		return;
+	}
 
 	Json::Value root2;
-	ec = Serialize(refs[0].get(), h, reg, root2);
+	ec = Serialize(gx, h, reg, root2);
 	Dump(root2);
 #endif
 }
 
 
-enum class Animal {
-	kChicken,
-	kSquirrel,
-	kRabbit,
-	kPony,
-};
-
-
-template<typename T>
-void RegisterEnum(std::initializer_list<std::pair<T, const char*>> list) {
-	static_assert(std::is_enum<T>::value, "Type is not an enum");
-	for (auto& item : list) {
-		std::cerr << int(item.first) << " " << item.second << std::endl;
-	}
-}
-
-void TestEnum() {
-	RegisterEnum<Animal>({
-		{Animal::kChicken, "chicken"},
-		{Animal::kSquirrel, "squirrel"}
-	});
-}
-
-
 int main() {
 	TestSerialize();
-	// TestEnum();
+	// Segment s;
+	// Circle c;
+	// PolyLine p;
+
+	// TypedRef<Circle, Segment> ref1, ref2;
+
+	// ref1 = nullptr;
+	// ref2 = &c;
+	// ref1 = ref2;
+	// ref1.Get();
+	// ref1.Get<Segment>();
+	// std::cout << ref1.Set(nullptr) << std::endl;
 }

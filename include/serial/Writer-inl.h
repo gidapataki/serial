@@ -19,7 +19,7 @@ void Writer::WriteReferable(const T& value) {
 	auto name = reg_.GetName<T>();
 
 	if (name == nullptr) {
-		error_ = ErrorCode::kUnregisteredType;
+		SetError(ErrorCode::kUnregisteredType);
 		assert(!enable_asserts_ && "Type is not registered");
 		return;
 	}
@@ -39,9 +39,26 @@ void Writer::VisitValue(const T& value) {
 }
 
 template<typename T>
-void Writer::VisitValue(const T& value, RefTag) {
-	Add(value);
-	auto refid = refids_[value];
+void Writer::VisitValue(const T& value, TypedRefTag) {
+	if (!value) {
+		SetError(ErrorCode::kNullReference);
+		assert(!enable_asserts_ && "Null reference");
+		return;
+	}
+	Add(value.Get());
+	auto refid = refids_[value.Get()];
+	Current() = Json::Value(refid);
+}
+
+template<typename T>
+void Writer::VisitValue(const T& value, BasicRefTag) {
+	if (!value) {
+		SetError(ErrorCode::kNullReference);
+		assert(!enable_asserts_ && "Null reference");
+		return;
+	}
+	Add(value.Get());
+	auto refid = refids_[value.Get()];
 	Current() = Json::Value(refid);
 }
 
@@ -70,7 +87,7 @@ template<typename T>
 void Writer::VisitValue(const T& value, EnumTag) {
 	auto name = reg_.EnumToString(value);
 	if (name == nullptr) {
-		error_ = ErrorCode::kUnregisteredEnum;
+		SetError(ErrorCode::kUnregisteredEnum);
 		return;
 	}
 

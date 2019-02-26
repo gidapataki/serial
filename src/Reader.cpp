@@ -1,6 +1,8 @@
 #include "serial/Reader.h"
 #include "serial/ReferableBase.h"
 #include "serial/Registry.h"
+#include "serial/TypedRef.h"
+#include "serial/BasicRef.h"
 
 
 namespace serial {
@@ -48,15 +50,16 @@ ErrorCode Reader::ReadHeader(Header& header) {
 	return ErrorCode::kNone;
 }
 
-ErrorCode Reader::ReadObjects(const Registry& reg, std::vector<UniqueRef>& refs) {
+ErrorCode Reader::ReadObjects(const Registry& reg, RefContainer& refs) {
 	SetError(ErrorCode::kNone);
 	ReadObjectsInternal(reg);
 	if (IsError()) {
 		return error_;
 	}
 
-	if (!ResolveRefs()) {
-		return ErrorCode::kUnresolvableReference;
+	ResolveRefs();
+	if (IsError()) {
+		return error_;
 	}
 
 	ExtractRefs(refs);
@@ -135,22 +138,37 @@ void Reader::ReadObjectInternal(int index, const Registry& reg) {
 	reg_ = nullptr;
 }
 
-bool Reader::ResolveRefs() {
-	for (auto& instance : unresolved_refs_) {
+void Reader::ResolveRefs() {
+	for (auto& instance : unresolved_basic_refs_) {
 		auto refptr = instance.first;
 		auto refid = instance.second;
 		auto it = objects_.find(refid);
 		if (it == objects_.end()) {
-			return false;
+			SetError(ErrorCode::kUnresolvableReference);
+			return;
 		}
 
 		*refptr = it->second.get();
 	}
-	return true;
+
+	for (auto& instance : unresolved_typed_refs_) {
+		auto refptr = instance.first;
+		auto refid = instance.second;
+		auto it = objects_.find(refid);
+		if (it == objects_.end()) {
+			SetError(ErrorCode::kUnresolvableReference);
+			return;
+		}
+
+		if (!refptr->Set(it->second.get())) {
+			SetError(ErrorCode::kInvalidReferenceType);
+			return;
+		}
+	}
 }
 
-void Reader::ExtractRefs(std::vector<UniqueRef>& refs) {
-	std::vector<UniqueRef> result;
+void Reader::ExtractRefs(RefContainer& refs) {
+	RefContainer result;
 
 	auto root = objects_.find(root_id_);
 	assert(root != objects_.end() && "Missing root object");
@@ -181,16 +199,6 @@ void Reader::VisitValue(std::string& value, PrimitiveTag) {
 	}
 
 	value = Current().asString();
-}
-
-void Reader::VisitValue(Ref& value, RefTag) {
-	if (!Current().isInt()) {
-		SetError(ErrorCode::kInvalidObjectField);
-		return;
-	}
-
-	auto refid = Current().asInt();
-	unresolved_refs_.emplace_back(&value, refid);
 }
 
 void Reader::SetError(ErrorCode error) {

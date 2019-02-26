@@ -5,13 +5,15 @@
 #include "serial/Referable.h"
 #include "serial/DocInfo.h"
 #include "serial/Constants.h"
+#include "serial/TypedRef.h"
+#include "serial/BasicRef.h"
 #include "jsoncpp/json.h"
 
 
 namespace serial {
 
 ErrorCode Serialize(
-	Ref ref,
+	BasicRef ref,
 	const Header& header,
 	const Registry& reg,
 	Json::Value& value);
@@ -23,6 +25,15 @@ ErrorCode DeserializeHeader(
 ErrorCode DeserializeObjects(
 	const Json::Value& root,
 	const Registry& reg,
-	std::vector<UniqueRef>& refs);
+	RefContainer& refs);
+
+template<typename T>
+ErrorCode DeserializeObjects(
+	const Json::Value& root,
+	const Registry& reg,
+	RefContainer& refs,
+	T*& typed_root);
 
 } // namespace serial
+
+#include "serial/Serial-inl.h"

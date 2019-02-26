@@ -18,14 +18,16 @@ Writer::Writer(const Registry& reg)
 {}
 
 
-void Writer::Add(Ref ref) {
+void Writer::Add(const ReferableBase* ref) {
 	if (refids_.count(ref) == 0) {
 		remaining_refs_.insert(ref);
 		refids_[ref] = next_refid_++;
 	}
 }
 
-ErrorCode Writer::Write(const Header& header, Ref ref, Json::Value& output) {
+ErrorCode Writer::Write(
+	const Header& header, ReferableBase* ref, Json::Value& output)
+{
 	root_ = Json::Value(Json::objectValue);
 
 	StateSentry sentry(this);
@@ -64,5 +66,8 @@ Json::Value& Writer::Current() {
 	return *current_;
 }
 
+void Writer::SetError(ErrorCode error) {
+	error_ = error;
+}
 
 } // namespace serial

@@ -13,7 +13,7 @@ namespace serial {
 class Writer {
 public:
 	Writer(const Registry& reg);
-	ErrorCode Write(const Header& header, Ref ref, Json::Value& output);
+	ErrorCode Write(const Header& header, ReferableBase* ref, Json::Value& output);
 
 	template<typename T> void VisitField(const T& value, const char* name);
 	template<typename T> void WriteReferable(const T& value);
@@ -29,26 +29,28 @@ private:
 		Json::Value* current_;
 	};
 
-	void Add(Ref ref);
+	void Add(const ReferableBase* ref);
 
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
 	Json::Value& Current();
+	void SetError(ErrorCode error);
 
 	template<typename T> void VisitValue(const T& value);
-	template<typename T> void VisitValue(const T& value, RefTag);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);
 	template<typename T> void VisitValue(const T& value, ArrayTag);
 	template<typename T> void VisitValue(const T& value, ObjectTag);
 	template<typename T> void VisitValue(const T& value, EnumTag);
+	template<typename T> void VisitValue(const T& value, BasicRefTag);
+	template<typename T> void VisitValue(const T& value, TypedRefTag);
 
 	const Registry& reg_;
 	ErrorCode error_ = ErrorCode::kNone;
 	int next_refid_ = 0;
 	bool enable_asserts_ = true;
 
-	std::unordered_map<Ref, int> refids_;
-	std::unordered_set<Ref> remaining_refs_;
+	std::unordered_map<const ReferableBase*, int> refids_;
+	std::unordered_set<const ReferableBase*> remaining_refs_;
 
 	Json::Value root_;
 	Json::Value* current_ = &root_;

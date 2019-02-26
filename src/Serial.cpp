@@ -8,12 +8,12 @@ namespace serial {
 // Serialize
 
 ErrorCode Serialize(
-	Ref ref,
+	BasicRef ref,
 	const Header& header,
  	const Registry& reg,
  	Json::Value& result)
 {
-	return Writer(reg).Write(header, ref, result);
+	return Writer(reg).Write(header, ref.Get(), result);
 }
 
 ErrorCode DeserializeHeader(
@@ -26,7 +26,7 @@ ErrorCode DeserializeHeader(
 ErrorCode DeserializeObjects(
 	const Json::Value& root,
 	const Registry& reg,
-	std::vector<UniqueRef>& refs)
+	RefContainer& refs)
 {
 	Header h;
 	Reader reader(root);

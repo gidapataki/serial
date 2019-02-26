@@ -5,21 +5,23 @@
 
 namespace serial {
 
+struct Header; // todo rename
+
 class Reader;
 class Writer;
 class ReferableBase;
 class FactoryBase;
 class Registry;
+class BasicRef;
+class TypedRefBase;
 
 template<typename T> class Referable;
 template<typename T> class Factory;
 template<typename T> using Array = std::vector<T>;
+template<typename... Ts> class TypedRef;
 
-using Ref = const ReferableBase*;
 using UniqueRef = std::unique_ptr<ReferableBase>;
-using TypeId = int*;
+using RefContainer = std::vector<UniqueRef>;
 
-struct Header;
-struct DeserializeResult;
 
 } // namespace serial

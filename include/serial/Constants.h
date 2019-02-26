@@ -23,12 +23,15 @@ enum class ErrorCode {
 	kInvalidHeader,
 	kInvalidObjectHeader,
 	kInvalidObjectField,
+	kInvalidRootType,
+	kInvalidReferenceType,
 	kUnexpectedHeaderField,
 	kUnexpectedObjectField,
 	kMissingRootObject,
 	kMissingObjectField,
 	kDuplicateObjectId,
 	kUnresolvableReference,
+	kNullReference,
 };
 
 } // namespace serial

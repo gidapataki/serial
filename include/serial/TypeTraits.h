@@ -10,7 +10,8 @@ struct PrimitiveTag {};
 struct ArrayTag {};
 struct ObjectTag {};
 struct EnumTag {};
-struct RefTag {};
+struct BasicRefTag {};
+struct TypedRefTag {};
 
 
 template<typename T>
@@ -27,8 +28,13 @@ struct TypeTag<Array<T>> {
 };
 
 template<>
-struct TypeTag<Ref> {
-	using Type = RefTag;
+struct TypeTag<BasicRef> {
+	using Type = BasicRefTag;
+};
+
+template<typename... Ts>
+struct TypeTag<TypedRef<Ts...>> {
+	using Type = TypedRefTag;
 };
 
 

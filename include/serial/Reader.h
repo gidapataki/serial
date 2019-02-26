@@ -15,7 +15,7 @@ public:
 	Reader(const Json::Value& root);
 
 	ErrorCode ReadHeader(Header& header);
-	ErrorCode ReadObjects(const Registry& reg, std::vector<UniqueRef>& refs);
+	ErrorCode ReadObjects(const Registry& reg, RefContainer& refs);
 
 	template<typename T> void ReadReferable(T& value);
 	template<typename T> void VisitField(T& value, const char* name);
@@ -38,17 +38,18 @@ private:
 
 	void ReadObjectsInternal(const Registry& reg);
 	void ReadObjectInternal(int index, const Registry& reg);
-	bool ResolveRefs();
-	void ExtractRefs(std::vector<UniqueRef>& refs);
+	void ResolveRefs();
+	void ExtractRefs(RefContainer& refs);
 
 	template<typename T> void VisitValue(T& value);
 	template<typename T> void VisitValue(T& value, ArrayTag);
 	template<typename T> void VisitValue(T& value, ObjectTag);
 	template<typename T> void VisitValue(T& value, EnumTag);
+	template<typename T> void VisitValue(T& value, BasicRefTag);
+	template<typename T> void VisitValue(T& value, TypedRefTag);
 
 	void VisitValue(int& value, PrimitiveTag);
 	void VisitValue(std::string& value, PrimitiveTag);
-	void VisitValue(Ref& value, RefTag);
 
 	void SetError(ErrorCode error);
 	bool IsError() const;
@@ -63,8 +64,9 @@ private:
 	ErrorCode error_;
 
 	int root_id_ = 0;
-	std::unordered_map<int, UniqueRef> objects_; // todo rename?
-	std::vector<std::pair<Ref*, int>> unresolved_refs_;
+	std::unordered_map<int, UniqueRef> objects_;
+	std::vector<std::pair<BasicRef*, int>> unresolved_basic_refs_;
+	std::vector<std::pair<TypedRefBase*, int>> unresolved_typed_refs_;
 };
 
 } // namespace serial

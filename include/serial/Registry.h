@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <utility>
 #include "serial/SerialFwd.h"
+#include "serial/TypeId.h"
 
 
 namespace serial {
@@ -19,13 +20,6 @@ template<typename T>
 class Factory : public FactoryBase {
 public:
 	virtual UniqueRef Create() const override;
-};
-
-
-template<typename T>
-class StaticTypeId {
-public:
-	static TypeId Get();
 };
 
 
