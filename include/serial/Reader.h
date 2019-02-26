@@ -4,7 +4,7 @@
 #include "serial/SerialFwd.h"
 #include "serial/Constants.h"
 #include "serial/TypeTraits.h"
-#include "serial/DocInfo.h"
+#include "serial/Header.h"
 #include "jsoncpp/json.h"
 
 
@@ -15,7 +15,8 @@ public:
 	Reader(const Json::Value& root);
 
 	ErrorCode ReadHeader(Header& header);
-	ErrorCode ReadObjects(const Registry& reg, RefContainer& refs);
+	ErrorCode ReadObjects(
+		const Registry& reg, RefContainer& refs, ReferableBase*& root);
 
 	template<typename T> void ReadReferable(T& value);
 	template<typename T> void VisitField(T& value, const char* name);
@@ -37,9 +38,9 @@ private:
 	};
 
 	void ReadObjectsInternal(const Registry& reg);
-	void ReadObjectInternal(int index, const Registry& reg);
+	void ReadObjectInternal(const Registry& reg);
 	void ResolveRefs();
-	void ExtractRefs(RefContainer& refs);
+	void ExtractRefs(RefContainer& refs, ReferableBase*& root);
 
 	template<typename T> void VisitValue(T& value);
 	template<typename T> void VisitValue(T& value, ArrayTag);

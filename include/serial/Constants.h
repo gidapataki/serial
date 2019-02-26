@@ -11,6 +11,7 @@ constexpr const char* kObjects = "objects";
 constexpr const char* kType = "type";
 constexpr const char* kFields = "fields";
 constexpr const char* kId = "id";
+constexpr const char* kRootId = "root";
 
 } // namespace str
 
@@ -28,10 +29,13 @@ enum class ErrorCode {
 	kUnexpectedHeaderField,
 	kUnexpectedObjectField,
 	kMissingRootObject,
+	kMissingHeaderField,
 	kMissingObjectField,
 	kDuplicateObjectId,
 	kUnresolvableReference,
 	kNullReference,
 };
+
+const char* ToString(ErrorCode ec);
 
 } // namespace serial

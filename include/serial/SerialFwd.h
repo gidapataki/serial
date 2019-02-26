@@ -5,7 +5,7 @@
 
 namespace serial {
 
-struct Header; // todo rename
+struct Header;
 
 class Reader;
 class Writer;

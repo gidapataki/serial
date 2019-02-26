@@ -29,19 +29,21 @@ ErrorCode Reader::ReadHeader(Header& header) {
 
 	if (!Current().isMember(str::kDoctype) ||
 		!Current().isMember(str::kVersion) ||
+		!Current().isMember(str::kRootId) ||
 		!Current().isMember(str::kObjects))
 	{
-		return ErrorCode::kInvalidHeader;
+		return ErrorCode::kMissingHeaderField;
 	}
 
 	if (!Current()[str::kDoctype].isString() ||
 		!Current()[str::kVersion].isInt() ||
+		!Current()[str::kRootId].isInt() ||
 		!Current()[str::kObjects].isArray())
 	{
 		return ErrorCode::kInvalidHeader;
 	}
 
-	if (Current().size() > 3) {
+	if (Current().size() > 4) {
 		return ErrorCode::kUnexpectedHeaderField;
 	}
 
@@ -50,7 +52,9 @@ ErrorCode Reader::ReadHeader(Header& header) {
 	return ErrorCode::kNone;
 }
 
-ErrorCode Reader::ReadObjects(const Registry& reg, RefContainer& refs) {
+ErrorCode Reader::ReadObjects(
+	const Registry& reg, RefContainer& refs, ReferableBase*& root)
+{
 	SetError(ErrorCode::kNone);
 	ReadObjectsInternal(reg);
 	if (IsError()) {
@@ -62,12 +66,23 @@ ErrorCode Reader::ReadObjects(const Registry& reg, RefContainer& refs) {
 		return error_;
 	}
 
-	ExtractRefs(refs);
+	ExtractRefs(refs, root);
+	if (IsError()) {
+		return error_;
+	}
 	return ErrorCode::kNone;
 }
 
 void Reader::ReadObjectsInternal(const Registry& reg) {
 	StateSentry sentry(this);
+	auto& root_value = Current()[str::kRootId];
+	if (!root_value.isInt()) {
+		SetError(ErrorCode::kInvalidHeader);
+		return;
+	}
+
+	root_id_ = root_value.asInt();
+
 	Select(str::kObjects);
 	if (!Current().isArray() ||
 		Current().size() == 0) {
@@ -75,19 +90,17 @@ void Reader::ReadObjectsInternal(const Registry& reg) {
 		return;
 	}
 
-	int index = -1;
 	for (const auto& value : Current()) {
-		++index;
 		StateSentry sentry2(this);
 		Select(value);
-		ReadObjectInternal(index, reg);
+		ReadObjectInternal(reg);
 		if (IsError()) {
 			return;
 		}
 	}
 }
 
-void Reader::ReadObjectInternal(int index, const Registry& reg) {
+void Reader::ReadObjectInternal(const Registry& reg) {
 	StateSentry sentry(this);
 
 	if (!Current().isMember(str::kFields) ||
@@ -129,10 +142,6 @@ void Reader::ReadObjectInternal(int index, const Registry& reg) {
 	auto p = obj.get();
 	objects_[id] = std::move(obj);
 
-	if (index == 0) {
-		root_id_ = id;
-	}
-
 	reg_ = &reg;
 	p->Read(this);
 	reg_ = nullptr;
@@ -167,19 +176,21 @@ void Reader::ResolveRefs() {
 	}
 }
 
-void Reader::ExtractRefs(RefContainer& refs) {
+void Reader::ExtractRefs(RefContainer& refs, ReferableBase*& root) {
 	RefContainer result;
+	auto it = objects_.find(root_id_);
 
-	auto root = objects_.find(root_id_);
-	assert(root != objects_.end() && "Missing root object");
+	if (it == objects_.end()) {
+		SetError(ErrorCode::kMissingRootObject);
+		return;
+	}
 
-	result.push_back(std::move(root->second));
-	objects_.erase(root);
-
+	auto root_ref = it->second.get();
 	for (auto& obj : objects_) {
 		result.push_back(std::move(obj.second));
 	}
 
+	root = root_ref;
 	std::swap(result, refs);
 }
 

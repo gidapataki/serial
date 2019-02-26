@@ -18,11 +18,15 @@ Writer::Writer(const Registry& reg)
 {}
 
 
-void Writer::Add(const ReferableBase* ref) {
-	if (refids_.count(ref) == 0) {
-		remaining_refs_.insert(ref);
-		refids_[ref] = next_refid_++;
+int Writer::Add(const ReferableBase* ref) {
+	auto it = refids_.find(ref);
+	if (it != refids_.end()) {
+		return it->second;
 	}
+	auto id = next_refid_++;
+	refids_[ref] = id;
+	remaining_refs_.insert(ref);
+	return id;
 }
 
 ErrorCode Writer::Write(
@@ -30,12 +34,15 @@ ErrorCode Writer::Write(
 {
 	root_ = Json::Value(Json::objectValue);
 
+
 	StateSentry sentry(this);
+	auto root_id = Add(ref);
+
 	Current()[str::kDoctype] = Json::Value(header.doctype);
 	Current()[str::kVersion] = Json::Value(header.version);
+	Current()[str::kRootId] = Json::Value(root_id);
 	Select(str::kObjects) = Json::Value(Json::arrayValue);
 
-	Add(ref);
 	while (!remaining_refs_.empty()) {
 		StateSentry sentry2(this);
 		SelectNext();

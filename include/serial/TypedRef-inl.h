@@ -28,10 +28,7 @@ TypedRef<Ts...>& TypedRef<Ts...>::operator=(U* u) {
 template<typename... Ts>
 template<typename U, typename>
 U* TypedRef<Ts...>::Get() {
-	if (!ref_) {
-		return nullptr;
-	}
-	if (ref_->HasType<U>()) {
+	if (IsReferable<U>(ref_)) {
 		return static_cast<U*>(ref_);
 	}
 	return nullptr;
@@ -40,10 +37,7 @@ U* TypedRef<Ts...>::Get() {
 template<typename... Ts>
 template<typename U, typename>
 const U* TypedRef<Ts...>::Get() const {
-	if (!ref_) {
-		return nullptr;
-	}
-	if (ref_->HasType<U>()) {
+	if (IsReferable<U>(ref_)) {
 		return static_cast<const U*>(ref_);
 	}
 	return nullptr;
@@ -52,10 +46,7 @@ const U* TypedRef<Ts...>::Get() const {
 template<typename... Ts>
 template<typename U, typename>
 bool TypedRef<Ts...>::Is() const {
-	if (!ref_) {
-		return false;
-	}
-	return ref_->HasType<U>();
+	return IsReferable<U>(ref_);
 }
 
 template<typename... Ts>

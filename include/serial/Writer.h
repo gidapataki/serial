@@ -3,7 +3,7 @@
 #include <unordered_set>
 #include "serial/SerialFwd.h"
 #include "serial/TypeTraits.h"
-#include "serial/DocInfo.h"
+#include "serial/Header.h"
 #include "serial/Constants.h"
 #include "jsoncpp/json.h"
 
@@ -29,7 +29,7 @@ private:
 		Json::Value* current_;
 	};
 
-	void Add(const ReferableBase* ref);
+	int Add(const ReferableBase* ref);
 
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();

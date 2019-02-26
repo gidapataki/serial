@@ -56,6 +56,7 @@ struct Segment : Referable<Segment> {
 	}
 };
 
+
 struct PolyLine : Referable<PolyLine> {
 	Array<Point> points;
 
@@ -128,12 +129,12 @@ void TestSerialize() {
 
 	g1.elements.push_back(&s1);
 	g1.elements.push_back(&k1);
-	g1.elements.push_back(&s1);
-	g1.elements.push_back(&c2);
-	g1.elements.push_back(&c3);
-	g1.elements.push_back(&g2);
-	g2.elements.push_back(&s2);
-	g2.elements.push_back(&p1);
+	// g1.elements.push_back(&s1);
+	// g1.elements.push_back(&c2);
+	// g1.elements.push_back(&c3);
+	// g1.elements.push_back(&g2);
+	// g2.elements.push_back(&s2);
+	// g2.elements.push_back(&p1);
 
 	Header h;
 	h.doctype = "sample";
@@ -150,7 +151,10 @@ void TestSerialize() {
 	}
 #else
 	RefContainer refs;
-	Group* gx = nullptr;
+	// Group*
+	// BasicRef
+	TypedRef<Group>
+		gx = nullptr;
 
 	// Dump(root);
 	// std::cerr << root["objects"][1]["type"].asString() << std::endl;
@@ -158,12 +162,12 @@ void TestSerialize() {
 
 	ec = DeserializeObjects(root, reg, refs, gx);
 	if (!gx) {
-		std::cout << "error: " << int(ec) << std::endl;
+		std::cout << "error: " << ToString(ec) << std::endl;
 		return;
 	}
 
 	Json::Value root2;
-	ec = Serialize(gx, h, reg, root2);
+	ec = Serialize(gx.Get(), h, reg, root2);
 	Dump(root2);
 #endif
 }

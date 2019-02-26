@@ -7,8 +7,8 @@
 namespace serial {
 
 template<typename T>
-bool ReferableBase::HasType() const {
-	return GetTypeId() == StaticTypeId<T>::Get();
+bool IsReferable(ReferableBase* ref) {
+	return ref && ref->GetTypeId() == StaticTypeId<T>::Get();
 }
 
 template<typename T>

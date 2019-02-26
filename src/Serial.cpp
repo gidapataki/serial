@@ -26,7 +26,8 @@ ErrorCode DeserializeHeader(
 ErrorCode DeserializeObjects(
 	const Json::Value& root,
 	const Registry& reg,
-	RefContainer& refs)
+	RefContainer& refs,
+	BasicRef& root_ref)
 {
 	Header h;
 	Reader reader(root);
@@ -35,7 +36,15 @@ ErrorCode DeserializeObjects(
 		return ec;
 	}
 
-	return reader.ReadObjects(reg, refs);
+	RefContainer result;
+	ReferableBase* result_ref = nullptr;
+
+	ec = reader.ReadObjects(reg, result, result_ref);
+	if (ec == ErrorCode::kNone) {
+		std::swap(refs, result);
+		root_ref = result_ref;
+	}
+	return ec;
 }
 
 } // namespace serial
