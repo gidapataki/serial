@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
+include(Sugoi)
+cmake_policy(SET CMP0063 NEW)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
 
-add_subdirectory(lib)
+add_subdirectory(lib/jsoncpp)
 
 # Serial
 
@@ -38,7 +40,7 @@ add_executable(test-serial
 )
 
 target_link_libraries(test-serial
-    PUBLIC serial jsoncpp
+    PUBLIC serial jsoncpp gtest_main
 )
 
 target_include_directories(test-serial

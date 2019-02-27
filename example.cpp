@@ -1,3 +1,4 @@
+#include "gtest/gtest.h"
 #include <iostream>
 #include <vector>
 #include "serial/Serial.h"
@@ -151,8 +152,6 @@ void TestSerialize() {
 	}
 #else
 	RefContainer refs;
-	// Group*
-	// BasicRef
 	TypedRef<Group>
 		gx = nullptr;
 

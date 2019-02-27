@@ -5,6 +5,8 @@
 
 namespace serial {
 
+noasserts_t noasserts;
+
 // Serialize
 
 ErrorCode Serialize(

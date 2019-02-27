@@ -23,5 +23,7 @@ template<typename... Ts> class TypedRef;
 using UniqueRef = std::unique_ptr<ReferableBase>;
 using RefContainer = std::vector<UniqueRef>;
 
+struct noasserts_t {};
+extern noasserts_t noasserts;
 
 } // namespace serial
