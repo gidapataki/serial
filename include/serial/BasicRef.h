@@ -26,19 +26,13 @@ public:
 	explicit operator bool() const;
 
 	template<typename T> bool Is() const;
+	template<typename T> T* Get();
+	template<typename T> const T* Get() const;
 
 private:
 	ReferableBase* ref_ = nullptr;
 };
 
-
-template<typename T>
-bool BasicRef::Is() const {
-	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
-	if (!ref_) {
-		return false;
-	}
-	return ref_->GetTypeId() == StaticTypeId<T>::Get();
-}
-
 } // namespace serial
+
+#include "serial/BasicRef-inl.h"

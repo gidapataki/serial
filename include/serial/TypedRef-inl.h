@@ -1,4 +1,5 @@
 #pragma once
+#include "serial/ReferableBase.h"
 
 namespace serial {
 
