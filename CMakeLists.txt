@@ -46,3 +46,13 @@ target_link_libraries(test-serial
 target_include_directories(test-serial
     PUBLIC test
 )
+
+
+add_executable(example
+    example.cpp
+)
+
+target_link_libraries(example
+    PUBLIC serial jsoncpp
+)
+

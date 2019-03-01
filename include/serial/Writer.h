@@ -13,6 +13,10 @@ namespace serial {
 class Writer {
 public:
 	Writer(const Registry& reg);
+	Writer(const Registry& reg, noasserts_t);
+
+	// Note: Write() should be only called once,
+	// as it leaves the object in a non-clear state.
 	ErrorCode Write(const Header& header, ReferableBase* ref, Json::Value& output);
 
 	template<typename T> void VisitField(const T& value, const char* name);

@@ -27,10 +27,9 @@ void Writer::WriteReferable(const T& value) {
 	StateSentry sentry(this);
 	Current()[str::kId] = Json::Value(refid);
 	Current()[str::kType] = Json::Value(name);
-	Select(str::kFields);
+	Select(str::kFields) = Json::Value(Json::objectValue);
 	T::AcceptVisitor(value, *this);
 }
-
 
 template<typename T>
 void Writer::VisitValue(const T& value) {

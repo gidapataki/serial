@@ -20,10 +20,10 @@ protected:
 template<typename... Ts>
 class TypedRef : public TypedRefBase {
 public:
-	static_assert(detail::IsReferable<Ts...>::value, "Types should Referable");
-
 	TypedRef() = default;
 	TypedRef(std::nullptr_t);
+	~TypedRef();
+
 	TypedRef& operator=(std::nullptr_t);
 
 	using TypedRefBase::Get;

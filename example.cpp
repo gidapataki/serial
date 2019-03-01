@@ -1,4 +1,3 @@
-#include "gtest/gtest.h"
 #include <iostream>
 #include <vector>
 #include "serial/Serial.h"
@@ -81,7 +80,7 @@ struct Group : Referable<Group> {
 
 
 struct Link : Referable<Link> {
-	TypedRef<Circle> circ;
+	TypedRef<Circle, Segment> circ;
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -130,8 +129,8 @@ void TestSerialize() {
 
 	g1.elements.push_back(&s1);
 	g1.elements.push_back(&k1);
-	// g1.elements.push_back(&s1);
-	// g1.elements.push_back(&c2);
+	g1.elements.push_back(&s1);
+	g1.elements.push_back(&c2);
 	// g1.elements.push_back(&c3);
 	// g1.elements.push_back(&g2);
 	// g2.elements.push_back(&s2);
@@ -144,7 +143,7 @@ void TestSerialize() {
 	Json::Value root;
 	ErrorCode ec;
 	ec = Serialize(&g1, h, reg, root);
-#if 0
+#if 1
 	if (ec == ErrorCode::kNone) {
 		Dump(root);
 	} else {

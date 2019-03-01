@@ -4,6 +4,11 @@
 namespace serial {
 
 template<typename... Ts>
+TypedRef<Ts...>::~TypedRef() {
+	static_assert(detail::IsReferable<Ts...>::value, "Types should Referable");
+}
+
+template<typename... Ts>
 TypedRef<Ts...>::TypedRef(std::nullptr_t)
 {}
 

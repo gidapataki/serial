@@ -17,6 +17,11 @@ Writer::Writer(const Registry& reg)
 	: reg_(reg)
 {}
 
+Writer::Writer(const Registry& reg, noasserts_t)
+	: Writer(reg)
+{
+	enable_asserts_ = false;
+}
 
 int Writer::Add(const ReferableBase* ref) {
 	auto it = refids_.find(ref);
