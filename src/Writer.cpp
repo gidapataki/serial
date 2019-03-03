@@ -43,8 +43,8 @@ ErrorCode Writer::Write(
 	StateSentry sentry(this);
 	auto root_id = Add(ref);
 
-	Current()[str::kDoctype] = Json::Value(header.doctype);
-	Current()[str::kVersion] = Json::Value(header.version);
+	Current()[str::kDocType] = Json::Value(header.doctype);
+	Current()[str::kDocVersion] = Json::Value(header.version);
 	Current()[str::kRootId] = Json::Value(root_id);
 	Select(str::kObjects) = Json::Value(Json::arrayValue);
 

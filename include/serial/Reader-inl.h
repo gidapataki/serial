@@ -1,22 +1,16 @@
 #pragma once
 #include "serial/Registry.h"
 
-
 namespace serial {
 
 template<typename T>
 void Reader::ReadReferable(T& value) {
-	if (!Current().isObject()) {
-		SetError(ErrorCode::kInvalidObjectHeader);
-		return;
-	}
-
 	auto input_count = Current().size();
 	StateSentry sentry(this);
 	state_.processed = 0;
 
 	T::AcceptVisitor(value, *this);
-	if (state_.processed < input_count) {
+	if (!IsError() && state_.processed < input_count) {
 		SetError(ErrorCode::kUnexpectedObjectField);
 	}
 }
@@ -76,7 +70,7 @@ void Reader::VisitValue(T& value, ObjectTag) {
 	auto input_count = Current().size();
 	state_.processed = 0;
 	T::AcceptVisitor(value, *this);
-	if (state_.processed < input_count) {
+	if (!IsError() && state_.processed < input_count) {
 		SetError(ErrorCode::kUnexpectedObjectField);
 		return;
 	}

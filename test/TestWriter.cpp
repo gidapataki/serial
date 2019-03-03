@@ -16,6 +16,8 @@ using namespace serial;
 
 namespace {
 
+
+
 struct A;
 struct B;
 struct C;
@@ -75,38 +77,38 @@ struct C : Referable<C> {
 
 void CheckHeader(const Json::Value& root, const Header& h) {
 	EXPECT_TRUE(root.isObject());
-	EXPECT_TRUE(root.isMember("doctype"));
-	EXPECT_TRUE(root.isMember("version"));
-	EXPECT_TRUE(root.isMember("objects"));
-	EXPECT_TRUE(root.isMember("root"));
+	EXPECT_TRUE(root.isMember(str::kDocType));
+	EXPECT_TRUE(root.isMember(str::kDocVersion));
+	EXPECT_TRUE(root.isMember(str::kObjects));
+	EXPECT_TRUE(root.isMember(str::kRootId));
 	EXPECT_EQ(4, root.size());
 
-	EXPECT_TRUE(root["doctype"].isString());
-	EXPECT_TRUE(root["version"].isInt());
-	EXPECT_TRUE(root["objects"].isArray());
-	EXPECT_TRUE(root["root"].isInt());
+	EXPECT_TRUE(root[str::kDocType].isString());
+	EXPECT_TRUE(root[str::kDocVersion].isInt());
+	EXPECT_TRUE(root[str::kObjects].isArray());
+	EXPECT_TRUE(root[str::kRootId].isInt());
 
-	EXPECT_EQ(h.doctype, root["doctype"].asString());
-	EXPECT_EQ(h.version, root["version"].asInt());
+	EXPECT_EQ(h.doctype, root[str::kDocType].asString());
+	EXPECT_EQ(h.version, root[str::kDocVersion].asInt());
 
 }
 
 void CheckObject(const Json::Value& obj) {
 	EXPECT_TRUE(obj.isObject());
-	EXPECT_TRUE(obj.isMember("id"));
-	EXPECT_TRUE(obj.isMember("fields"));
-	EXPECT_TRUE(obj.isMember("type"));
+	EXPECT_TRUE(obj.isMember(str::kObjectId));
+	EXPECT_TRUE(obj.isMember(str::kObjectFields));
+	EXPECT_TRUE(obj.isMember(str::kObjectType));
 	EXPECT_EQ(3, obj.size());
 
-	EXPECT_TRUE(obj["id"].isInt());
-	EXPECT_TRUE(obj["fields"].isObject());
-	EXPECT_TRUE(obj["type"].isString());
+	EXPECT_TRUE(obj[str::kObjectId].isInt());
+	EXPECT_TRUE(obj[str::kObjectFields].isObject());
+	EXPECT_TRUE(obj[str::kObjectType].isString());
 
 }
 
 void CheckObject(const Json::Value& obj, const std::string& type) {
 	CheckObject(obj);
-	EXPECT_EQ(type, obj["type"].asString());
+	EXPECT_EQ(type, obj[str::kObjectType].asString());
 }
 
 } // namespace
@@ -127,15 +129,15 @@ TEST(WriterTest, SingleObject) {
 
 	CheckHeader(root, h);
 
-	auto root_id = root["root"].asInt();
-	auto& objs = root["objects"];
+	auto root_id = root[str::kRootId].asInt();
+	auto& objs = root[str::kObjects];
 
 	EXPECT_EQ(1, objs.size());
 	auto& leaf_obj = objs[0];
 
 	CheckObject(leaf_obj, "leaf");
-	EXPECT_EQ(0, leaf_obj["fields"].size());
-	EXPECT_EQ(root_id, leaf_obj["id"].asInt());
+	EXPECT_EQ(0, leaf_obj[str::kObjectFields].size());
+	EXPECT_EQ(root_id, leaf_obj[str::kObjectId].asInt());
 }
 
 TEST(WriterTest, ObjectTree) {
@@ -169,8 +171,8 @@ TEST(WriterTest, ObjectTree) {
 
 	CheckHeader(root, h);
 
-	auto root_id = root["root"].asInt();
-	auto& objs = root["objects"];
+	auto root_id = root[str::kRootId].asInt();
+	auto& objs = root[str::kObjects];
 
 	EXPECT_EQ(4, objs.size());
 
@@ -182,28 +184,28 @@ TEST(WriterTest, ObjectTree) {
 	for (int i = 0; i < objs.size(); ++i) {
 		auto& current = objs[i];
 		CheckObject(objs[i]);
-		auto type = current["type"].asString();
+		auto type = current[str::kObjectType].asString();
 		if (type == "leaf") {
 			EXPECT_EQ(nullptr, leaf_obj);
-			EXPECT_EQ(0, current["fields"].size());
+			EXPECT_EQ(0, current[str::kObjectFields].size());
 
 			leaf_obj = &objs[i];
 		} else if (type == "b") {
-			EXPECT_EQ(2, current["fields"].size());
-			EXPECT_TRUE(current["fields"].isMember("data"));
-			EXPECT_TRUE(current["fields"].isMember("leaf"));
+			EXPECT_EQ(2, current[str::kObjectFields].size());
+			EXPECT_TRUE(current[str::kObjectFields].isMember("data"));
+			EXPECT_TRUE(current[str::kObjectFields].isMember("leaf"));
 			EXPECT_EQ(nullptr, b_obj);
 			b_obj = &current;
 		} else {
-			EXPECT_EQ(3, current["fields"].size());
-			EXPECT_TRUE(current["fields"].isMember("name"));
-			EXPECT_TRUE(current["fields"].isMember("value"));
-			EXPECT_TRUE(current["fields"].isMember("refs"));
+			EXPECT_EQ(3, current[str::kObjectFields].size());
+			EXPECT_TRUE(current[str::kObjectFields].isMember("name"));
+			EXPECT_TRUE(current[str::kObjectFields].isMember("value"));
+			EXPECT_TRUE(current[str::kObjectFields].isMember("refs"));
 
-			EXPECT_TRUE(current["fields"]["name"].isString());
-			EXPECT_EQ(std::string{"a"}, current["type"].asString());
+			EXPECT_TRUE(current[str::kObjectFields]["name"].isString());
+			EXPECT_EQ(std::string{"a"}, current[str::kObjectType].asString());
 
-			auto name = current["fields"]["name"].asString();
+			auto name = current[str::kObjectFields]["name"].asString();
 			EXPECT_TRUE(name == "a1" || name == "a2");
 			if (name == "a1") {
 				EXPECT_EQ(nullptr, a1_obj);
@@ -220,10 +222,10 @@ TEST(WriterTest, ObjectTree) {
 	EXPECT_NE(nullptr, leaf_obj);
 	EXPECT_NE(nullptr, b_obj);
 
-	EXPECT_EQ(12, (*a1_obj)["fields"]["value"].asInt());
-	EXPECT_EQ(23, (*a2_obj)["fields"]["value"].asInt());
+	EXPECT_EQ(12, (*a1_obj)[str::kObjectFields]["value"].asInt());
+	EXPECT_EQ(23, (*a2_obj)[str::kObjectFields]["value"].asInt());
 
-	auto& data_field = (*b_obj)["fields"]["data"];
+	auto& data_field = (*b_obj)[str::kObjectFields]["data"];
 	EXPECT_TRUE(data_field.isObject());
 	EXPECT_EQ(1, data_field.size());
 
@@ -231,14 +233,14 @@ TEST(WriterTest, ObjectTree) {
 	EXPECT_TRUE(data_field["x"].isInt());
 	EXPECT_EQ(47, data_field["x"].asInt());
 
-	auto a1_id = (*a1_obj)["id"].asInt();
-	auto a2_id = (*a2_obj)["id"].asInt();
-	auto leaf_id = (*leaf_obj)["id"].asInt();
-	auto b_id = (*b_obj)["id"].asInt();
+	auto a1_id = (*a1_obj)[str::kObjectId].asInt();
+	auto a2_id = (*a2_obj)[str::kObjectId].asInt();
+	auto leaf_id = (*leaf_obj)[str::kObjectId].asInt();
+	auto b_id = (*b_obj)[str::kObjectId].asInt();
 
-	auto& a1_refs = (*a1_obj)["fields"]["refs"];
-	auto& a2_refs = (*a2_obj)["fields"]["refs"];
-	auto& b_leaf = (*b_obj)["fields"]["leaf"];
+	auto& a1_refs = (*a1_obj)[str::kObjectFields]["refs"];
+	auto& a2_refs = (*a2_obj)[str::kObjectFields]["refs"];
+	auto& b_leaf = (*b_obj)[str::kObjectFields]["leaf"];
 
 	EXPECT_EQ(3, a1_refs.size());
 	EXPECT_EQ(3, a2_refs.size());
@@ -274,13 +276,13 @@ TEST(WriterTest, EnumValue) {
 	EXPECT_EQ(ErrorCode::kNone, ec);
 
 	CheckHeader(root, h);
-	EXPECT_EQ(1, root["objects"].size());
+	EXPECT_EQ(1, root[str::kObjects].size());
 
-	auto& c_obj = root["objects"][0];
+	auto& c_obj = root[str::kObjects][0];
 	CheckObject(c_obj, "c");
-	EXPECT_EQ(root["root"].asInt(), c_obj["id"].asInt());
+	EXPECT_EQ(root[str::kRootId].asInt(), c_obj[str::kObjectId].asInt());
 
-	auto& c_fields = c_obj["fields"];
+	auto& c_fields = c_obj[str::kObjectFields];
 	EXPECT_EQ(1, c_fields.size());
 	EXPECT_TRUE(c_fields.isMember("color"));
 	EXPECT_TRUE(c_fields["color"].isString());

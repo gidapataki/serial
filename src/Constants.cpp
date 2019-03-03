@@ -1,4 +1,5 @@
 #include "serial/Constants.h"
+#include <ostream>
 
 
 namespace serial {
@@ -24,6 +25,12 @@ const char* ToString(ErrorCode ec) {
 		case ErrorCode::kNullReference: return "NullReference";
 	}
 	return "Unknown";
+}
+
+std::ostream& operator<<(std::ostream& os, ErrorCode ec) {
+	auto str = ToString(ec);
+	os << str;
+	return os;
 }
 
 } // namespace serial

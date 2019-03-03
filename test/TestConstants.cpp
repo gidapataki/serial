@@ -3,8 +3,17 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <sstream>
 
 using namespace serial;
+
+TEST(ConstantTest, StreamOperator) {
+	std::stringstream ss;
+
+	ss << ErrorCode::kMissingRootObject;
+	EXPECT_EQ(std::string{ToString(ErrorCode::kMissingRootObject)}, ss.str());
+}
+
 
 TEST(ConstantTest, UniqueErrorCodes) {
 	std::vector<std::string> names;
@@ -44,4 +53,14 @@ TEST(ConstantTest, UniqueErrorCodes) {
 		}
 		uniq.insert(name);
 	}
+}
+
+TEST(ConstantTest, Names) {
+	EXPECT_EQ(std::string{"doctype"}, str::kDocType);
+	EXPECT_EQ(std::string{"version"}, str::kDocVersion);
+	EXPECT_EQ(std::string{"objects"}, str::kObjects);
+	EXPECT_EQ(std::string{"type"}, str::kObjectType);
+	EXPECT_EQ(std::string{"fields"}, str::kObjectFields);
+	EXPECT_EQ(std::string{"id"}, str::kObjectId);
+	EXPECT_EQ(std::string{"root"}, str::kRootId);
 }

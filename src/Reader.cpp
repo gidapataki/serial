@@ -27,16 +27,16 @@ ErrorCode Reader::ReadHeader(Header& header) {
 		return ErrorCode::kInvalidDocument;
 	}
 
-	if (!Current().isMember(str::kDoctype) ||
-		!Current().isMember(str::kVersion) ||
+	if (!Current().isMember(str::kDocType) ||
+		!Current().isMember(str::kDocVersion) ||
 		!Current().isMember(str::kRootId) ||
 		!Current().isMember(str::kObjects))
 	{
 		return ErrorCode::kMissingHeaderField;
 	}
 
-	if (!Current()[str::kDoctype].isString() ||
-		!Current()[str::kVersion].isInt() ||
+	if (!Current()[str::kDocType].isString() ||
+		!Current()[str::kDocVersion].isInt() ||
 		!Current()[str::kRootId].isInt() ||
 		!Current()[str::kObjects].isArray())
 	{
@@ -47,14 +47,18 @@ ErrorCode Reader::ReadHeader(Header& header) {
 		return ErrorCode::kUnexpectedHeaderField;
 	}
 
-	header.doctype = Current()[str::kDoctype].asString();
-	header.version = Current()[str::kVersion].asInt();
+	header.doctype = Current()[str::kDocType].asString();
+	header.version = Current()[str::kDocVersion].asInt();
 	return ErrorCode::kNone;
 }
 
 ErrorCode Reader::ReadObjects(
 	const Registry& reg, RefContainer& refs, ReferableBase*& root)
 {
+	if (!Current().isObject()) {
+		return ErrorCode::kInvalidDocument;
+	}
+
 	SetError(ErrorCode::kNone);
 	ReadObjectsInternal(reg);
 	if (IsError()) {
@@ -103,17 +107,17 @@ void Reader::ReadObjectsInternal(const Registry& reg) {
 void Reader::ReadObjectInternal(const Registry& reg) {
 	StateSentry sentry(this);
 
-	if (!Current().isMember(str::kFields) ||
-		!Current().isMember(str::kType) ||
-		!Current().isMember(str::kId))
+	if (!Current().isMember(str::kObjectFields) ||
+		!Current().isMember(str::kObjectType) ||
+		!Current().isMember(str::kObjectId))
 	{
-		SetError(ErrorCode::kInvalidObjectHeader);
+		SetError(ErrorCode::kMissingHeaderField);
 		return;
 	}
 
-	if (!Current()[str::kFields].isObject() ||
-		!Current()[str::kType].isString() ||
-		!Current()[str::kId].isInt())
+	if (!Current()[str::kObjectFields].isObject() ||
+		!Current()[str::kObjectType].isString() ||
+		!Current()[str::kObjectId].isInt())
 	{
 		SetError(ErrorCode::kInvalidObjectHeader);
 		return;
@@ -124,8 +128,8 @@ void Reader::ReadObjectInternal(const Registry& reg) {
 		return;
 	}
 
-	auto type = Current()[str::kType].asString();
-	auto id = Current()[str::kId].asInt();
+	auto type = Current()[str::kObjectType].asString();
+	auto id = Current()[str::kObjectId].asInt();
 
 	if (objects_.find(id) != objects_.end()) {
 		SetError(ErrorCode::kDuplicateObjectId);
@@ -138,7 +142,7 @@ void Reader::ReadObjectInternal(const Registry& reg) {
 		return;
 	}
 
-	Select(str::kFields);
+	Select(str::kObjectFields);
 	auto p = obj.get();
 	objects_[id] = std::move(obj);
 

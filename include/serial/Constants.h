@@ -1,16 +1,16 @@
 #pragma once
-
+#include <iosfwd>
 
 namespace serial {
 
 namespace str {
 
-constexpr const char* kDoctype = "doctype";
-constexpr const char* kVersion = "version";
+constexpr const char* kDocType = "doctype";
+constexpr const char* kDocVersion = "version";
 constexpr const char* kObjects = "objects";
-constexpr const char* kType = "type";
-constexpr const char* kFields = "fields";
-constexpr const char* kId = "id";
+constexpr const char* kObjectType = "type";
+constexpr const char* kObjectFields = "fields";
+constexpr const char* kObjectId = "id";
 constexpr const char* kRootId = "root";
 
 } // namespace str
@@ -37,5 +37,7 @@ enum class ErrorCode {
 };
 
 const char* ToString(ErrorCode ec);
+
+std::ostream& operator<<(std::ostream& os, ErrorCode ec);
 
 } // namespace serial

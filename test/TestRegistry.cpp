@@ -86,6 +86,14 @@ TEST(RegistryTest, Create) {
 	EXPECT_EQ(StaticTypeId<B>::Get(), b->GetTypeId());
 }
 
+TEST(RegistryTest, RegisterNullptr) {
+	Registry reg(noasserts);
+
+	EXPECT_FALSE(reg.Register<A>(nullptr));
+	EXPECT_FALSE(reg.RegisterEnum<E>({{E::kOne, nullptr}, {E::kTwo, "two"}}));
+	EXPECT_TRUE(reg.RegisterEnum<E>({{E::kTwo, "two"}}));
+}
+
 TEST(RegistryTest, RegisterEnum) {
 	Registry reg(noasserts);
 

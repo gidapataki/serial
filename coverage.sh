@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 BUILD_DIR=$(sugoi-target -b)
 EXECUTABLE="${BUILD_DIR}/test-serial"

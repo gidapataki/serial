@@ -25,9 +25,9 @@ void Writer::WriteReferable(const T& value) {
 	}
 
 	StateSentry sentry(this);
-	Current()[str::kId] = Json::Value(refid);
-	Current()[str::kType] = Json::Value(name);
-	Select(str::kFields) = Json::Value(Json::objectValue);
+	Current()[str::kObjectId] = Json::Value(refid);
+	Current()[str::kObjectType] = Json::Value(name);
+	Select(str::kObjectFields) = Json::Value(Json::objectValue);
 	T::AcceptVisitor(value, *this);
 }
 

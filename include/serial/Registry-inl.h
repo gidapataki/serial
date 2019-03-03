@@ -21,7 +21,13 @@ UniqueRef Factory<T>::Create() const {
 
 template<typename T>
 bool Registry::Register(const char* name) {
+	if (name == nullptr) {
+		assert(!enable_asserts_ && "Cannot register type with nullptr");
+		return false;
+	}
+
 	auto id = StaticTypeId<T>::Get();
+
 	if (factories_.count(name) > 0) {
 		assert(!enable_asserts_ && "Duplicate type name");
 		return false;
@@ -65,6 +71,10 @@ bool Registry::RegisterEnum(
 		// Note: this requires that the underlying type fits in an int
 		auto value = static_cast<int>(item.first);
 		auto name = item.second;
+		if (name == nullptr) {
+			assert(!enable_asserts_ && "Cannot register enum with nullptr");
+			return false;
+		}
 
 		if (mapping.names.count(value) > 0) {
 			assert(!enable_asserts_ && "Duplicate enum value");
