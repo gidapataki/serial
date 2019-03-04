@@ -3,6 +3,8 @@
 #include "serial/TypedRef.h"
 #include "serial/Referable.h"
 #include "serial/Writer.h"
+#include <limits>
+
 
 void Dump(const Json::Value& root) {
 	Json::StreamWriterBuilder builder;
@@ -15,8 +17,6 @@ void Dump(const Json::Value& root) {
 using namespace serial;
 
 namespace {
-
-
 
 struct A;
 struct B;
@@ -74,6 +74,40 @@ struct C : Referable<C> {
 	}
 };
 
+struct All : Referable<All> {
+	bool b = {};
+	int32_t i32 = {};
+	int64_t i64 = {};
+	uint32_t u32 = {};
+	uint64_t u64 = {};
+	float f = {};
+	double d = {};
+	std::string s;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.b, "b");
+		v.VisitField(self.i32, "i32");
+		v.VisitField(self.i64, "i64");
+		v.VisitField(self.u32, "u32");
+		v.VisitField(self.u64, "u64");
+		v.VisitField(self.s, "s");
+		v.VisitField(self.f, "f");
+		v.VisitField(self.d, "d");
+	}
+};
+
+struct Floats : Referable<Floats> {
+	float f = {};
+	double d = {};
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.f, "f");
+		v.VisitField(self.d, "d");
+	}
+};
+
 
 void CheckHeader(const Json::Value& root, const Header& h) {
 	EXPECT_TRUE(root.isObject());
@@ -109,6 +143,10 @@ void CheckObject(const Json::Value& obj) {
 void CheckObject(const Json::Value& obj, const std::string& type) {
 	CheckObject(obj);
 	EXPECT_EQ(type, obj[str::kObjectType].asString());
+}
+
+const Json::Value& FirstObjectField(const Json::Value& root, const char* name) {
+	return root[str::kObjects][0][str::kObjectFields][name];
 }
 
 } // namespace
@@ -352,3 +390,80 @@ TEST(WriterTest, NullReferences) {
 	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &a, root));
 }
 
+TEST(WriterTest, AllPrimitives) {
+	Registry reg(noasserts);
+	Header h;
+	Json::Value root;
+	All all;
+
+	reg.Register<All>("all");
+
+	all.b = true;
+	all.i32 = 15;
+	all.i64 = 137438953473ll;
+	all.u32 = 4294967286u;
+	all.u64 = 34359738358ull;
+	all.f = 2.254e12f;
+	all.d = 1.637e215;
+	all.s = "yolo";
+
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &all, root));
+
+	auto& fields = root[str::kObjects][0][str::kObjectFields];
+	EXPECT_TRUE(fields["b"].isBool());
+	EXPECT_TRUE(fields["i32"].isInt());
+	EXPECT_TRUE(fields["i64"].isInt64());
+	EXPECT_TRUE(fields["u32"].isUInt());
+	EXPECT_TRUE(fields["u64"].isUInt64());
+	EXPECT_TRUE(fields["f"].isDouble());
+	EXPECT_TRUE(fields["d"].isDouble());
+	EXPECT_TRUE(fields["s"].isString());
+
+	EXPECT_EQ(true, fields["b"].asBool());
+	EXPECT_EQ(15, fields["i32"].asInt());
+	EXPECT_EQ(137438953473ll, fields["i64"].asInt64());
+	EXPECT_EQ(4294967286u, fields["u32"].asUInt());
+	EXPECT_EQ(34359738358ull, fields["u64"].asUInt64());
+	EXPECT_EQ(2.254e12f, static_cast<float>(fields["f"].asDouble()));
+	EXPECT_EQ(1.637e215, fields["d"].asDouble());
+	EXPECT_EQ(std::string{"yolo"}, fields["s"].asString());
+}
+
+TEST(WriterTest, InfAndNaN) {
+	Registry reg(noasserts);
+	Header h;
+	Json::Value root;
+	Floats fs;
+
+	reg.Register<Floats>("floats");
+
+	fs.f = std::numeric_limits<float>::max();
+	fs.d = std::numeric_limits<double>::max();
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &fs, root));
+	EXPECT_TRUE(FirstObjectField(root, "f").isDouble());
+	EXPECT_TRUE(FirstObjectField(root, "d").isDouble());
+
+	fs.f = std::numeric_limits<float>::infinity();
+	fs.d = std::numeric_limits<double>::infinity();
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &fs, root));
+	EXPECT_TRUE(FirstObjectField(root, "f").isString());
+	EXPECT_TRUE(FirstObjectField(root, "d").isString());
+	EXPECT_EQ(std::string{"inf"}, FirstObjectField(root, "f").asString());
+	EXPECT_EQ(std::string{"inf"}, FirstObjectField(root, "d").asString());
+
+	fs.f = -std::numeric_limits<float>::infinity();
+	fs.d = -std::numeric_limits<double>::infinity();
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &fs, root));
+	EXPECT_TRUE(FirstObjectField(root, "f").isString());
+	EXPECT_TRUE(FirstObjectField(root, "d").isString());
+	EXPECT_EQ(std::string{"-inf"}, FirstObjectField(root, "f").asString());
+	EXPECT_EQ(std::string{"-inf"}, FirstObjectField(root, "d").asString());
+
+	fs.f = std::numeric_limits<float>::quiet_NaN();
+	fs.d = std::numeric_limits<double>::quiet_NaN();
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &fs, root));
+	EXPECT_TRUE(FirstObjectField(root, "f").isString());
+	EXPECT_TRUE(FirstObjectField(root, "d").isString());
+	EXPECT_EQ(std::string{"nan"}, FirstObjectField(root, "f").asString());
+	EXPECT_EQ(std::string{"nan"}, FirstObjectField(root, "d").asString());
+}

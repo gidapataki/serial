@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <type_traits>
+#include <cstdint>
 #include "serial/SerialFwd.h"
 
 
@@ -40,7 +41,13 @@ struct TypeTag<TypedRef<Ts...>> {
 
 // Primitives
 
-template<> struct TypeTag<int> { using Type = PrimitiveTag; };
+template<> struct TypeTag<bool> { using Type = PrimitiveTag; };
+template<> struct TypeTag<int32_t> { using Type = PrimitiveTag; };
+template<> struct TypeTag<int64_t> { using Type = PrimitiveTag; };
+template<> struct TypeTag<uint32_t> { using Type = PrimitiveTag; };
+template<> struct TypeTag<uint64_t> { using Type = PrimitiveTag; };
+template<> struct TypeTag<float> { using Type = PrimitiveTag; };
+template<> struct TypeTag<double> { using Type = PrimitiveTag; };
 template<> struct TypeTag<std::string> { using Type = PrimitiveTag; };
 
 } // namespace serial

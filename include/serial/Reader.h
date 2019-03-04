@@ -49,7 +49,13 @@ private:
 	template<typename T> void VisitValue(T& value, BasicRefTag);
 	template<typename T> void VisitValue(T& value, TypedRefTag);
 
+	void VisitValue(bool& value, PrimitiveTag);
 	void VisitValue(int& value, PrimitiveTag);
+	void VisitValue(int64_t& value, PrimitiveTag);
+	void VisitValue(unsigned& value, PrimitiveTag);
+	void VisitValue(uint64_t& value, PrimitiveTag);
+	void VisitValue(float& value, PrimitiveTag);
+	void VisitValue(double& value, PrimitiveTag);
 	void VisitValue(std::string& value, PrimitiveTag);
 
 	void SetError(ErrorCode error);

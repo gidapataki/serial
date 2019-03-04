@@ -1,4 +1,3 @@
-#include <iostream> // todo - remove
 #include "serial/Serial.h"
 #include "serial/Writer.h"
 

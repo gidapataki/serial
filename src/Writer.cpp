@@ -64,6 +64,26 @@ ErrorCode Writer::Write(
 	return ErrorCode::kNone;
 }
 
+void Writer::VisitValue(const float& value, PrimitiveTag) {
+	if (std::isnan(value)) {
+		Current() = "nan";
+	} else if (std::isinf(value)) {
+		Current() = (value < 0 ? "-inf" : "inf");
+	} else {
+		Current() = Json::Value(value);
+	}
+}
+
+void Writer::VisitValue(const double& value, PrimitiveTag) {
+	if (std::isnan(value)) {
+		Current() = "nan";
+	} else if (std::isinf(value)) {
+		Current() = (value < 0 ? "-inf" : "inf");
+	} else {
+		Current() = Json::Value(value);
+	}
+}
+
 Json::Value& Writer::Select(const char* name) {
 	current_ = &Current()[name];
 	return Current();

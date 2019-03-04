@@ -48,6 +48,9 @@ private:
 	template<typename T> void VisitValue(const T& value, BasicRefTag);
 	template<typename T> void VisitValue(const T& value, TypedRefTag);
 
+	void VisitValue(const float& value, PrimitiveTag);
+	void VisitValue(const double& value, PrimitiveTag);
+
 	const Registry& reg_;
 	ErrorCode error_ = ErrorCode::kNone;
 	int next_refid_ = 0;

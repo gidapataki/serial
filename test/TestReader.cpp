@@ -3,7 +3,7 @@
 #include "serial/TypedRef.h"
 #include "serial/Referable.h"
 #include "serial/Reader.h"
-
+#include <limits>
 
 using namespace serial;
 
@@ -124,6 +124,39 @@ struct G : Referable<G> {
 	}
 };
 
+struct All : Referable<All> {
+	bool b = {};
+	int32_t i32 = {};
+	int64_t i64 = {};
+	uint32_t u32 = {};
+	uint64_t u64 = {};
+	float f = {};
+	double d = {};
+	std::string s;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.b, "b");
+		v.VisitField(self.i32, "i32");
+		v.VisitField(self.i64, "i64");
+		v.VisitField(self.u32, "u32");
+		v.VisitField(self.u64, "u64");
+		v.VisitField(self.s, "s");
+		v.VisitField(self.f, "f");
+		v.VisitField(self.d, "d");
+	}
+};
+
+struct Floats : Referable<Floats> {
+	float f = {};
+	double d = {};
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.f, "f");
+		v.VisitField(self.d, "d");
+	}
+};
 
 } // namespace
 
@@ -488,4 +521,111 @@ TEST(ReaderTest, ReadObjectsWithRef) {
 	EXPECT_EQ(2, refs.size());
 	EXPECT_TRUE(refs[0].get() == p || refs[1].get() == p);
 	EXPECT_EQ(StaticTypeId<C>::Get(), p->GetTypeId());
+}
+
+TEST(ReaderTest, ReadAllTypes) {
+	Json::Value root;
+	RefContainer refs;
+	ReferableBase* p = nullptr;
+	Registry reg(noasserts);
+	reg.Register<All>("all");
+
+	root = MakeHeader(0);
+	root[str::kObjects][0] = MakeObject(0, "all");
+
+	auto& fields = root[str::kObjects][0][str::kObjectFields];
+	fields["b"] = true;
+	fields["i32"] = -12;
+	fields["i64"] = 1ll << 34;
+	fields["u32"] = 55;
+	fields["u64"] = 1ull << 36;
+	fields["s"] = "hi_mom";
+	fields["f"] = 0.25f;
+	fields["d"] = 1.25e120;
+
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_NE(nullptr, p);
+	EXPECT_EQ(StaticTypeId<All>::Get(), p->GetTypeId());
+	auto& all = static_cast<All&>(*p);
+
+	EXPECT_EQ(true, all.b);
+	EXPECT_EQ(-12, all.i32);
+	EXPECT_EQ(1ll << 34, all.i64);
+	EXPECT_EQ(55, all.u32);
+	EXPECT_EQ(1ull << 36, all.u64);
+	EXPECT_EQ(std::string{"hi_mom"}, all.s);
+	EXPECT_EQ(0.25f, all.f);
+	EXPECT_EQ(1.25e120, all.d);
+
+	const Json::Value good_fields = fields;
+
+	(fields = good_fields)["b"] = 5;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["i32"] = 1ll << 37;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["i64"] = false;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["u32"] = 1ull << 40;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["u64"] = "hm";
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["f"] = 3.25e200;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["f"] = Json::arrayValue;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["f"] = "hi";
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["d"] = "yo";
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["d"] = Json::objectValue;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["d"] = std::numeric_limits<double>::infinity();
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	(fields = good_fields)["d"] = std::numeric_limits<double>::quiet_NaN();
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+}
+
+TEST(ReaderTest, InfAndNaN) {
+	Json::Value root;
+	RefContainer refs;
+	ReferableBase* p = nullptr;
+	Registry reg(noasserts);
+	reg.Register<Floats>("floats");
+
+	root = MakeHeader(0);
+	root[str::kObjects][0] = MakeObject(0, "floats");
+	auto& fields = root[str::kObjects][0][str::kObjectFields];
+
+	fields["f"] = "nan";
+	fields["d"] = "nan";
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_TRUE(std::isnan(static_cast<Floats*>(p)->f));
+	EXPECT_TRUE(std::isnan(static_cast<Floats*>(p)->d));
+
+	fields["f"] = "inf";
+	fields["d"] = "inf";
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_TRUE(std::isinf(static_cast<Floats*>(p)->f));
+	EXPECT_TRUE(std::isinf(static_cast<Floats*>(p)->d));
+	EXPECT_LT(0, static_cast<Floats*>(p)->f);
+	EXPECT_LT(0, static_cast<Floats*>(p)->d);
+
+	fields["f"] = "-inf";
+	fields["d"] = "-inf";
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_TRUE(std::isinf(static_cast<Floats*>(p)->f));
+	EXPECT_TRUE(std::isinf(static_cast<Floats*>(p)->d));
+	EXPECT_GT(0, static_cast<Floats*>(p)->f);
+	EXPECT_GT(0, static_cast<Floats*>(p)->d);
 }

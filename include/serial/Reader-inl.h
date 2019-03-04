@@ -111,6 +111,4 @@ void Reader::VisitValue(T& value, BasicRefTag) {
 	unresolved_basic_refs_.emplace_back(&value, refid);
 }
 
-
-
 } // namespace serial

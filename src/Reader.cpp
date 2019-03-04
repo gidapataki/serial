@@ -3,7 +3,7 @@
 #include "serial/Registry.h"
 #include "serial/TypedRef.h"
 #include "serial/BasicRef.h"
-
+#include <limits>
 
 namespace serial {
 
@@ -198,6 +198,15 @@ void Reader::ExtractRefs(RefContainer& refs, ReferableBase*& root) {
 	std::swap(result, refs);
 }
 
+void Reader::VisitValue(bool& value, PrimitiveTag) {
+	if (!Current().isBool()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	value = Current().asBool();
+}
+
 void Reader::VisitValue(int& value, PrimitiveTag) {
 	if (!Current().isInt()) {
 		SetError(ErrorCode::kInvalidObjectField);
@@ -205,6 +214,91 @@ void Reader::VisitValue(int& value, PrimitiveTag) {
 	}
 
 	value = Current().asInt();
+}
+
+void Reader::VisitValue(int64_t& value, PrimitiveTag) {
+	if (!Current().isInt64()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	value = Current().asInt64();
+}
+
+void Reader::VisitValue(unsigned& value, PrimitiveTag) {
+	if (!Current().isUInt()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	value = Current().asUInt();
+}
+
+void Reader::VisitValue(uint64_t& value, PrimitiveTag) {
+	if (!Current().isUInt64()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	value = Current().asUInt64();
+}
+
+void Reader::VisitValue(float& value, PrimitiveTag) {
+	if (Current().isString()) {
+		auto v = Current().asString();
+		if (v == "nan") {
+			value = std::numeric_limits<float>::quiet_NaN();
+		} else if (v == "inf") {
+			value = std::numeric_limits<float>::infinity();
+		} else if (v == "-inf") {
+			value = -std::numeric_limits<float>::infinity();
+		} else {
+			SetError(ErrorCode::kInvalidObjectField);
+		}
+		return;
+	}
+
+	if (!Current().isDouble()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	float v = static_cast<float>(Current().asDouble());
+	if (std::isinf(v) || std::isnan(v)) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	value = v;
+}
+
+void Reader::VisitValue(double& value, PrimitiveTag) {
+	if (Current().isString()) {
+		auto v = Current().asString();
+		if (v == "nan") {
+			value = std::numeric_limits<double>::quiet_NaN();
+		} else if (v == "inf") {
+			value = std::numeric_limits<double>::infinity();
+		} else if (v == "-inf") {
+			value = -std::numeric_limits<double>::infinity();
+		} else {
+			SetError(ErrorCode::kInvalidObjectField);
+		}
+		return;
+	}
+
+	if (!Current().isDouble()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	double v = Current().asDouble();
+	if (std::isinf(v) || std::isnan(v)) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	value = Current().asDouble();
 }
 
 void Reader::VisitValue(std::string& value, PrimitiveTag) {

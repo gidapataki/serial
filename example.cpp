@@ -171,8 +171,81 @@ void TestSerialize() {
 }
 
 
+void TestRange() {
+	Json::Value root;
+	auto& v = root["long"];
+	v = 8589934592ull;
+	v = 4294966796ull;
+	v = 6.23e201;
+
+	std::cout << v << std::endl;
+	std::cout << v.isInt() << std::endl;
+	std::cout << v.isUInt() << std::endl;
+	std::cout << v.isInt64() << std::endl;
+	std::cout << v.isDouble() << std::endl;
+	std::cout << v.asFloat() << std::endl;
+	std::cout << v.asDouble() << std::endl;
+}
+
+
+struct All : Referable<All> {
+	bool b = true;
+	int i = 15;
+	int64_t i64 = 1447632456543;
+	unsigned u = -1;
+	uint64_t u64 = -1ull;
+	float f = 2532445621.214f;
+	double d = 21425324456213674343.2153654;
+	std::string s = "hi mom";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.b, "b");
+		v.VisitField(self.i, "i");
+		v.VisitField(self.i64, "i64");
+		v.VisitField(self.u, "u");
+		v.VisitField(self.u64, "u64");
+		v.VisitField(self.s, "s");
+		v.VisitField(self.f, "f");
+		v.VisitField(self.d, "d");
+	}
+};
+
+void TestPrimitives() {
+	Registry reg;
+	All all;
+	Json::Value root;
+	ErrorCode ec;
+
+	reg.Register<All>("all");
+
+	all.d = std::numeric_limits<double>::lowest();
+
+	ec = Serialize(&all, Header{}, reg, root);
+	if (ec != ErrorCode::kNone) {
+		return;
+	}
+	Dump(root);
+
+// return;
+	RefContainer refs;
+	BasicRef obj;
+	ec = DeserializeObjects(root, reg, refs, obj);
+	if (ec != ErrorCode::kNone) {
+		return;
+	}
+
+	ec = Serialize(obj, Header{}, reg, root);
+	if (ec != ErrorCode::kNone) {
+		return;
+	}
+	Dump(root);
+}
+
 int main() {
-	TestSerialize();
+	TestPrimitives();
+	// TestRange();
+	// TestSerialize();
 	// Segment s;
 	// Circle c;
 	// PolyLine p;
