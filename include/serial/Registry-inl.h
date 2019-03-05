@@ -66,9 +66,10 @@ bool Registry::RegisterEnum(
 	}
 
 	EnumMapping mapping;
+	static_assert(std::is_same<int, typename std::underlying_type<T>::type>::value,
+		"Underlying type should be int");
 
 	for (auto& item : list) {
-		// Note: this requires that the underlying type fits in an int
 		auto value = static_cast<int>(item.first);
 		auto name = item.second;
 		if (name == nullptr) {
