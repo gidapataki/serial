@@ -158,6 +158,21 @@ struct Floats : Referable<Floats> {
 	}
 };
 
+struct Opt : Referable<Opt> {
+	Optional<int> i;
+	Optional<Point> p;
+	Optional<Array<int>> a;
+	Optional<BasicRef> ref;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.i, "i");
+		v.VisitField(self.p, "p");
+		v.VisitField(self.a, "a");
+		v.VisitField(self.ref, "ref");
+	}
+};
+
 } // namespace
 
 TEST(ReaderTest, ReadHeader) {
@@ -628,4 +643,44 @@ TEST(ReaderTest, InfAndNaN) {
 	EXPECT_TRUE(std::isinf(static_cast<Floats*>(p)->d));
 	EXPECT_GT(0, static_cast<Floats*>(p)->f);
 	EXPECT_GT(0, static_cast<Floats*>(p)->d);
+}
+
+TEST(ReaderTest, Optional) {
+	Json::Value root;
+	RefContainer refs;
+	ReferableBase* p = nullptr;
+	Registry reg(noasserts);
+	reg.Register<Opt>("opt");
+
+	root = MakeHeader(0);
+	root[str::kObjects][0] = MakeObject(0, "opt");
+	auto& fields = root[str::kObjects][0][str::kObjectFields];
+
+	fields["i"] = Json::nullValue;
+	fields["p"] = Json::nullValue;
+	fields["a"] = Json::nullValue;
+	fields["ref"] = Json::nullValue;
+
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_FALSE(static_cast<Opt*>(p)->i);
+	EXPECT_FALSE(static_cast<Opt*>(p)->p);
+	EXPECT_FALSE(static_cast<Opt*>(p)->a);
+	EXPECT_FALSE(static_cast<Opt*>(p)->ref);
+
+	fields["i"] = 15;
+	fields["p"] = Json::objectValue;
+	fields["p"]["x"] = 6;
+	fields["p"]["y"] = -13;
+	fields["a"] = Json::arrayValue;
+	fields["a"][0] = 3;
+	fields["a"][1] = 5;
+	fields["a"][2] = 7;
+	fields["ref"] = 0;
+
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_EQ(15, static_cast<Opt*>(p)->i);
+	EXPECT_EQ(6, static_cast<Opt*>(p)->p->x);
+	EXPECT_EQ(-13, static_cast<Opt*>(p)->p->y);
+	EXPECT_EQ(3, static_cast<Opt*>(p)->a->size());
+	EXPECT_EQ(p, static_cast<Opt*>(p)->ref->Get());
 }

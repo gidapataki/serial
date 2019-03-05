@@ -108,6 +108,21 @@ struct Floats : Referable<Floats> {
 	}
 };
 
+struct Opt : Referable<Opt> {
+	Optional<int> i;
+	Optional<Data> d;
+	Optional<Array<int>> a;
+	Optional<BasicRef> ref;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.i, "i");
+		v.VisitField(self.d, "d");
+		v.VisitField(self.a, "a");
+		v.VisitField(self.ref, "ref");
+	}
+};
+
 
 void CheckHeader(const Json::Value& root, const Header& h) {
 	EXPECT_TRUE(root.isObject());
@@ -466,4 +481,30 @@ TEST(WriterTest, InfAndNaN) {
 	EXPECT_TRUE(FirstObjectField(root, "d").isString());
 	EXPECT_EQ(std::string{"nan"}, FirstObjectField(root, "f").asString());
 	EXPECT_EQ(std::string{"nan"}, FirstObjectField(root, "d").asString());
+}
+
+TEST(WriterTest, Optional) {
+	Registry reg(noasserts);
+	Header h;
+	Json::Value root;
+	Opt opt;
+
+	reg.Register<Opt>("opt");
+
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &opt, root));
+	EXPECT_TRUE(FirstObjectField(root, "i").isNull());
+	EXPECT_TRUE(FirstObjectField(root, "d").isNull());
+	EXPECT_TRUE(FirstObjectField(root, "a").isNull());
+	EXPECT_TRUE(FirstObjectField(root, "ref").isNull());
+
+	opt.i = 15;
+	opt.d = Data{};
+	opt.a = Array<int>({1, 2});
+	opt.ref = &opt;
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &opt, root));
+	EXPECT_TRUE(FirstObjectField(root, "i").isInt());
+	EXPECT_TRUE(FirstObjectField(root, "d").isObject());
+	EXPECT_TRUE(FirstObjectField(root, "a").isArray());
+	EXPECT_TRUE(FirstObjectField(root, "ref").isInt());
+	EXPECT_EQ(2, FirstObjectField(root, "a").size());
 }
