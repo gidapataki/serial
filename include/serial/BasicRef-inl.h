@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 
 
 namespace serial {
@@ -13,19 +14,19 @@ bool BasicRef::Is() const {
 }
 
 template<typename T>
-T* BasicRef::Get() {
-	if (Is<T>()) {
-		return static_cast<T*>(ref_);
-	}
-	return nullptr;
+T& BasicRef::As() {
+	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
+	assert(Is<T>() && "Invalid dynamic type");
+
+	return *static_cast<T*>(ref_);
 }
 
 template<typename T>
-const T* BasicRef::Get() const {
-	if (Is<T>()) {
-		return static_cast<const T*>(ref_);
-	}
-	return nullptr;
+const T& BasicRef::As() const {
+	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
+	assert(Is<T>() && "Invalid dynamic type");
+
+	return *static_cast<const T*>(ref_);
 }
 
 } // namespace serial

@@ -110,18 +110,12 @@ TEST(BasicRefTest, IsAs) {
 	EXPECT_FALSE(ref1.Is<B>());
 	EXPECT_TRUE(ref2.Is<B>());
 
-	EXPECT_EQ(&a, ref1.Get<A>());
-	EXPECT_EQ(nullptr, ref1.Get<B>());
-
-	EXPECT_EQ(&b, ref2.Get<B>());
-	EXPECT_EQ(nullptr, ref2.Get<A>());
+	EXPECT_EQ(&a, &ref1.As<A>());
+	EXPECT_EQ(&b, &ref2.As<B>());
 
 	const BasicRef ref3 = ref2;
 	const BasicRef ref4 = ref1;
 
-	EXPECT_EQ(&b, ref3.Get<B>());
-	EXPECT_EQ(nullptr, ref3.Get<A>());
-
-	EXPECT_EQ(&a, ref4.Get<A>());
-	EXPECT_EQ(nullptr, ref4.Get<B>());
+	EXPECT_EQ(&b, &ref3.As<B>());
+	EXPECT_EQ(&a, &ref4.As<A>());
 }

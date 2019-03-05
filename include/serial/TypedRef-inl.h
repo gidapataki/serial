@@ -1,5 +1,7 @@
 #pragma once
 #include "serial/ReferableBase.h"
+#include <cassert>
+
 
 namespace serial {
 
@@ -33,20 +35,16 @@ TypedRef<Ts...>& TypedRef<Ts...>::operator=(U* u) {
 
 template<typename... Ts>
 template<typename U, typename>
-U* TypedRef<Ts...>::Get() {
-	if (IsReferable<U>(ref_)) {
-		return static_cast<U*>(ref_);
-	}
-	return nullptr;
+U& TypedRef<Ts...>::As() {
+	assert(IsReferable<U>(ref_) && "Invalid dynamic type");
+	return *static_cast<U*>(ref_);
 }
 
 template<typename... Ts>
 template<typename U, typename>
-const U* TypedRef<Ts...>::Get() const {
-	if (IsReferable<U>(ref_)) {
-		return static_cast<const U*>(ref_);
-	}
-	return nullptr;
+const U& TypedRef<Ts...>::As() const {
+	assert(IsReferable<U>(ref_) && "Invalid dynamic type");
+	return *static_cast<const U*>(ref_);
 }
 
 template<typename... Ts>

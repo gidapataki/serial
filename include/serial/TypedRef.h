@@ -30,8 +30,8 @@ public:
 
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> TypedRef(U* u);
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> TypedRef& operator=(U* u);
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> U* Get();
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> const U* Get() const;
+	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> U& As();
+	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> const U& As() const;
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> bool Is() const;
 
 	bool operator==(const TypedRef& other) const;

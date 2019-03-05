@@ -26,8 +26,8 @@ public:
 	explicit operator bool() const;
 
 	template<typename T> bool Is() const;
-	template<typename T> T* Get();
-	template<typename T> const T* Get() const;
+	template<typename T> T& As();
+	template<typename T> const T& As() const;
 
 private:
 	ReferableBase* ref_ = nullptr;
