@@ -61,6 +61,17 @@ void Reader::VisitValue(T& value, ArrayTag) {
 }
 
 template<typename T>
+void Reader::VisitValue(T& value, OptionalTag) {
+	if (Current().isNull()) {
+		value = boost::none;
+	} else {
+		StateSentry sentry(this);
+		value = (typename T::value_type){};
+		VisitValue(*value);
+	}
+}
+
+template<typename T>
 void Reader::VisitValue(T& value, ObjectTag) {
 	if (!Current().isObject()) {
 		SetError(ErrorCode::kInvalidObjectField);

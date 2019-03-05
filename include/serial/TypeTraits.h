@@ -9,6 +9,7 @@ namespace serial {
 
 struct PrimitiveTag {};
 struct ArrayTag {};
+struct OptionalTag {};
 struct ObjectTag {};
 struct EnumTag {};
 struct BasicRefTag {};
@@ -26,6 +27,11 @@ struct TypeTag {
 template<typename T>
 struct TypeTag<Array<T>> {
 	using Type = ArrayTag;
+};
+
+template<typename T>
+struct TypeTag<Optional<T>> {
+	using Type = OptionalTag;
 };
 
 template<>

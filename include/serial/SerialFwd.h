@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <boost/optional.hpp>
 
 
 namespace serial {
@@ -18,6 +19,7 @@ class TypedRefBase;
 template<typename T> class Referable;
 template<typename T> class Factory;
 template<typename T> using Array = std::vector<T>;
+template<typename T> using Optional = boost::optional<T>;
 template<typename... Ts> class TypedRef;
 
 using UniqueRef = std::unique_ptr<ReferableBase>;

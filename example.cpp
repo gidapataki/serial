@@ -197,6 +197,7 @@ struct All : Referable<All> {
 	float f = 2532445621.214f;
 	double d = 21425324456213674343.2153654;
 	std::string s = "hi mom";
+	Optional<int> o;
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -208,6 +209,7 @@ struct All : Referable<All> {
 		v.VisitField(self.s, "s");
 		v.VisitField(self.f, "f");
 		v.VisitField(self.d, "d");
+		v.VisitField(self.o, "o");
 	}
 };
 
@@ -220,6 +222,7 @@ void TestPrimitives() {
 	reg.Register<All>("all");
 
 	all.d = std::numeric_limits<double>::lowest();
+	all.o = 15;
 
 	ec = Serialize(&all, Header{}, reg, root);
 	if (ec != ErrorCode::kNone) {

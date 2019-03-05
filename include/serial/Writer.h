@@ -43,6 +43,7 @@ private:
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);
 	template<typename T> void VisitValue(const T& value, ArrayTag);
+	template<typename T> void VisitValue(const T& value, OptionalTag);
 	template<typename T> void VisitValue(const T& value, ObjectTag);
 	template<typename T> void VisitValue(const T& value, EnumTag);
 	template<typename T> void VisitValue(const T& value, BasicRefTag);

@@ -78,6 +78,16 @@ void Writer::VisitValue(const T& value, ArrayTag) {
 }
 
 template<typename T>
+void Writer::VisitValue(const T& value, OptionalTag) {
+	StateSentry sentry(this);
+	if (!value) {
+		Current() = Json::Value(Json::nullValue);
+	} else {
+		VisitValue(*value);
+	}
+}
+
+template<typename T>
 void Writer::VisitValue(const T& value, ObjectTag) {
 	T::AcceptVisitor(value, *this);
 }
