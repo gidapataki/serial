@@ -66,7 +66,8 @@ void Reader::VisitValue(T& value, OptionalTag) {
 		value = boost::none;
 	} else {
 		StateSentry sentry(this);
-		value = (typename T::value_type){};
+		using ValueType = typename T::value_type;
+		value = ValueType{};
 		VisitValue(*value);
 	}
 }
