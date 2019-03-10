@@ -1,6 +1,7 @@
 #include "RgbColor.h"
 #include <sstream>
 #include <iomanip>
+#include <cctype>
 
 
 bool FromString(const std::string& str, RgbColor& color) {
