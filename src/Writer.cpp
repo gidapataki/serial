@@ -40,6 +40,7 @@ std::string Writer::AddRef(const ReferableBase* ref) {
 
 	refids_[ref] = id;
 	remaining_refs_.insert(ref);
+	queue_.push_back(ref);
 	return id;
 }
 
@@ -57,12 +58,12 @@ ErrorCode Writer::Write(
 	Current()[str::kRootId] = Json::Value(root_id);
 	Select(str::kObjects) = Json::Value(Json::arrayValue);
 
-	while (!remaining_refs_.empty()) {
+	while (!queue_.empty()) {
 		StateSentry sentry2(this);
 		SelectNext();
-		auto p = remaining_refs_.begin();
-		auto ref = *p;
-		remaining_refs_.erase(p);
+		auto ref = queue_.front();
+		queue_.pop_front();
+		remaining_refs_.erase(ref);
 		ref->Write(this);
 		if (error_ != ErrorCode::kNone) {
 			return error_;

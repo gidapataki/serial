@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <unordered_set>
+#include <deque>
 #include "serial/SerialFwd.h"
 #include "serial/TypeTraits.h"
 #include "serial/Header.h"
@@ -60,6 +61,7 @@ private:
 
 	std::unordered_map<const ReferableBase*, std::string> refids_;
 	std::unordered_set<const ReferableBase*> remaining_refs_;
+	std::deque<const ReferableBase*> queue_;
 
 	Json::Value root_;
 	Json::Value* current_ = &root_;
