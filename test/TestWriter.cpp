@@ -3,6 +3,7 @@
 #include "serial/TypedRef.h"
 #include "serial/Referable.h"
 #include "serial/Writer.h"
+#include "RgbColor.h"
 #include <limits>
 
 
@@ -120,6 +121,15 @@ struct Opt : Referable<Opt> {
 		v.VisitField(self.d, "d");
 		v.VisitField(self.a, "a");
 		v.VisitField(self.ref, "ref");
+	}
+};
+
+struct U : Referable<U> {
+	RgbColor color;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.color, "color");
 	}
 };
 
@@ -507,4 +517,19 @@ TEST(WriterTest, Optional) {
 	EXPECT_TRUE(FirstObjectField(root, "a").isArray());
 	EXPECT_TRUE(FirstObjectField(root, "ref").isString());
 	EXPECT_EQ(2, FirstObjectField(root, "a").size());
+}
+
+TEST(WriterTest, UserType) {
+	Registry reg(noasserts);
+	Header h;
+	Json::Value root;
+	U u;
+
+	reg.Register<U>("u");
+	u.color.r = 255;
+	u.color.g = 128;
+	u.color.b = 0;
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &u, root));
+	EXPECT_TRUE(FirstObjectField(root, "color").isString());
+	EXPECT_EQ(std::string{"#ff8000"}, FirstObjectField(root, "color").asString());
 }

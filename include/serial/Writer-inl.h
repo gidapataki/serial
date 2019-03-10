@@ -65,6 +65,13 @@ void Writer::VisitValue(const T& value, PrimitiveTag) {
 }
 
 template<typename T>
+void Writer::VisitValue(const T& value, UserTag) {
+	std::string str;
+	ToString(value, str);
+	Current() = str;
+}
+
+template<typename T>
 void Writer::VisitValue(const T& value, ArrayTag) {
 	StateSentry sentry(this);
 	Current() = Json::Value(Json::arrayValue);

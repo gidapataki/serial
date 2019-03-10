@@ -89,6 +89,19 @@ void Reader::VisitValue(T& value, ObjectTag) {
 }
 
 template<typename T>
+void Reader::VisitValue(T& value, UserTag) {
+	if (!Current().isString()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+
+	if (!FromString(Current().asString(), value)) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return;
+	}
+}
+
+template<typename T>
 void Reader::VisitValue(T& value, EnumTag) {
 	if (!Current().isString()) {
 		SetError(ErrorCode::kInvalidObjectField);

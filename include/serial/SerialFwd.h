@@ -28,4 +28,6 @@ using RefContainer = std::vector<UniqueRef>;
 struct noasserts_t {};
 extern noasserts_t noasserts;
 
+struct UserPrimitive {};
+
 } // namespace serial

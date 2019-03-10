@@ -114,5 +114,4 @@ TEST(SerialTest, DeserializeObjects) {
 	root[str::kRootId] = "ref_2";
 	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ref));
 	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ptr));
-
 }

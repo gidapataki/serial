@@ -14,14 +14,18 @@ struct ObjectTag {};
 struct EnumTag {};
 struct BasicRefTag {};
 struct TypedRefTag {};
-
+struct UserTag {};
 
 template<typename T>
 struct TypeTag {
 	using Type = typename std::conditional<
 		std::is_enum<T>::value,
 		EnumTag,
-		ObjectTag>::type;
+		typename std::conditional<
+			std::is_base_of<UserPrimitive, T>::value,
+			UserTag,
+			ObjectTag
+		>::type>::type;
 };
 
 template<typename T>

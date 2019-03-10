@@ -3,6 +3,7 @@
 #include "serial/TypedRef.h"
 #include "serial/Referable.h"
 #include "serial/Reader.h"
+#include "RgbColor.h"
 #include <limits>
 
 using namespace serial;
@@ -120,6 +121,15 @@ struct G : Referable<G> {
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
+		v.VisitField(self.color, "color");
+	}
+};
+
+struct U : Referable<U> {
+	RgbColor color;
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.color, "color");
 	}
 };
@@ -679,4 +689,27 @@ TEST(ReaderTest, Optional) {
 	EXPECT_EQ(-13, static_cast<Opt*>(p)->p->y);
 	EXPECT_EQ(3, static_cast<Opt*>(p)->a->size());
 	EXPECT_EQ(p, static_cast<Opt*>(p)->ref->Get());
+}
+
+TEST(ReaderTest, UserType) {
+	Json::Value root;
+	RefContainer refs;
+	ReferableBase* p = nullptr;
+	Registry reg(noasserts);
+	reg.Register<U>("u");
+
+	root = MakeHeader(0);
+	root[str::kObjects][0] = MakeObject(0, "u");
+	auto& fields = root[str::kObjects][0][str::kObjectFields];
+	fields["color"] = "#hello_";
+
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	fields["color"] = "#0102ff";
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+
+	auto& color = static_cast<U&>(*p).color;
+	EXPECT_EQ(1, color.r);
+	EXPECT_EQ(2, color.g);
+	EXPECT_EQ(255, color.b);
 }
