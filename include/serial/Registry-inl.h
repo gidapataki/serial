@@ -13,7 +13,12 @@ UniqueRef Factory<T>::Create() const {
 		std::is_base_of<ReferableBase, T>::value,
 		"Type is not referable");
 
+#if 1
+	// Note: this is faster to compile
+	return UniqueRef(new T());
+#else
 	return std::make_unique<T>();
+#endif
 }
 
 
@@ -38,7 +43,12 @@ bool Registry::Register(const char* name) {
 	}
 
 	types_[id] = name;
+#if 1
+	// Note: this is faster to compile
+	factories_[name] = std::unique_ptr<FactoryBase>(new Factory<T>());
+#else
 	factories_[name] = std::make_unique<Factory<T>>();
+#endif
 	return true;
 }
 
