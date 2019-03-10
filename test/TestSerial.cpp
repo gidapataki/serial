@@ -72,11 +72,11 @@ TEST(SerialTest, DeserializeObjects) {
 	root = Json::objectValue;
 	root[str::kDocType] = "";
 	root[str::kDocVersion] = 1;
-	root[str::kRootId] = 1;
+	root[str::kRootId] = "ref_1";
 	root[str::kObjects] = Json::arrayValue;
 	root[str::kObjects][0] = Json::objectValue;
 	root[str::kObjects][0][str::kObjectType] = "a";
-	root[str::kObjects][0][str::kObjectId] = 1;
+	root[str::kObjects][0][str::kObjectId] = "ref_1";
 	root[str::kObjects][0][str::kObjectFields] = Json::objectValue;
 	root[str::kObjects][0][str::kObjectFields]["name"] = "hello";
 
@@ -111,7 +111,7 @@ TEST(SerialTest, DeserializeObjects) {
 	EXPECT_EQ(ErrorCode::kInvalidRootType, DeserializeObjects(root, reg, refs, b_ref));
 	EXPECT_EQ(2, refs.size());
 
-	root[str::kRootId] = 2;
+	root[str::kRootId] = "ref_2";
 	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ref));
 	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ptr));
 

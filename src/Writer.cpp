@@ -4,6 +4,14 @@
 
 namespace serial {
 
+namespace {
+
+std::string MakeRefString(int id) {
+	return "ref_" + std::to_string(id);
+}
+
+} // namespace
+
 Writer::StateSentry::StateSentry(Writer* writer)
 	: writer_(writer)
 	, current_(writer->current_)
@@ -23,12 +31,13 @@ Writer::Writer(const Registry& reg, noasserts_t)
 	enable_asserts_ = false;
 }
 
-int Writer::Add(const ReferableBase* ref) {
+std::string Writer::AddRef(const ReferableBase* ref) {
 	auto it = refids_.find(ref);
 	if (it != refids_.end()) {
 		return it->second;
 	}
-	auto id = next_refid_++;
+	auto id = MakeRefString(next_refid_++);
+
 	refids_[ref] = id;
 	remaining_refs_.insert(ref);
 	return id;
@@ -41,7 +50,7 @@ ErrorCode Writer::Write(
 
 
 	StateSentry sentry(this);
-	auto root_id = Add(ref);
+	auto root_id = AddRef(ref);
 
 	Current()[str::kDocType] = Json::Value(header.doctype);
 	Current()[str::kDocVersion] = Json::Value(header.version);

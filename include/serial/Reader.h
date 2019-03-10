@@ -71,10 +71,12 @@ private:
 	State state_;
 	ErrorCode error_;
 
-	int root_id_ = 0;
-	std::unordered_map<int, UniqueRef> objects_;
-	std::vector<std::pair<BasicRef*, int>> unresolved_basic_refs_;
-	std::vector<std::pair<TypedRefBase*, int>> unresolved_typed_refs_;
+	using RefId = std::string;
+
+	RefId root_id_ = {};
+	std::unordered_map<RefId, UniqueRef> objects_;
+	std::vector<std::pair<BasicRef*, RefId>> unresolved_basic_refs_;
+	std::vector<std::pair<TypedRefBase*, RefId>> unresolved_typed_refs_;
 };
 
 } // namespace serial

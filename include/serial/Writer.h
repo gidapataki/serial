@@ -33,7 +33,7 @@ private:
 		Json::Value* current_;
 	};
 
-	int Add(const ReferableBase* ref);
+	std::string AddRef(const ReferableBase* ref);
 
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
@@ -57,7 +57,7 @@ private:
 	int next_refid_ = 0;
 	bool enable_asserts_ = true;
 
-	std::unordered_map<const ReferableBase*, int> refids_;
+	std::unordered_map<const ReferableBase*, std::string> refids_;
 	std::unordered_set<const ReferableBase*> remaining_refs_;
 
 	Json::Value root_;

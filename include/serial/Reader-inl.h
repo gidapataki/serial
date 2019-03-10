@@ -103,24 +103,24 @@ void Reader::VisitValue(T& value, EnumTag) {
 
 template<typename T>
 void Reader::VisitValue(T& value, TypedRefTag) {
-	if (!Current().isInt()) {
+	if (!Current().isString()) {
 		SetError(ErrorCode::kInvalidObjectField);
 		return;
 	}
 
-	auto refid = Current().asInt();
-	unresolved_typed_refs_.emplace_back(&value, refid);
+	auto refid = Current().asString();
+	unresolved_typed_refs_.emplace_back(&value, std::move(refid));
 }
 
 template<typename T>
 void Reader::VisitValue(T& value, BasicRefTag) {
-	if (!Current().isInt()) {
+	if (!Current().isString()) {
 		SetError(ErrorCode::kInvalidObjectField);
 		return;
 	}
 
-	auto refid = Current().asInt();
-	unresolved_basic_refs_.emplace_back(&value, refid);
+	auto refid = Current().asString();
+	unresolved_basic_refs_.emplace_back(&value, std::move(refid));
 }
 
 } // namespace serial

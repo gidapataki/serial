@@ -37,7 +37,7 @@ ErrorCode Reader::ReadHeader(Header& header) {
 
 	if (!Current()[str::kDocType].isString() ||
 		!Current()[str::kDocVersion].isInt() ||
-		!Current()[str::kRootId].isInt() ||
+		!Current()[str::kRootId].isString() ||
 		!Current()[str::kObjects].isArray())
 	{
 		return ErrorCode::kInvalidHeader;
@@ -80,12 +80,12 @@ ErrorCode Reader::ReadObjects(
 void Reader::ReadObjectsInternal(const Registry& reg) {
 	StateSentry sentry(this);
 	auto& root_value = Current()[str::kRootId];
-	if (!root_value.isInt()) {
+	if (!root_value.isString()) {
 		SetError(ErrorCode::kInvalidHeader);
 		return;
 	}
 
-	root_id_ = root_value.asInt();
+	root_id_ = root_value.asString();
 
 	Select(str::kObjects);
 	if (!Current().isArray() ||
@@ -117,7 +117,7 @@ void Reader::ReadObjectInternal(const Registry& reg) {
 
 	if (!Current()[str::kObjectFields].isObject() ||
 		!Current()[str::kObjectType].isString() ||
-		!Current()[str::kObjectId].isInt())
+		!Current()[str::kObjectId].isString())
 	{
 		SetError(ErrorCode::kInvalidObjectHeader);
 		return;
@@ -129,7 +129,7 @@ void Reader::ReadObjectInternal(const Registry& reg) {
 	}
 
 	auto type = Current()[str::kObjectType].asString();
-	auto id = Current()[str::kObjectId].asInt();
+	auto id = Current()[str::kObjectId].asString();
 
 	if (objects_.find(id) != objects_.end()) {
 		SetError(ErrorCode::kDuplicateObjectId);

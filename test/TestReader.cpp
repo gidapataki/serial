@@ -14,7 +14,7 @@ Json::Value MakeHeader(int root_id = 0) {
 	root = Json::Value(Json::objectValue);
 	root[str::kDocType] = "test";
 	root[str::kDocVersion] = 1;
-	root[str::kRootId] = root_id;
+	root[str::kRootId] = "ref_" + std::to_string(root_id);
 	root[str::kObjects] = Json::Value(Json::arrayValue);
 	return root;
 }
@@ -23,7 +23,7 @@ Json::Value MakeObject(int id, const char* type) {
 	Json::Value root;
 	root[str::kObjectType] = type;
 	root[str::kObjectFields] = Json::objectValue;
-	root[str::kObjectId] = id;
+	root[str::kObjectId] = "ref_" + std::to_string(id);
 	return root;
 }
 
@@ -245,13 +245,12 @@ TEST(ReaderTest, ReadObjects1) {
 	EXPECT_EQ(&l2, p);
 
 	root = MakeHeader();
-	root[str::kRootId] = "hello";
+	root[str::kRootId] = Json::objectValue;
 	EXPECT_EQ(ErrorCode::kInvalidHeader, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(2, refs.size());
 	EXPECT_EQ(&l2, p);
 
-	root = MakeHeader();
-	root[str::kObjects] = 23;
+	root = MakeHeader(23);
 	EXPECT_EQ(ErrorCode::kMissingRootObject, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(2, refs.size());
 	EXPECT_EQ(&l2, p);
@@ -261,23 +260,20 @@ TEST(ReaderTest, ReadObjects1) {
 	EXPECT_EQ(2, refs.size());
 	EXPECT_EQ(&l2, p);
 
-	root = MakeHeader();
-	root[str::kRootId] = 1;
+	root = MakeHeader(3);
 	root[str::kObjects][0] = MakeObject(15, "leaf");
 	EXPECT_EQ(ErrorCode::kMissingRootObject, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(2, refs.size());
 	EXPECT_EQ(&l2, p);
 
-	root = MakeHeader();
-	root[str::kRootId] = 1;
+	root = MakeHeader(1);
 	root[str::kObjects][0] = MakeObject(1, "leaf");
 	root[str::kObjects][0]["id"] = Json::nullValue;
 	EXPECT_EQ(ErrorCode::kInvalidObjectHeader, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(2, refs.size());
 	EXPECT_EQ(&l2, p);
 
-	root = MakeHeader();
-	root[str::kRootId] = 12;
+	root = MakeHeader(12);
 	root[str::kObjects][0] = MakeObject(12, "leaf");
 	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(1, refs.size());
@@ -336,24 +332,24 @@ TEST(ReaderTest, ReadObjects2) {
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
 	root[str::kObjects][0][str::kObjectFields]["elements"] = Json::arrayValue;
-	root[str::kObjects][0][str::kObjectFields]["elements"][0] = 22;
-	root[str::kObjects][0][str::kObjectFields]["ref"] = 1;
+	root[str::kObjects][0][str::kObjectFields]["elements"][0] = "ref_22";
+	root[str::kObjects][0][str::kObjectFields]["ref"] = "ref_1";
 	root[str::kObjects][1] = MakeObject(1, "leaf");
 	EXPECT_EQ(ErrorCode::kUnresolvableReference, Reader(root).ReadObjects(reg, refs, p));
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
 	root[str::kObjects][0][str::kObjectFields]["elements"] = Json::arrayValue;
-	root[str::kObjects][0][str::kObjectFields]["elements"][0] = 0;
-	root[str::kObjects][0][str::kObjectFields]["ref"] = 1;
+	root[str::kObjects][0][str::kObjectFields]["elements"][0] = "ref_0";
+	root[str::kObjects][0][str::kObjectFields]["ref"] = "ref_1";
 	root[str::kObjects][1] = MakeObject(1, "leaf");
 	EXPECT_EQ(ErrorCode::kInvalidReferenceType, Reader(root).ReadObjects(reg, refs, p));
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
 	root[str::kObjects][0][str::kObjectFields]["elements"] = Json::arrayValue;
-	root[str::kObjects][0][str::kObjectFields]["elements"][0] = 1;
-	root[str::kObjects][0][str::kObjectFields]["ref"] = 22;
+	root[str::kObjects][0][str::kObjectFields]["elements"][0] = "ref_1";
+	root[str::kObjects][0][str::kObjectFields]["ref"] = "ref_22";
 	root[str::kObjects][1] = MakeObject(1, "leaf");
 	EXPECT_EQ(ErrorCode::kUnresolvableReference, Reader(root).ReadObjects(reg, refs, p));
 
@@ -515,22 +511,22 @@ TEST(ReaderTest, ReadObjectsWithRef) {
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
-	root[str::kObjects][0][str::kObjectFields]["ref"] = "hello";
+	root[str::kObjects][0][str::kObjectFields]["ref"] = Json::arrayValue;
 	root[str::kObjects][0][str::kObjectFields]["elements"] = Json::arrayValue;
 	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
-	root[str::kObjects][0][str::kObjectFields]["ref"] = 0;
+	root[str::kObjects][0][str::kObjectFields]["ref"] = "ref_0";
 	root[str::kObjects][0][str::kObjectFields]["elements"] = Json::arrayValue;
-	root[str::kObjects][0][str::kObjectFields]["elements"][0] = "xy";
+	root[str::kObjects][0][str::kObjectFields]["elements"][0] = Json::objectValue;
 	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
-	root[str::kObjects][0][str::kObjectFields]["ref"] = 0;
+	root[str::kObjects][0][str::kObjectFields]["ref"] = "ref_0";
 	root[str::kObjects][0][str::kObjectFields]["elements"] = Json::arrayValue;
-	root[str::kObjects][0][str::kObjectFields]["elements"][0] = 1;
+	root[str::kObjects][0][str::kObjectFields]["elements"][0] = "ref_1";
 	root[str::kObjects][1] = MakeObject(1, "leaf");
 	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(2, refs.size());
@@ -675,7 +671,7 @@ TEST(ReaderTest, Optional) {
 	fields["a"][0] = 3;
 	fields["a"][1] = 5;
 	fields["a"][2] = 7;
-	fields["ref"] = 0;
+	fields["ref"] = "ref_0";
 
 	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(15, static_cast<Opt*>(p)->i);

@@ -135,7 +135,7 @@ void CheckHeader(const Json::Value& root, const Header& h) {
 	EXPECT_TRUE(root[str::kDocType].isString());
 	EXPECT_TRUE(root[str::kDocVersion].isInt());
 	EXPECT_TRUE(root[str::kObjects].isArray());
-	EXPECT_TRUE(root[str::kRootId].isInt());
+	EXPECT_TRUE(root[str::kRootId].isString());
 
 	EXPECT_EQ(h.doctype, root[str::kDocType].asString());
 	EXPECT_EQ(h.version, root[str::kDocVersion].asInt());
@@ -149,7 +149,7 @@ void CheckObject(const Json::Value& obj) {
 	EXPECT_TRUE(obj.isMember(str::kObjectType));
 	EXPECT_EQ(3, obj.size());
 
-	EXPECT_TRUE(obj[str::kObjectId].isInt());
+	EXPECT_TRUE(obj[str::kObjectId].isString());
 	EXPECT_TRUE(obj[str::kObjectFields].isObject());
 	EXPECT_TRUE(obj[str::kObjectType].isString());
 
@@ -182,7 +182,7 @@ TEST(WriterTest, SingleObject) {
 
 	CheckHeader(root, h);
 
-	auto root_id = root[str::kRootId].asInt();
+	auto root_id = root[str::kRootId].asString();
 	auto& objs = root[str::kObjects];
 
 	EXPECT_EQ(1, objs.size());
@@ -190,7 +190,7 @@ TEST(WriterTest, SingleObject) {
 
 	CheckObject(leaf_obj, "leaf");
 	EXPECT_EQ(0, leaf_obj[str::kObjectFields].size());
-	EXPECT_EQ(root_id, leaf_obj[str::kObjectId].asInt());
+	EXPECT_EQ(root_id, leaf_obj[str::kObjectId].asString());
 }
 
 TEST(WriterTest, ObjectTree) {
@@ -224,7 +224,7 @@ TEST(WriterTest, ObjectTree) {
 
 	CheckHeader(root, h);
 
-	auto root_id = root[str::kRootId].asInt();
+	auto root_id = root[str::kRootId].asString();
 	auto& objs = root[str::kObjects];
 
 	EXPECT_EQ(4, objs.size());
@@ -286,10 +286,10 @@ TEST(WriterTest, ObjectTree) {
 	EXPECT_TRUE(data_field["x"].isInt());
 	EXPECT_EQ(47, data_field["x"].asInt());
 
-	auto a1_id = (*a1_obj)[str::kObjectId].asInt();
-	auto a2_id = (*a2_obj)[str::kObjectId].asInt();
-	auto leaf_id = (*leaf_obj)[str::kObjectId].asInt();
-	auto b_id = (*b_obj)[str::kObjectId].asInt();
+	auto a1_id = (*a1_obj)[str::kObjectId].asString();
+	auto a2_id = (*a2_obj)[str::kObjectId].asString();
+	auto leaf_id = (*leaf_obj)[str::kObjectId].asString();
+	auto b_id = (*b_obj)[str::kObjectId].asString();
 
 	auto& a1_refs = (*a1_obj)[str::kObjectFields]["refs"];
 	auto& a2_refs = (*a2_obj)[str::kObjectFields]["refs"];
@@ -298,19 +298,19 @@ TEST(WriterTest, ObjectTree) {
 	EXPECT_EQ(3, a1_refs.size());
 	EXPECT_EQ(3, a2_refs.size());
 
-	EXPECT_TRUE(a1_refs[0].isInt());
-	EXPECT_TRUE(a1_refs[1].isInt());
-	EXPECT_TRUE(a1_refs[2].isInt());
-	EXPECT_TRUE(a2_refs[0].isInt());
-	EXPECT_TRUE(b_leaf.isInt());
+	EXPECT_TRUE(a1_refs[0].isString());
+	EXPECT_TRUE(a1_refs[1].isString());
+	EXPECT_TRUE(a1_refs[2].isString());
+	EXPECT_TRUE(a2_refs[0].isString());
+	EXPECT_TRUE(b_leaf.isString());
 
-	EXPECT_EQ(a2_id, a1_refs[0].asInt());
-	EXPECT_EQ(a2_id, a1_refs[1].asInt());
-	EXPECT_EQ(leaf_id, a1_refs[2].asInt());
-	EXPECT_EQ(leaf_id, a2_refs[0].asInt());
-	EXPECT_EQ(a2_id, a2_refs[1].asInt());
-	EXPECT_EQ(b_id, a2_refs[2].asInt());
-	EXPECT_EQ(leaf_id, b_leaf.asInt());
+	EXPECT_EQ(a2_id, a1_refs[0].asString());
+	EXPECT_EQ(a2_id, a1_refs[1].asString());
+	EXPECT_EQ(leaf_id, a1_refs[2].asString());
+	EXPECT_EQ(leaf_id, a2_refs[0].asString());
+	EXPECT_EQ(a2_id, a2_refs[1].asString());
+	EXPECT_EQ(b_id, a2_refs[2].asString());
+	EXPECT_EQ(leaf_id, b_leaf.asString());
 }
 
 TEST(WriterTest, EnumValue) {
@@ -333,7 +333,7 @@ TEST(WriterTest, EnumValue) {
 
 	auto& c_obj = root[str::kObjects][0];
 	CheckObject(c_obj, "c");
-	EXPECT_EQ(root[str::kRootId].asInt(), c_obj[str::kObjectId].asInt());
+	EXPECT_EQ(root[str::kRootId].asString(), c_obj[str::kObjectId].asString());
 
 	auto& c_fields = c_obj[str::kObjectFields];
 	EXPECT_EQ(1, c_fields.size());
@@ -505,6 +505,6 @@ TEST(WriterTest, Optional) {
 	EXPECT_TRUE(FirstObjectField(root, "i").isInt());
 	EXPECT_TRUE(FirstObjectField(root, "d").isObject());
 	EXPECT_TRUE(FirstObjectField(root, "a").isArray());
-	EXPECT_TRUE(FirstObjectField(root, "ref").isInt());
+	EXPECT_TRUE(FirstObjectField(root, "ref").isString());
 	EXPECT_EQ(2, FirstObjectField(root, "a").size());
 }

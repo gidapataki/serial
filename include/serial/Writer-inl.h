@@ -15,7 +15,7 @@ void Writer::VisitField(const T& value, const char* name) {
 
 template<typename T>
 void Writer::WriteReferable(const T& value) {
-	auto refid = refids_[&value];
+	auto refid = AddRef(&value);
 	auto name = reg_.GetName<T>();
 
 	if (name == nullptr) {
@@ -44,8 +44,7 @@ void Writer::VisitValue(const T& value, TypedRefTag) {
 		assert(!enable_asserts_ && "Null reference");
 		return;
 	}
-	Add(value.Get());
-	auto refid = refids_[value.Get()];
+	auto refid = AddRef(value.Get());
 	Current() = Json::Value(refid);
 }
 
@@ -56,8 +55,7 @@ void Writer::VisitValue(const T& value, BasicRefTag) {
 		assert(!enable_asserts_ && "Null reference");
 		return;
 	}
-	Add(value.Get());
-	auto refid = refids_[value.Get()];
+	auto refid = AddRef(value.Get());
 	Current() = Json::Value(refid);
 }
 
