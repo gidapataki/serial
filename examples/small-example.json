@@ -1,0 +1,41 @@
+{
+  "doctype" : "example",
+  "version" : 1,
+  "root" : "ref_0",
+
+  "objects" : [
+
+    {
+      "type" : "group",
+      "id" : "ref_0",
+      "fields" : {
+        "elements" : [ "ref_1" ],
+        "name" : null
+      }
+    },
+
+    {
+      "type" : "group",
+      "id" : "ref_1",
+      "fields" : {
+        "elements" : [ "ref_2" ],
+        "name" : "inner"
+      }
+    },
+
+    {
+      "type" : "circle",
+      "id" : "ref_2",
+      "fields" : {
+        "center" :
+        {
+          "x" : 15,
+          "y" : -32
+        },
+        "radius" : 121,
+        "winding" : "ccw"
+      }
+    }
+
+  ]
+}
