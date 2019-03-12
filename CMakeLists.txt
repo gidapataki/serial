@@ -49,7 +49,7 @@ target_include_directories(test-serial
 
 
 add_executable(example
-    example.cpp
+    examples/small-example.cpp
 )
 
 target_link_libraries(example
