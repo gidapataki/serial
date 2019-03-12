@@ -143,7 +143,8 @@ void TestSerialize() {
 	Json::Value root;
 	ErrorCode ec;
 	ec = Serialize(&g1, h, reg, root);
-#if 1
+		Dump(root);
+#if 0
 	if (ec == ErrorCode::kNone) {
 		Dump(root);
 	} else {
@@ -245,10 +246,169 @@ void TestPrimitives() {
 	Dump(root);
 }
 
+
+struct Simple : Referable<Simple> {
+	Array<Array<Optional<int32_t>>> arr;
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.arr, "arr");
+	}
+};
+
+class Vx {
+	struct State {
+		std::string prefix;
+	} state_;
+
+	class StateSentry {
+	public:
+		StateSentry(Vx* parent)
+			: parent_(parent)
+			, state_(parent->state_)
+		{}
+
+		~StateSentry() {
+			parent_->state_ = state_;
+		}
+
+	private:
+		State state_;
+		Vx* parent_ = nullptr;
+	};
+
+public:
+	template<typename T>
+	void Dump(const char* prefix) {
+		StateSentry sentry(this);
+		state_.prefix = prefix;
+		T elem;
+		T::AcceptVisitor(elem, *this);
+	}
+
+	template<typename T>
+	void VisitField(const T& value, const char* name) {
+		StateSentry sentry(this);
+		state_.prefix += '.';
+		state_.prefix += name;
+		VisitValue(value);
+	}
+
+	template<typename T>
+	void VisitValue(const T& value) {
+		using Tag = typename TypeTag<T>::Type;
+		Tag tag;
+		VisitValue(value, tag);
+	}
+
+	template<typename T>
+	void VisitValue(const T& value, PrimitiveTag) {
+		VisitPrimitive(value);
+	}
+
+	void DeclareType(const char* name) {
+		std::cerr << state_.prefix << " : " << name << std::endl;
+	}
+
+	void VisitPrimitive(const bool&) { DeclareType("bool"); }
+	void VisitPrimitive(const int32_t&) { DeclareType("i32"); }
+	void VisitPrimitive(const int64_t&) { DeclareType("i64"); }
+	void VisitPrimitive(const uint32_t&) { DeclareType("u32"); }
+	void VisitPrimitive(const uint64_t&) { DeclareType("u64"); }
+	void VisitPrimitive(const float&) { DeclareType("float"); }
+	void VisitPrimitive(const double&) { DeclareType("double"); }
+	void VisitPrimitive(const std::string&) { DeclareType("string"); }
+
+	template<typename T>
+	void VisitValue(const Array<T>& value, ArrayTag) {
+		StateSentry sentry(this);
+
+		state_.prefix += "[]";
+		T elem;
+		VisitValue(elem);
+	}
+
+	template<typename T>
+	void VisitValue(const Optional<T>& value, OptionalTag) {
+		StateSentry sentry(this);
+
+		state_.prefix += "?";
+		T elem;
+		VisitValue(elem);
+	}
+
+	template<typename T>
+	void VisitValue(const T& value, ObjectTag) {
+		StateSentry sentry(this);
+		T::AcceptVisitor(value, *this);
+	}
+
+	template<typename T>
+	void VisitValue(const T& value, EnumTag) {
+		DeclareType("enum");
+	}
+
+	template<typename T>
+	void VisitValue(const T& value, BasicRefTag) {
+		DeclareType("ref");
+	}
+
+	template<typename T>
+	void VisitValue(const T& value, TypedRefTag) {
+		DeclareType("ref*");
+	}
+
+	template<typename T>
+	void VisitValue(const T& value, UserTag) {
+		DeclareType("user");
+	}
+};
+
+
+void DumpStructure() {
+	Vx vx;
+	vx.Dump<Circle>("circle");
+	vx.Dump<PolyLine>("poly");
+	vx.Dump<Simple>("simple");
+
+}
+
+void Stress() {
+	Registry reg;
+	Json::Value root;
+	ErrorCode ec;
+	Header h;
+
+	reg.Register<Group>("group");
+	reg.Register<PolyLine>("poly");
+
+	Group g;
+	std::vector<PolyLine> ps;
+	int N = 100000;
+	ps.reserve(N);
+
+	for (int i = 0; i < N; ++i) {
+		PolyLine p;
+		// p.points.push_back({i, i});
+		// p.points.push_back({i + 1, i + 1});
+		// p.points.push_back({i + 2, i + 2});
+		ps.push_back(std::move(p));
+	}
+
+	for (auto& p : ps) {
+		g.elements.push_back(&p);
+	}
+
+	ec = Serialize(&g, h, reg, root);
+}
+
+
+
 int main() {
-	TestPrimitives();
+	// Stress();
+	// DumpStructure();
+	// TestPrimitives();
 	// TestRange();
-	// TestSerialize();
+	TestSerialize();
 	// Segment s;
 	// Circle c;
 	// PolyLine p;

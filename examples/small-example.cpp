@@ -70,10 +70,9 @@ void Example() {
 	Group g2;
 	g2.elements.push_back(&g1);
 
-	// Setup registry & co.
-	serial::Registry reg;
-	serial::Header header{"example", 1};
 
+	// Setup registry
+	serial::Registry reg;
 	reg.Register<Circle>("circle");
 	reg.Register<Group>("group");
 
@@ -84,9 +83,10 @@ void Example() {
 
 
 	// Serialize
-
 	Json::Value json_value;
-	serial::ErrorCode ec = serial::Serialize(&g2, header, reg, json_value);
+	serial::Header header{"example", 1};
+	auto ec = serial::Serialize(&g2, header, reg, json_value);
+
 
 	// Deserialize
 
