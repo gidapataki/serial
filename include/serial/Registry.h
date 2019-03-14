@@ -28,7 +28,7 @@ public:
 	Registry() = default;
 	Registry(noasserts_t);
 
-	template<typename T> bool Register(const char* name);
+	template<typename T> bool Register();
 	template<typename T> const char* GetName() const;
 	UniqueRef Create(const std::string& name) const;
 

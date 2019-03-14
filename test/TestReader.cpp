@@ -57,11 +57,15 @@ enum class Color {
 
 
 struct Leaf : Referable<Leaf> {
+	static constexpr auto kReferableName = "leaf";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct A : Referable<A> {
 	int value = 0;
+
+	static constexpr auto kReferableName = "a";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.value, "value");
@@ -70,6 +74,9 @@ struct A : Referable<A> {
 
 struct B : Referable<B> {
 	std::string name;
+
+	static constexpr auto kReferableName = "b";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.name, "name");
@@ -79,6 +86,8 @@ struct B : Referable<B> {
 struct C : Referable<C> {
 	BasicRef ref;
 	Array<TypedRef<A, Leaf>> elements;
+
+	static constexpr auto kReferableName = "c";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -91,6 +100,8 @@ struct D : Referable<D> {
 	std::string name;
 	int value = 0;
 
+	static constexpr auto kReferableName = "d";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.name, "name");
@@ -101,6 +112,8 @@ struct D : Referable<D> {
 struct E : Referable<E> {
 	Array<int> values;
 
+	static constexpr auto kReferableName = "e";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.values, "values");
@@ -109,6 +122,8 @@ struct E : Referable<E> {
 
 struct F : Referable<F> {
 	Point point;
+
+	static constexpr auto kReferableName = "f";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -119,6 +134,8 @@ struct F : Referable<F> {
 struct G : Referable<G> {
 	Color color = {};
 
+	static constexpr auto kReferableName = "g";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.color, "color");
@@ -127,6 +144,8 @@ struct G : Referable<G> {
 
 struct U : Referable<U> {
 	RgbColor color;
+
+	static constexpr auto kReferableName = "u";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -143,6 +162,8 @@ struct All : Referable<All> {
 	float f = {};
 	double d = {};
 	std::string s;
+
+	static constexpr auto kReferableName = "all";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -161,6 +182,8 @@ struct Floats : Referable<Floats> {
 	float f = {};
 	double d = {};
 
+	static constexpr auto kReferableName = "floats";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.f, "f");
@@ -173,6 +196,8 @@ struct Opt : Referable<Opt> {
 	Optional<Point> p;
 	Optional<Array<int>> a;
 	Optional<BasicRef> ref;
+
+	static constexpr auto kReferableName = "opt";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -244,7 +269,7 @@ TEST(ReaderTest, ReadObjects1) {
 	Leaf l1, l2;
 	ReferableBase* p = &l2;
 	Registry reg(noasserts);
-	reg.Register<Leaf>("leaf");
+	reg.Register<Leaf>();
 
 	refs.push_back(nullptr);
 	refs.push_back(nullptr);
@@ -295,11 +320,11 @@ TEST(ReaderTest, ReadObjects2) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<Leaf>("leaf");
-	reg.Register<A>("a");
-	reg.Register<B>("b");
-	reg.Register<C>("c");
-	reg.Register<D>("d");
+	reg.Register<Leaf>();
+	reg.Register<A>();
+	reg.Register<B>();
+	reg.Register<C>();
+	reg.Register<D>();
 
 	root = MakeHeader();
 	root[str::kObjects][0] = Json::objectValue;
@@ -415,7 +440,7 @@ TEST(ReaderTest, ReadObjectsWithArray) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<E>("e");
+	reg.Register<E>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "e");
@@ -436,7 +461,7 @@ TEST(ReaderTest, ReadObjectsWithStruct) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<F>("f");
+	reg.Register<F>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "f");
@@ -481,9 +506,9 @@ TEST(ReaderTest, ReadObjectsWithEnum) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<Leaf>("leaf");
-	reg.Register<C>("c");
-	reg.Register<G>("g");
+	reg.Register<Leaf>();
+	reg.Register<C>();
+	reg.Register<G>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "g");
@@ -515,9 +540,9 @@ TEST(ReaderTest, ReadObjectsWithRef) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<G>("a");
-	reg.Register<C>("c");
-	reg.Register<Leaf>("leaf");
+	reg.Register<G>();
+	reg.Register<C>();
+	reg.Register<Leaf>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "c");
@@ -549,7 +574,7 @@ TEST(ReaderTest, ReadAllTypes) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<All>("all");
+	reg.Register<All>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "all");
@@ -622,7 +647,7 @@ TEST(ReaderTest, InfAndNaN) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<Floats>("floats");
+	reg.Register<Floats>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "floats");
@@ -656,7 +681,7 @@ TEST(ReaderTest, Optional) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<Opt>("opt");
+	reg.Register<Opt>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "opt");
@@ -696,7 +721,7 @@ TEST(ReaderTest, UserType) {
 	RefContainer refs;
 	ReferableBase* p = nullptr;
 	Registry reg(noasserts);
-	reg.Register<U>("u");
+	reg.Register<U>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "u");

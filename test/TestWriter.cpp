@@ -26,6 +26,7 @@ struct Leaf;
 
 struct Data {
 	int x = 0;
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.x, "x");
@@ -36,6 +37,8 @@ struct A : Referable<A> {
 	int value = 0;
 	std::string name;
 	Array<BasicRef> refs;
+
+	static constexpr auto kReferableName = "a";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -49,6 +52,8 @@ struct B : Referable<B> {
 	Data data;
 	TypedRef<Leaf> leaf;
 
+	static constexpr auto kReferableName = "b";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.data, "data");
@@ -57,6 +62,8 @@ struct B : Referable<B> {
 };
 
 struct Leaf : Referable<Leaf> {
+	static constexpr auto kReferableName = "leaf";
+
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
@@ -68,6 +75,8 @@ enum class Color {
 
 struct C : Referable<C> {
 	Color color = Color::kRed;
+
+	static constexpr auto kReferableName = "c";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -84,6 +93,8 @@ struct All : Referable<All> {
 	float f = {};
 	double d = {};
 	std::string s;
+
+	static constexpr auto kReferableName = "all";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -102,6 +113,8 @@ struct Floats : Referable<Floats> {
 	float f = {};
 	double d = {};
 
+	static constexpr auto kReferableName = "floats";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.f, "f");
@@ -115,6 +128,8 @@ struct Opt : Referable<Opt> {
 	Optional<Array<int>> a;
 	Optional<BasicRef> ref;
 
+	static constexpr auto kReferableName = "opt";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.i, "i");
@@ -126,6 +141,8 @@ struct Opt : Referable<Opt> {
 
 struct U : Referable<U> {
 	RgbColor color;
+
+	static constexpr auto kReferableName = "u";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -187,7 +204,7 @@ TEST(WriterTest, SingleObject) {
 	h.doctype = "test";
 	h.version = 3412;
 
-	EXPECT_TRUE(reg.Register<Leaf>("leaf"));
+	EXPECT_TRUE(reg.Register<Leaf>());
 	EXPECT_EQ(ErrorCode::kNone, w.Write(h, &leaf, root));
 
 	CheckHeader(root, h);
@@ -212,9 +229,9 @@ TEST(WriterTest, ObjectTree) {
 	B b;
 	Leaf leaf;
 
-	EXPECT_TRUE(reg.Register<A>("a"));
-	EXPECT_TRUE(reg.Register<B>("b"));
-	EXPECT_TRUE(reg.Register<Leaf>("leaf"));
+	EXPECT_TRUE(reg.Register<A>());
+	EXPECT_TRUE(reg.Register<B>());
+	EXPECT_TRUE(reg.Register<Leaf>());
 
 	a1.name = "a1";
 	a1.value = 12;
@@ -331,7 +348,7 @@ TEST(WriterTest, EnumValue) {
 
 	C c;
 
-	reg.Register<C>("c");
+	reg.Register<C>();
 	reg.RegisterEnum<Color>({{Color::kRed, "red"}, {Color::kBlue, "blue"}});
 	c.color = Color::kBlue;
 
@@ -360,7 +377,7 @@ TEST(WriterTest, UnregisteredEnum) {
 	C c;
 	c.color = Color::kGreen;
 
-	reg.Register<C>("c");
+	reg.Register<C>();
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &c, root));
 
 	reg.RegisterEnum<Color>({{Color::kBlue, "blue"}});
@@ -385,10 +402,10 @@ TEST(WriterTest, UnregisteredType) {
 
 	EXPECT_EQ(ErrorCode::kUnregisteredType, Writer(reg, noasserts).Write(h, &a, root));
 
-	reg.Register<A>("a");
+	reg.Register<A>();
 	EXPECT_EQ(ErrorCode::kUnregisteredType, Writer(reg, noasserts).Write(h, &a, root));
 
-	reg.Register<Leaf>("leaf");
+	reg.Register<Leaf>();
 	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &a, root));
 }
 
@@ -400,9 +417,9 @@ TEST(WriterTest, NullReferences) {
 	B b;
 	Leaf leaf;
 
-	reg.Register<A>("a");
-	reg.Register<B>("b");
-	reg.Register<Leaf>("leaf");
+	reg.Register<A>();
+	reg.Register<B>();
+	reg.Register<Leaf>();
 
 	a.refs.push_back(nullptr);
 	EXPECT_EQ(ErrorCode::kNullReference, Writer(reg, noasserts).Write(h, &a, root));
@@ -421,7 +438,7 @@ TEST(WriterTest, AllPrimitives) {
 	Json::Value root;
 	All all;
 
-	reg.Register<All>("all");
+	reg.Register<All>();
 
 	all.b = true;
 	all.i32 = 15;
@@ -460,7 +477,7 @@ TEST(WriterTest, InfAndNaN) {
 	Json::Value root;
 	Floats fs;
 
-	reg.Register<Floats>("floats");
+	reg.Register<Floats>();
 
 	fs.f = std::numeric_limits<float>::max();
 	fs.d = std::numeric_limits<double>::max();
@@ -499,7 +516,7 @@ TEST(WriterTest, Optional) {
 	Json::Value root;
 	Opt opt;
 
-	reg.Register<Opt>("opt");
+	reg.Register<Opt>();
 
 	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &opt, root));
 	EXPECT_TRUE(FirstObjectField(root, "i").isNull());
@@ -525,7 +542,7 @@ TEST(WriterTest, UserType) {
 	Json::Value root;
 	U u;
 
-	reg.Register<U>("u");
+	reg.Register<U>();
 	u.color.r = 255;
 	u.color.g = 128;
 	u.color.b = 0;

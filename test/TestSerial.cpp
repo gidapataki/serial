@@ -18,6 +18,8 @@ struct A : Referable<A> {
 	int value;
 	std::string name;
 
+	static constexpr auto kReferableName = "a";
+
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.value, "value");
@@ -27,6 +29,8 @@ struct A : Referable<A> {
 
 struct B : Referable<B> {
 	Color color = {};
+
+	static constexpr auto kReferableName = "b";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -42,7 +46,7 @@ TEST(SerialTest, Serialize) {
 	Header h;
 	B b;
 
-	reg.Register<B>("b");
+	reg.Register<B>();
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Serialize(&b, h, reg, root));
 	EXPECT_TRUE(root.isInt());
 	EXPECT_EQ(1, root.asInt());
@@ -65,7 +69,7 @@ TEST(SerialTest, DeserializeObjects) {
 	Registry reg;
 	Header h;
 
-	reg.Register<A>("a");
+	reg.Register<A>();
 
 	EXPECT_EQ(ErrorCode::kInvalidDocument, DeserializeObjects(root, reg, refs, p));
 

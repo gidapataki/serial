@@ -7,16 +7,37 @@ using namespace serial;
 namespace {
 
 struct A : Referable<A> {
+	static constexpr auto kReferableName = "a";
+	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
+};
+
+struct A2 : Referable<A2> {
+	static constexpr auto kReferableName = "a";
+	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
+};
+
+struct A0 : Referable<A0> {
+	static constexpr auto kReferableName = nullptr;
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct B : Referable<B> {
+	static constexpr auto kReferableName = "b";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct C : Referable<C> {
+	static constexpr auto kReferableName = "c";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
+
+struct X : Referable<X> {
+	static const char* kReferableName;
+	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
+};
+
+const char* X::kReferableName;
+
 
 enum class E {
 	kOne,
@@ -34,24 +55,27 @@ enum class F {
 TEST(RegistryTest, Register) {
 	Registry reg(noasserts);
 
-	EXPECT_TRUE(reg.Register<A>("A"));
-	EXPECT_FALSE(reg.Register<A>("B"));
-	EXPECT_FALSE(reg.Register<B>("A"));
-	EXPECT_TRUE(reg.Register<B>("B"));
-	EXPECT_FALSE(reg.Register<A>("B"));
-	EXPECT_FALSE(reg.Register<B>("C"));
+	EXPECT_TRUE(reg.Register<A>());
+	EXPECT_FALSE(reg.Register<A2>());
+	EXPECT_TRUE(reg.Register<B>());
+
+	X::kReferableName = "x1";
+	EXPECT_TRUE(reg.Register<X>());
+
+	X::kReferableName = "x2";
+	EXPECT_FALSE(reg.Register<X>());
 }
 
 TEST(RegistryTest, Scoped) {
 	Registry reg1(noasserts);
 	Registry reg2(noasserts);
 
-	EXPECT_TRUE(reg1.Register<A>("A"));
-	EXPECT_TRUE(reg2.Register<A>("B"));
+	EXPECT_TRUE(reg1.Register<A>());
+	EXPECT_TRUE(reg1.Register<B>());
 
-	EXPECT_TRUE(reg1.Register<B>("B"));
-	EXPECT_FALSE(reg2.Register<B>("B"));
-	EXPECT_TRUE(reg2.Register<B>("B2"));
+	EXPECT_TRUE(reg2.Register<A>());
+	EXPECT_FALSE(reg2.Register<A2>());
+	EXPECT_TRUE(reg2.Register<C>());
 }
 
 TEST(RegistryTest, Name) {
@@ -60,23 +84,23 @@ TEST(RegistryTest, Name) {
 	EXPECT_EQ(nullptr, reg.GetName<A>());
 	EXPECT_EQ(nullptr, reg.GetName<B>());
 
-	reg.Register<A>("TypeA");
-	reg.Register<B>("TypeB");
+	reg.Register<A>();
+	reg.Register<B>();
 
-	EXPECT_EQ(std::string{"TypeA"}, reg.GetName<A>());
-	EXPECT_EQ(std::string{"TypeB"}, reg.GetName<B>());
+	EXPECT_EQ(std::string{"a"}, reg.GetName<A>());
+	EXPECT_EQ(std::string{"b"}, reg.GetName<B>());
 	EXPECT_EQ(nullptr, reg.GetName<C>());
 }
 
 TEST(RegistryTest, Create) {
 	Registry reg(noasserts);
 
-	reg.Register<A>("A");
-	reg.Register<B>("B");
+	reg.Register<A>();
+	reg.Register<B>();
 
-	auto a = reg.Create("A");
-	auto b = reg.Create("B");
-	auto c = reg.Create("C");
+	auto a = reg.Create("a");
+	auto b = reg.Create("b");
+	auto c = reg.Create("c");
 
 	EXPECT_NE(nullptr, a);
 	EXPECT_NE(nullptr, b);
@@ -89,7 +113,7 @@ TEST(RegistryTest, Create) {
 TEST(RegistryTest, RegisterNullptr) {
 	Registry reg(noasserts);
 
-	EXPECT_FALSE(reg.Register<A>(nullptr));
+	EXPECT_FALSE(reg.Register<A0>());
 	EXPECT_FALSE(reg.RegisterEnum<E>({{E::kOne, nullptr}, {E::kTwo, "two"}}));
 	EXPECT_TRUE(reg.RegisterEnum<E>({{E::kTwo, "two"}}));
 }

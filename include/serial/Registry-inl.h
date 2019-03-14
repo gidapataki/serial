@@ -25,7 +25,9 @@ UniqueRef Factory<T>::Create() const {
 // Registry
 
 template<typename T>
-bool Registry::Register(const char* name) {
+bool Registry::Register() {
+	const char* name = T::kReferableName;
+
 	if (name == nullptr) {
 		assert(!enable_asserts_ && "Cannot register type with nullptr");
 		return false;
