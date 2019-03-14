@@ -67,7 +67,11 @@ void Writer::VisitValue(const T& value, PrimitiveTag) {
 template<typename T>
 void Writer::VisitValue(const T& value, UserTag) {
 	std::string str;
-	ToString(value, str);
+	bool success = ToString(value, str);
+	if (!success) {
+		SetError(ErrorCode::kUnexpectedValue);
+		return;
+	}
 	Current() = str;
 }
 

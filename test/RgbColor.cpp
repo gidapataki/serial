@@ -27,11 +27,17 @@ bool FromString(const std::string& str, RgbColor& color) {
 	return true;
 }
 
-void ToString(const RgbColor& color, std::string& str) {
+bool ToString(const RgbColor& color, std::string& str) {
+	if (color.invalid) {
+		return false;
+	}
+
 	std::stringstream ss;
 	ss << '#' << std::hex << std::setfill('0') << std::nouppercase;
 	ss << std::setw(2) << int(color.r);
 	ss << std::setw(2) << int(color.g);
 	ss << std::setw(2) << int(color.b);
 	str = ss.str();
+
+	return true;
 }

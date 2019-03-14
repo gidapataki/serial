@@ -8,7 +8,9 @@ struct RgbColor : serial::UserPrimitive {
 	uint8_t r = 0;
 	uint8_t g = 0;
 	uint8_t b = 0;
+
+	bool invalid = false;
 };
 
 bool FromString(const std::string& str, RgbColor& color);
-void ToString(const RgbColor& color, std::string& str);
+bool ToString(const RgbColor& color, std::string& str);

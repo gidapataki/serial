@@ -32,6 +32,7 @@ TEST(ConstantTest, UniqueErrorCodes) {
 		ErrorCode::kInvalidReferenceType,
 		ErrorCode::kUnexpectedHeaderField,
 		ErrorCode::kUnexpectedObjectField,
+		ErrorCode::kUnexpectedValue,
 		ErrorCode::kMissingRootObject,
 		ErrorCode::kMissingHeaderField,
 		ErrorCode::kMissingObjectField,

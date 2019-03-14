@@ -532,4 +532,7 @@ TEST(WriterTest, UserType) {
 	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &u, root));
 	EXPECT_TRUE(FirstObjectField(root, "color").isString());
 	EXPECT_EQ(std::string{"#ff8000"}, FirstObjectField(root, "color").asString());
+
+	u.color.invalid = true;
+	EXPECT_EQ(ErrorCode::kUnexpectedValue, Writer(reg, noasserts).Write(h, &u, root));
 }

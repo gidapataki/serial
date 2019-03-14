@@ -28,6 +28,7 @@ enum class ErrorCode {
 	kInvalidReferenceType,
 	kUnexpectedHeaderField,
 	kUnexpectedObjectField,
+	kUnexpectedValue,
 	kMissingRootObject,
 	kMissingHeaderField,
 	kMissingObjectField,

@@ -17,6 +17,7 @@ const char* ToString(ErrorCode ec) {
 		case ErrorCode::kInvalidReferenceType: return "InvalidReferenceType";
 		case ErrorCode::kUnexpectedHeaderField: return "UnexpectedHeaderField";
 		case ErrorCode::kUnexpectedObjectField: return "UnexpectedObjectField";
+		case ErrorCode::kUnexpectedValue: return "UnexpectedValue";
 		case ErrorCode::kMissingRootObject: return "MissingRootObject";
 		case ErrorCode::kMissingHeaderField: return "MissingHeaderField";
 		case ErrorCode::kMissingObjectField: return "MissingObjectField";
