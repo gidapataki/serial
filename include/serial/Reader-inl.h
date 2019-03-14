@@ -62,6 +62,11 @@ void Reader::VisitValue(T& value, ArrayTag) {
 
 template<typename T>
 void Reader::VisitValue(T& value, OptionalTag) {
+	static_assert(!std::is_same<
+		OptionalTag,
+		typename TypeTag<typename T::value_type>::Type>::value,
+		"Cannot nest Optional types");
+
 	if (Current().isNull()) {
 		value = boost::none;
 	} else {

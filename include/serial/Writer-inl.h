@@ -88,6 +88,11 @@ void Writer::VisitValue(const T& value, ArrayTag) {
 
 template<typename T>
 void Writer::VisitValue(const T& value, OptionalTag) {
+	static_assert(!std::is_same<
+		OptionalTag,
+		typename TypeTag<typename T::value_type>::Type>::value,
+		"Cannot nest Optional types");
+
 	StateSentry sentry(this);
 	if (!value) {
 		Current() = Json::Value(Json::nullValue);
