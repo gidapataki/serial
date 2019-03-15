@@ -100,7 +100,7 @@ void Reader::VisitValue(T& value, UserTag) {
 		return;
 	}
 
-	if (!FromString(Current().asString(), value)) {
+	if (!value.FromString(Current().asString())) {
 		SetError(ErrorCode::kInvalidObjectField);
 		return;
 	}

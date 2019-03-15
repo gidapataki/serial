@@ -4,7 +4,7 @@
 #include <cctype>
 
 
-bool FromString(const std::string& str, RgbColor& color) {
+bool RgbColor::FromString(const std::string& str) {
 	if (str.size() != 7 || str[0] != '#') {
 		return false;
 	}
@@ -20,23 +20,23 @@ bool FromString(const std::string& str, RgbColor& color) {
 	char* end = nullptr;
 	auto color_value = std::strtoul(start + 1, &end, 16);
 
-	color.r = (color_value >> 16) & 0xff;
-	color.g = (color_value >> 8) & 0xff;
-	color.b = color_value & 0xff;
+	this->r = (color_value >> 16) & 0xff;
+	this->g = (color_value >> 8) & 0xff;
+	this->b = color_value & 0xff;
 
 	return true;
 }
 
-bool ToString(const RgbColor& color, std::string& str) {
-	if (color.invalid) {
+bool RgbColor::ToString(std::string& str) const {
+	if (invalid) {
 		return false;
 	}
 
 	std::stringstream ss;
 	ss << '#' << std::hex << std::setfill('0') << std::nouppercase;
-	ss << std::setw(2) << int(color.r);
-	ss << std::setw(2) << int(color.g);
-	ss << std::setw(2) << int(color.b);
+	ss << std::setw(2) << int(r);
+	ss << std::setw(2) << int(g);
+	ss << std::setw(2) << int(b);
 	str = ss.str();
 
 	return true;
