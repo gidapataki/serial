@@ -67,22 +67,21 @@ const char* Registry::GetName() const {
 }
 
 template<typename T>
-bool Registry::RegisterEnum(
-	std::initializer_list<std::pair<T, const char*>> list)
-{
-	static_assert(std::is_enum<T>::value, "Type is not an enum");
+bool Registry::RegisterEnum() {
+	static_assert(std::is_base_of<Enum, T>::value, "Type is derived from Enum");
 	auto id = StaticTypeId<T>::Get();
 	if (enum_maps_.count(id) > 0) {
 		assert(!enable_asserts_ && "Enum is already registered");
 		return false;
 	}
 
+	T enum_value;
 	EnumMapping mapping;
-	static_assert(std::is_same<int, typename std::underlying_type<T>::type>::value,
-		"Underlying type should be int");
+	EnumValueCollector<decltype(enum_value.value)> cc;
+	T::AcceptVisitor(cc);
 
-	for (auto& item : list) {
-		auto value = static_cast<int>(item.first);
+	for (auto& item : cc.mapping) {
+		auto value = item.first;
 		auto name = item.second;
 		if (name == nullptr) {
 			assert(!enable_asserts_ && "Cannot register enum with nullptr");
@@ -107,9 +106,14 @@ bool Registry::RegisterEnum(
 	return true;
 }
 
+
 template<typename T>
 const char* Registry::EnumToString(T value) const {
-	static_assert(std::is_enum<T>::value, "Type is not an enum");
+	static_assert(std::is_base_of<Enum, T>::value, "Invalid type");
+
+	using EnumType = decltype(value.value);
+	static_assert(std::is_enum<EnumType>::value, "Type is not an enum");
+
 	auto id = StaticTypeId<T>::Get();
 	auto it = enum_maps_.find(id);
 	if (it == enum_maps_.end()) {
@@ -118,7 +122,7 @@ const char* Registry::EnumToString(T value) const {
 	}
 
 	auto& mapping = it->second;
-	auto it2 = mapping.names.find(static_cast<int>(value));
+	auto it2 = mapping.names.find(static_cast<int>(value.value));
 	if (it2 == mapping.names.end()) {
 		assert(!enable_asserts_ && "Enum value is not registered");
 		return nullptr;
@@ -129,7 +133,11 @@ const char* Registry::EnumToString(T value) const {
 
 template<typename T>
 bool Registry::EnumFromString(const std::string& name, T& value) const {
-	static_assert(std::is_enum<T>::value, "Type is not an enum");
+	static_assert(std::is_base_of<Enum, T>::value, "Invalid type");
+
+	using EnumType = decltype(value.value);
+	static_assert(std::is_enum<EnumType>::value, "Type is not an enum");
+
 	auto id = StaticTypeId<T>::Get();
 	auto it = enum_maps_.find(id);
 	if (it == enum_maps_.end()) {
@@ -144,8 +152,18 @@ bool Registry::EnumFromString(const std::string& name, T& value) const {
 		return false;
 	}
 
-	value = static_cast<T>(it2->second);
+	value.value = static_cast<EnumType>(it2->second);
 	return true;
+}
+
+
+template<typename T>
+void Registry::EnumValueCollector<T>::VisitValue(T value, const char* name) {
+	static_assert(
+		std::is_same<int, typename std::underlying_type<T>::type>::value,
+		"Underlying type should be int");
+
+	mapping.emplace_back(static_cast<int>(value), name);
 }
 
 } // namespace serial

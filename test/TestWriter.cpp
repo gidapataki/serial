@@ -67,10 +67,22 @@ struct Leaf : Referable<Leaf> {
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
-enum class Color {
-	kRed,
-	kGreen,
-	kBlue,
+struct Color : Enum {
+	enum Value : int {
+		kRed,
+		kGreen,
+		kBlue,
+	} value = {};
+
+	Color() = default;
+	Color(Value v) : value(v) {}
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		v.VisitValue(kRed, "red");
+		v.VisitValue(kBlue, "blue");
+		// Note: green is not registered
+	}
 };
 
 struct C : Referable<C> {
@@ -349,7 +361,7 @@ TEST(WriterTest, EnumValue) {
 	C c;
 
 	reg.Register<C>();
-	reg.RegisterEnum<Color>({{Color::kRed, "red"}, {Color::kBlue, "blue"}});
+	reg.RegisterEnum<Color>();
 	c.color = Color::kBlue;
 
 	auto ec = w.Write(h, &c, root);
@@ -375,14 +387,14 @@ TEST(WriterTest, UnregisteredEnum) {
 	Json::Value root;
 
 	C c;
-	c.color = Color::kGreen;
+	c.color.value = Color::kGreen;
 
 	reg.Register<C>();
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &c, root));
 
-	reg.RegisterEnum<Color>({{Color::kBlue, "blue"}});
-	EXPECT_EQ(Color::kGreen, c.color);
-	EXPECT_EQ(nullptr, reg.EnumToString(Color::kGreen));
+	reg.RegisterEnum<Color>();
+	EXPECT_EQ(Color::kGreen, c.color.value);
+	EXPECT_EQ(nullptr, reg.EnumToString(Color{Color::kGreen}));
 
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &c, root));
 

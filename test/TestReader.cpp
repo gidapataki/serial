@@ -49,10 +49,19 @@ struct Point {
 	}
 };
 
-enum class Color {
-	kRed,
-	kGreen,
-	kBlue,
+struct Color : Enum {
+	enum : int {
+		kRed,
+		kGreen,
+		kBlue,
+	} value = {};
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		v.VisitValue(kRed, "red");
+		v.VisitValue(kBlue, "blue");
+		// Note: green is not registered
+	}
 };
 
 
@@ -520,7 +529,7 @@ TEST(ReaderTest, ReadObjectsWithEnum) {
 	root[str::kObjects][0][str::kObjectFields]["color"] = "green";
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Reader(root).ReadObjects(reg, refs, p));
 
-	reg.RegisterEnum<Color>({{Color::kRed, "red"}, {Color::kBlue, "blue"}});
+	reg.RegisterEnum<Color>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "g");

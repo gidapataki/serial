@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapp
 
 add_subdirectory(lib/jsoncpp)
 
+
 # Serial
 
 file(GLOB serial_srcs
@@ -26,7 +27,7 @@ target_link_libraries(serial
     PUBLIC jsoncpp
 )
 
-target_include_directories(serial PUBLIC include)
+target_include_directories(serial PUBLIC include lib/boost/include)
 target_include_directories(serial PRIVATE src)
 
 # Tests
@@ -49,6 +50,7 @@ target_include_directories(test-serial
 
 
 add_executable(example
+    # examples/example.cpp
     examples/small-example.cpp
 )
 
@@ -56,3 +58,6 @@ target_link_libraries(example
     PUBLIC serial jsoncpp
 )
 
+add_executable(sandbox
+    sandbox.cpp
+)

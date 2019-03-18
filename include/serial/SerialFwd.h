@@ -29,5 +29,6 @@ struct noasserts_t {};
 extern noasserts_t noasserts;
 
 struct UserPrimitive {};
+struct Enum {};
 
 } // namespace serial

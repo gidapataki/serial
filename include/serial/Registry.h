@@ -32,11 +32,17 @@ public:
 	template<typename T> const char* GetName() const;
 	UniqueRef Create(const std::string& name) const;
 
-	template<typename T> bool RegisterEnum(std::initializer_list<std::pair<T, const char*>> list);
+	template<typename T> bool RegisterEnum();
 	template<typename T> bool EnumFromString(const std::string& name, T& value) const;
 	template<typename T> const char* EnumToString(T value) const;
 
 private:
+	template<typename T>
+	struct EnumValueCollector {
+		void VisitValue(T value, const char* name);
+		std::vector<std::pair<int, const char*>> mapping;
+	};
+
 	struct EnumMapping {
 		std::unordered_map<int, const char*> names;
 		std::unordered_map<std::string, int> values;

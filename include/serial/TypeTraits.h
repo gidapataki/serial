@@ -18,9 +18,10 @@ struct UserTag {};
 
 template<typename T>
 struct TypeTag {
-	using Type = typename std::conditional<
-		std::is_enum<T>::value,
-		EnumTag,
+	using Type =
+		typename std::conditional<
+			std::is_base_of<Enum, T>::value,
+			EnumTag,
 		typename std::conditional<
 			std::is_base_of<UserPrimitive, T>::value,
 			UserTag,

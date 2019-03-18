@@ -1,0 +1,5 @@
+NOTES
+
+- inf and nan are saved as string
+- optional<optional<T>> is prohibited
+- user type FromString() . ToString()

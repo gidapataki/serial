@@ -8,10 +8,20 @@ using namespace serial;
 
 namespace {
 
-enum class Color {
-	kRed,
-	kOrange,
-	kYellow,
+struct Color : Enum {
+	enum Value : int {
+		kRed,
+		kOrange,
+		kYellow,
+	} value;
+
+	Color() = default;
+	Color(Value v) : value(v) {}
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		v.VisitValue(kRed, "red");
+	}
 };
 
 struct A : Referable<A> {
@@ -51,7 +61,7 @@ TEST(SerialTest, Serialize) {
 	EXPECT_TRUE(root.isInt());
 	EXPECT_EQ(1, root.asInt());
 
-	reg.RegisterEnum<Color>({{Color::kRed, "red"}});
+	reg.RegisterEnum<Color>();
 	EXPECT_EQ(ErrorCode::kNone, Serialize(&b, h, reg, root));
 }
 

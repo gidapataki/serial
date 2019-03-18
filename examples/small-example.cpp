@@ -2,9 +2,23 @@
 #include <iostream>
 
 
-enum class Winding {
-	kClockwise,
-	kCounterClockwise,
+// enum class Winding {
+// 	kClockwise,
+// 	kCounterClockwise,
+// };
+
+
+struct Winding : serial::Enum {
+	enum class Value {
+		kClockwise,
+		kCounterClockwise,
+	} value = {};
+
+	template<typename Visitor>
+	static void AcceptVisitor(Visitor& v) {
+		v.VisitValue(Value::kClockwise, "cw");
+		v.VisitValue(Value::kCounterClockwise, "ccw");
+	}
 };
 
 struct Point {
@@ -23,6 +37,8 @@ struct Circle : serial::Referable<Circle> {
 	Point center;
 	Winding winding = {};
 
+	static constexpr auto kReferableName = "circle";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.radius, "radius");
@@ -34,6 +50,8 @@ struct Circle : serial::Referable<Circle> {
 struct Group : serial::Referable<Group> {
 	serial::Array<serial::TypedRef<Circle, Group>> elements;
 	serial::Optional<std::string> name;
+
+	static constexpr auto kReferableName = "group";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -59,7 +77,7 @@ void Example() {
 	// Model
 	Circle c1;
 	c1.radius = 121;
-	c1.winding = Winding::kCounterClockwise;
+	c1.winding.value = Winding::Value::kCounterClockwise;
 	c1.center.x = 15;
 	c1.center.y = -32;
 
@@ -73,13 +91,14 @@ void Example() {
 
 	// Setup registry
 	serial::Registry reg;
-	reg.Register<Circle>("circle");
-	reg.Register<Group>("group");
+	reg.Register<Circle>();
+	reg.Register<Group>();
+	reg.RegisterEnum<Winding>();
 
-	reg.RegisterEnum<Winding>({
-		{Winding::kClockwise, "cw"},
-		{Winding::kCounterClockwise, "ccw"},
-	});
+	// reg.RegisterEnum<Winding>({
+	// 	{Winding::kClockwise, "cw"},
+	// 	{Winding::kCounterClockwise, "ccw"},
+	// });
 
 
 	// Serialize
@@ -89,7 +108,6 @@ void Example() {
 
 
 	// Deserialize
-
 	serial::RefContainer refs;
 	Group* group = nullptr;
 	auto ec2 = serial::DeserializeObjects(json_value, reg, refs, group);

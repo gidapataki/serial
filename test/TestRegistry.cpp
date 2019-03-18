@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "serial/Registry.h"
 #include "serial/Referable.h"
+#include <map>
 
 using namespace serial;
 
@@ -38,17 +39,96 @@ struct X : Referable<X> {
 
 const char* X::kReferableName;
 
-
-enum class E {
+enum class Index {
 	kOne,
 	kTwo,
-};
-
-enum class F {
 	kRed,
+	kRed2,
 	kGreen,
 	kBlue,
 };
+
+std::map<Index, const char*> enum_name;
+std::map<Index, bool> enum_enabled;
+
+void Reset(Index i) {
+	enum_name[i] = nullptr;
+	enum_enabled[i] = false;
+}
+
+void Enable(Index i, const char* name) {
+	enum_enabled[i] = true;
+	enum_name[i] = name;
+}
+
+bool IsEnabled(Index i) {
+	return enum_enabled[i];
+}
+
+const char* Name(Index i) {
+	return enum_name[i];
+}
+
+struct E : Enum {
+	enum Value : int {
+		kOne,
+		kTwo,
+	} value = {};
+
+	E() = default;
+	E(Value v) : value(v) {}
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		if (IsEnabled(Index::kOne)) { v.VisitValue(kOne, Name(Index::kOne)); }
+		if (IsEnabled(Index::kTwo)) { v.VisitValue(kTwo, Name(Index::kTwo)); }
+	}
+
+	static void Reset() {
+		::Reset(Index::kOne);
+		::Reset(Index::kTwo);
+	}
+};
+
+struct F : Enum {
+	enum SomeOtherName : int {
+		kRed,
+		kGreen,
+		kBlue,
+	} value = {};
+
+	F() = default;
+	F(SomeOtherName v) : value(v) {}
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		if (IsEnabled(Index::kRed)) { v.VisitValue(kRed, Name(Index::kRed)); }
+		if (IsEnabled(Index::kRed2)) { v.VisitValue(kRed, Name(Index::kRed2)); }
+		if (IsEnabled(Index::kGreen)) { v.VisitValue(kGreen, Name(Index::kGreen)); }
+		if (IsEnabled(Index::kBlue)) { v.VisitValue(kBlue, Name(Index::kBlue)); }
+	}
+
+	static void Reset() {
+		::Reset(Index::kRed);
+		::Reset(Index::kRed2);
+		::Reset(Index::kGreen);
+		::Reset(Index::kBlue);
+	}
+};
+
+struct G : Enum {
+	E::Value value = {};
+
+	G() = default;
+	G(E::Value v) : value(v) {}
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		v.VisitValue(E::Value::kOne, "one");
+		v.VisitValue(E::Value::kTwo, "two");
+	}
+};
+
 
 } // namespace
 
@@ -114,51 +194,86 @@ TEST(RegistryTest, RegisterNullptr) {
 	Registry reg(noasserts);
 
 	EXPECT_FALSE(reg.Register<A0>());
-	EXPECT_FALSE(reg.RegisterEnum<E>({{E::kOne, nullptr}, {E::kTwo, "two"}}));
-	EXPECT_TRUE(reg.RegisterEnum<E>({{E::kTwo, "two"}}));
+
+	E::Reset();
+	Enable(Index::kOne, nullptr);
+	Enable(Index::kTwo, "two");
+	EXPECT_FALSE(reg.RegisterEnum<E>());
+
+	E::Reset();
+	Enable(Index::kTwo, "two");
+	EXPECT_TRUE(reg.RegisterEnum<E>());
 }
 
 TEST(RegistryTest, RegisterEnum) {
 	Registry reg(noasserts);
 
-	EXPECT_TRUE(reg.RegisterEnum<E>({}));
-	EXPECT_FALSE(reg.RegisterEnum<E>({}));
+	E::Reset();
+	EXPECT_TRUE(reg.RegisterEnum<E>());
+	EXPECT_FALSE(reg.RegisterEnum<E>());
 
-	EXPECT_FALSE(reg.RegisterEnum<F>({{F::kRed, "red"}, {F::kRed, "green"}}));
-	EXPECT_FALSE(reg.RegisterEnum<F>({{F::kRed, "red"}, {F::kGreen, "red"}}));
-	EXPECT_TRUE(reg.RegisterEnum<F>({{F::kRed, "red"}, {F::kGreen, "green"}}));
-	EXPECT_FALSE(reg.RegisterEnum<F>({{F::kBlue, "blue"}}));
+	F::Reset();
+	Enable(Index::kRed, "red");
+	Enable(Index::kRed2, "not_red");
+	EXPECT_FALSE(reg.RegisterEnum<F>());
+
+	F::Reset();
+	Enable(Index::kRed, "red");
+	Enable(Index::kGreen, "red");
+	EXPECT_FALSE(reg.RegisterEnum<F>());
+
+	F::Reset();
+	Enable(Index::kRed, "red");
+	Enable(Index::kGreen, "green");
+	EXPECT_TRUE(reg.RegisterEnum<F>());
+
+	F::Reset();
+	Enable(Index::kBlue, "blue");
+	EXPECT_FALSE(reg.RegisterEnum<F>());
 }
 
 TEST(RegistryTest, EnumToString) {
 	Registry reg(noasserts);
 
-	reg.RegisterEnum<F>({{F::kRed, "red"}, {F::kBlue, "blue"}});
+	E::Reset();
+	F::Reset();
+	Enable(Index::kRed, "red");
+	Enable(Index::kBlue, "blue");
+	reg.RegisterEnum<F>();
 
-	EXPECT_EQ(nullptr, reg.EnumToString(E::kOne));
-	EXPECT_EQ(nullptr, reg.EnumToString(E::kTwo));
-	EXPECT_EQ(nullptr, reg.EnumToString(F::kGreen));
+	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kOne}));
+	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kTwo}));
+	EXPECT_EQ(nullptr, reg.EnumToString(F{F::kGreen}));
 
-	EXPECT_EQ(std::string{"red"}, reg.EnumToString(F::kRed));
-	EXPECT_EQ(std::string{"blue"}, reg.EnumToString(F::kBlue));
+	EXPECT_EQ(std::string{"red"}, reg.EnumToString(F{F::kRed}));
+	EXPECT_EQ(std::string{"blue"}, reg.EnumToString(F{F::kBlue}));
 
-	EXPECT_TRUE(reg.RegisterEnum<E>({{E::kOne, "one"}}));
-	EXPECT_EQ(std::string{"one"}, reg.EnumToString(E::kOne));
-	EXPECT_EQ(nullptr, reg.EnumToString(E::kTwo));
+	E::Reset();
+	Enable(Index::kOne, "one");
+
+	EXPECT_TRUE(reg.RegisterEnum<E>());
+	EXPECT_EQ(std::string{"one"}, reg.EnumToString(E{E::kOne}));
+	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kTwo}));
 }
 
 TEST(RegistryTest, EnumIsScoped) {
 	Registry reg1(noasserts);
 	Registry reg2(noasserts);
 
-	reg1.RegisterEnum<E>({{E::kOne, "1"}});
-	reg2.RegisterEnum<E>({{E::kOne, "one"}, {E::kTwo, "two"}});
+	E::Reset();
+	Enable(Index::kOne, "1");
+	reg1.RegisterEnum<E>();
 
-	EXPECT_EQ(std::string{"1"}, reg1.EnumToString(E::kOne));
-	EXPECT_EQ(nullptr, reg1.EnumToString(E::kTwo));
+	E::Reset();
+	Enable(Index::kOne, "one");
+	Enable(Index::kTwo, "two");
+	reg2.RegisterEnum<E>();
 
-	EXPECT_EQ(std::string{"one"}, reg2.EnumToString(E::kOne));
-	EXPECT_EQ(std::string{"two"}, reg2.EnumToString(E::kTwo));
+	EXPECT_EQ(std::string{"1"}, reg1.EnumToString(E{E::kOne}));
+	EXPECT_EQ(nullptr, reg1.EnumToString(E{E::kTwo}));
+
+	EXPECT_EQ(std::string{"one"}, reg2.EnumToString(E{E::kOne}));
+	EXPECT_EQ(std::string{"two"}, reg2.EnumToString(E{E::kTwo}));
 }
 
 TEST(RegistryTest, EnumFromString) {
@@ -166,31 +281,52 @@ TEST(RegistryTest, EnumFromString) {
 
 	F f_value = F::kGreen;
 	EXPECT_FALSE(reg.EnumFromString("first", f_value));
-	EXPECT_EQ(F::kGreen, f_value);
+	EXPECT_EQ(F::kGreen, f_value.value);
 
-	reg.RegisterEnum<E>({{E::kOne, "1"}, {E::kTwo, "first"}});
-	reg.RegisterEnum<F>({{F::kRed, "first"}, {F::kBlue, "blue"}});
+	E::Reset();
+	F::Reset();
 
+	Enable(Index::kOne, "1");
+	Enable(Index::kTwo, "first");
+	Enable(Index::kRed, "first");
+	Enable(Index::kBlue, "blue");
+
+	reg.RegisterEnum<E>();
+	reg.RegisterEnum<F>();
 
 	EXPECT_TRUE(reg.EnumFromString("first", f_value));
-	EXPECT_EQ(F::kRed, f_value);
+	EXPECT_EQ(F::kRed, f_value.value);
 
 	f_value = F::kBlue;
 	EXPECT_FALSE(reg.EnumFromString("???", f_value));
-	EXPECT_EQ(F::kBlue, f_value);
+	EXPECT_EQ(F::kBlue, f_value.value);
 
 	f_value = F::kGreen;
 	EXPECT_FALSE(reg.EnumFromString("???", f_value));
-	EXPECT_EQ(F::kGreen, f_value);
+	EXPECT_EQ(F::kGreen, f_value.value);
 
 	EXPECT_TRUE(reg.EnumFromString("blue", f_value));
-	EXPECT_EQ(F::kBlue, f_value);
+	EXPECT_EQ(F::kBlue, f_value.value);
 
 	E e_value = E::kTwo;
 	EXPECT_TRUE(reg.EnumFromString("1", e_value));
-	EXPECT_EQ(E::kOne, e_value);
+	EXPECT_EQ(E::kOne, e_value.value);
 
 	EXPECT_TRUE(reg.EnumFromString("first", e_value));
-	EXPECT_EQ(E::kTwo, e_value);
+	EXPECT_EQ(E::kTwo, e_value.value);
 }
 
+TEST(RegistryTest, SameEnumType) {
+	Registry reg(noasserts);
+
+	E::Reset();
+	Enable(Index::kTwo, "2");
+	EXPECT_TRUE(reg.RegisterEnum<E>());
+	EXPECT_TRUE(reg.RegisterEnum<G>());
+
+	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kOne}));
+	EXPECT_EQ(std::string{"one"}, reg.EnumToString(G{E::kOne}));
+
+	EXPECT_EQ(std::string{"2"}, reg.EnumToString(E{E::kTwo}));
+	EXPECT_EQ(std::string{"two"}, reg.EnumToString(G{E::kTwo}));
+}

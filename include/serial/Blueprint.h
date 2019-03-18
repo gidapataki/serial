@@ -62,7 +62,6 @@ class Blueprint {
 		Blueprint* parent_ = nullptr;
 	};
 
-
 public:
 	template<typename T>
 	void Add() {
@@ -178,7 +177,9 @@ public:
 
 	template<typename T>
 	void VisitValue(const T& value, UserTag) {
-		DeclareType("user");
+		std::stringstream ss;
+		ss << "user<" << T::kPrimitiveName << ">";
+		DeclareType(ss.str());
 	}
 
 private:

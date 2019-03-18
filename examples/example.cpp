@@ -36,6 +36,8 @@ struct Circle : Referable<Circle> {
 	Point center;
 	Winding winding = {};
 
+	static constexpr auto kReferableName = "circle";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.radius, "radius");
@@ -49,6 +51,8 @@ struct Segment : Referable<Segment> {
 	Point start;
 	Point end;
 
+	static constexpr auto kReferableName = "segment";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.start, "start");
@@ -60,16 +64,21 @@ struct Segment : Referable<Segment> {
 struct PolyLine : Referable<PolyLine> {
 	Array<Point> points;
 
+	static constexpr auto kReferableName = "poly";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.points, "points");
 	}
 };
 
+struct Link;
 
 struct Group : Referable<Group> {
-	Array<BasicRef> elements;
+	Array<TypedRef<PolyLine, Segment, Circle, Group, Link>> elements;
 	std::string name;
+
+	static constexpr auto kReferableName = "group";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -82,6 +91,8 @@ struct Group : Referable<Group> {
 struct Link : Referable<Link> {
 	TypedRef<Circle, Segment> circ;
 
+	static constexpr auto kReferableName = "link";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.circ, "circ");
@@ -91,12 +102,12 @@ struct Link : Referable<Link> {
 
 void TestSerialize() {
 	Registry reg;
-	reg.Register<Group>("group");
-	reg.Register<Circle>("circle");
-	reg.Register<Segment>("segment");
+	reg.Register<Group>();
+	reg.Register<Circle>();
+	reg.Register<Segment>();
 
-	reg.Register<PolyLine>("polyline");
-	reg.Register<Link>("link");
+	reg.Register<PolyLine>();
+	reg.Register<Link>();
 
 	reg.RegisterEnum<Winding>({
 		{Winding::kClockwise, "cw"},
@@ -200,6 +211,8 @@ struct All : Referable<All> {
 	std::string s = "hi mom";
 	Optional<int> o;
 
+	static constexpr auto kReferableName = "all";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.b, "b");
@@ -220,7 +233,7 @@ void TestPrimitives() {
 	Json::Value root;
 	ErrorCode ec;
 
-	reg.Register<All>("all");
+	reg.Register<All>();
 
 	all.d = std::numeric_limits<double>::lowest();
 	all.o = 15;
@@ -378,8 +391,8 @@ void Stress() {
 	ErrorCode ec;
 	Header h;
 
-	reg.Register<Group>("group");
-	reg.Register<PolyLine>("poly");
+	reg.Register<Group>();
+	reg.Register<PolyLine>();
 
 	Group g;
 	std::vector<PolyLine> ps;
@@ -402,23 +415,47 @@ void Stress() {
 }
 
 
+struct Sol {
+	std::size_t len = 0;
+
+	bool FromString(const std::string& str) {
+		len = str.size();
+		return true;
+	}
+
+	bool ToString(std::string& str) {
+		std::string s;
+		for (auto i = len; len-- > 0;) {
+			s += '.';
+		}
+		str = s;
+		return true;
+	}
+
+};
+
+
+struct XEnum {
+	enum Value {
+		kOne,
+		kTwo
+	} value;
+
+
+};
+
+
+enum class YEnum {
+	kOne,
+	kTwo
+};
+
+
+template<typename T>
+void func() {
+
+}
 
 int main() {
-	// Stress();
-	// DumpStructure();
-	// TestPrimitives();
-	// TestRange();
-	TestSerialize();
-	// Segment s;
-	// Circle c;
-	// PolyLine p;
-
-	// TypedRef<Circle, Segment> ref1, ref2;
-
-	// ref1 = nullptr;
-	// ref2 = &c;
-	// ref1 = ref2;
-	// ref1.Get();
-	// ref1.Get<Segment>();
-	// std::cout << ref1.Set(nullptr) << std::endl;
 }
+
