@@ -3,13 +3,13 @@
 
 namespace serial {
 
-// TypedRefBase
+// RefBase
 
-ReferableBase* TypedRefBase::Get() {
+ReferableBase* RefBase::Get() {
 	return ref_;
 }
 
-const ReferableBase* TypedRefBase::Get() const {
+const ReferableBase* RefBase::Get() const {
 	return ref_;
 }
 

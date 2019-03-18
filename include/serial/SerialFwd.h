@@ -13,14 +13,13 @@ class Writer;
 class ReferableBase;
 class FactoryBase;
 class Registry;
-class TypedRefBase;
+class RefBase;
 
 template<typename T> class Referable;
 template<typename T> class Factory;
 template<typename T> using Array = std::vector<T>;
 template<typename T> using Optional = boost::optional<T>;
-template<typename... Ts> class TypedRef;
-template<typename... Ts> using Ref = TypedRef<Ts...>;
+template<typename... Ts> class Ref;
 
 using UniqueRef = std::unique_ptr<ReferableBase>;
 using RefContainer = std::vector<UniqueRef>;

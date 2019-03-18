@@ -75,7 +75,7 @@ private:
 
 	RefId root_id_ = {};
 	std::unordered_map<RefId, UniqueRef> objects_;
-	std::vector<std::pair<TypedRefBase*, RefId>> unresolved_refs_;
+	std::vector<std::pair<RefBase*, RefId>> unresolved_refs_;
 };
 
 } // namespace serial
