@@ -150,11 +150,6 @@ public:
 	}
 
 	template<typename T>
-	void VisitValue(const T& value, BasicRefTag) {
-		DeclareType("ref");
-	}
-
-	template<typename T>
 	void VisitValue(const T& value, TypedRefTag) {
 		using R = typename detail::ReferableNamesOf<T>::type;
 		std::vector<std::string> vec;

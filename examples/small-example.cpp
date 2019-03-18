@@ -104,7 +104,7 @@ void Example() {
 	// Serialize
 	Json::Value json_value;
 	serial::Header header{"example", 1};
-	auto ec = serial::Serialize(&g2, header, reg, json_value);
+	auto ec = serial::Serialize(g2, header, reg, json_value);
 
 
 	// Deserialize

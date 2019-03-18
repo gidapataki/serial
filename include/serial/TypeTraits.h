@@ -12,7 +12,6 @@ struct ArrayTag {};
 struct OptionalTag {};
 struct ObjectTag {};
 struct EnumTag {};
-struct BasicRefTag {};
 struct TypedRefTag {};
 struct UserTag {};
 
@@ -37,11 +36,6 @@ struct TypeTag<Array<T>> {
 template<typename T>
 struct TypeTag<Optional<T>> {
 	using Type = OptionalTag;
-};
-
-template<>
-struct TypeTag<BasicRef> {
-	using Type = BasicRefTag;
 };
 
 template<typename... Ts>

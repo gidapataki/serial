@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include "serial/BasicRef.h"
 #include "serial/TypedRef.h"
 #include "serial/Referable.h"
 #include "serial/Writer.h"
@@ -23,6 +22,9 @@ struct A;
 struct B;
 struct C;
 struct Leaf;
+struct Opt;
+
+using AnyRef = TypedRef<A, B, C, Leaf, Opt>;
 
 struct Data {
 	int x = 0;
@@ -36,7 +38,7 @@ struct Data {
 struct A : Referable<A> {
 	int value = 0;
 	std::string name;
-	Array<BasicRef> refs;
+	Array<AnyRef> refs;
 
 	static constexpr auto kReferableName = "a";
 
@@ -138,7 +140,7 @@ struct Opt : Referable<Opt> {
 	Optional<int> i;
 	Optional<Data> d;
 	Optional<Array<int>> a;
-	Optional<BasicRef> ref;
+	Optional<AnyRef> ref;
 
 	static constexpr auto kReferableName = "opt";
 

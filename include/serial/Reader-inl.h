@@ -127,18 +127,7 @@ void Reader::VisitValue(T& value, TypedRefTag) {
 	}
 
 	auto refid = Current().asString();
-	unresolved_typed_refs_.emplace_back(&value, std::move(refid));
-}
-
-template<typename T>
-void Reader::VisitValue(T& value, BasicRefTag) {
-	if (!Current().isString()) {
-		SetError(ErrorCode::kInvalidObjectField);
-		return;
-	}
-
-	auto refid = Current().asString();
-	unresolved_basic_refs_.emplace_back(&value, std::move(refid));
+	unresolved_refs_.emplace_back(&value, std::move(refid));
 }
 
 } // namespace serial

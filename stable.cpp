@@ -17,8 +17,8 @@ void Dump(const Json::Value& root) {
 
 struct A : Referable<A> {
 	int index = -1;
-	Optional<BasicRef> left;
-	Optional<BasicRef> right;
+	Optional<TypedRef<A>> left;
+	Optional<TypedRef<A>> right;
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {

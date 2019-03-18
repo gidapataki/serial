@@ -2,7 +2,6 @@
 #include "serial/ReferableBase.h"
 #include "serial/Registry.h"
 #include "serial/TypedRef.h"
-#include "serial/BasicRef.h"
 #include <limits>
 
 namespace serial {
@@ -152,19 +151,7 @@ void Reader::ReadObjectInternal(const Registry& reg) {
 }
 
 void Reader::ResolveRefs() {
-	for (auto& instance : unresolved_basic_refs_) {
-		auto refptr = instance.first;
-		auto refid = instance.second;
-		auto it = objects_.find(refid);
-		if (it == objects_.end()) {
-			SetError(ErrorCode::kUnresolvableReference);
-			return;
-		}
-
-		*refptr = it->second.get();
-	}
-
-	for (auto& instance : unresolved_typed_refs_) {
+	for (auto& instance : unresolved_refs_) {
 		auto refptr = instance.first;
 		auto refid = instance.second;
 		auto it = objects_.find(refid);

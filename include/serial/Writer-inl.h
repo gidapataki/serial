@@ -49,17 +49,6 @@ void Writer::VisitValue(const T& value, TypedRefTag) {
 }
 
 template<typename T>
-void Writer::VisitValue(const T& value, BasicRefTag) {
-	if (!value) {
-		SetError(ErrorCode::kNullReference);
-		assert(!enable_asserts_ && "Null reference");
-		return;
-	}
-	auto refid = AddRef(value.Get());
-	Current() = Json::Value(refid);
-}
-
-template<typename T>
 void Writer::VisitValue(const T& value, PrimitiveTag) {
 	Current() = Json::Value(value);
 }

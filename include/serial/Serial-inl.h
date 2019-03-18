@@ -5,52 +5,49 @@
 namespace serial {
 
 template<typename T>
+ErrorCode Serialize(
+	T& obj,
+	const Header& header,
+	const Registry& reg,
+	Json::Value& value)
+{
+	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
+	return Writer(reg).Write(header, &obj, value);
+}
+
+template<typename T>
 ErrorCode DeserializeObjects(
 	const Json::Value& root,
 	const Registry& reg,
 	RefContainer& refs,
 	T*& root_ref)
 {
-	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
+	static_assert(
+		std::is_base_of<ReferableBase, T>::value &&
+		!std::is_same<ReferableBase, T>::value, "Invalid type");
 
 	RefContainer result;
-	BasicRef result_ref;
+	ReferableBase* result_ref = nullptr;
 
-	auto ec = DeserializeObjects(root, reg, result, result_ref);
+	Header h;
+	Reader reader(root);
+	auto ec = reader.ReadHeader(h);
 	if (ec != ErrorCode::kNone) {
 		return ec;
 	}
 
-	if (!std::is_same<ReferableBase, T>::value && !result_ref.Is<T>()) {
-		return ErrorCode::kInvalidRootType;
-	}
-
-	root_ref = static_cast<T*>(result_ref.Get());
-	std::swap(result, refs);
-
-	return ErrorCode::kNone;
-}
-
-template<typename... Ts>
-ErrorCode DeserializeObjects(
-	const Json::Value& root,
-	const Registry& reg,
-	RefContainer& refs,
-	TypedRef<Ts...>& root_ref)
-{
-	RefContainer result;
-	BasicRef result_ref;
-
-	auto ec = DeserializeObjects(root, reg, result, result_ref);
+	ec = reader.ReadObjects(reg, result, result_ref);
 	if (ec != ErrorCode::kNone) {
 		return ec;
 	}
 
-	if (!root_ref.Set(result_ref.Get())) {
+	if (result_ref->GetTypeId() != StaticTypeId<T>::Get()) {
 		return ErrorCode::kInvalidRootType;
 	}
 
+	root_ref = static_cast<T*>(result_ref);
 	std::swap(result, refs);
+
 	return ErrorCode::kNone;
 }
 

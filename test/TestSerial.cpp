@@ -1,5 +1,4 @@
 #include "gtest/gtest.h"
-#include "serial/BasicRef.h"
 #include "serial/Referable.h"
 #include "serial/Serial.h"
 
@@ -57,12 +56,12 @@ TEST(SerialTest, Serialize) {
 	B b;
 
 	reg.Register<B>();
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Serialize(&b, h, reg, root));
+	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Serialize(b, h, reg, root));
 	EXPECT_TRUE(root.isInt());
 	EXPECT_EQ(1, root.asInt());
 
 	reg.RegisterEnum<Color>();
-	EXPECT_EQ(ErrorCode::kNone, Serialize(&b, h, reg, root));
+	EXPECT_EQ(ErrorCode::kNone, Serialize(b, h, reg, root));
 }
 
 TEST(SerialTest, DeserializeHeader) {
@@ -74,14 +73,15 @@ TEST(SerialTest, DeserializeHeader) {
 
 TEST(SerialTest, DeserializeObjects) {
 	Json::Value root;
-	BasicRef p;
 	RefContainer refs;
 	Registry reg;
 	Header h;
+	A* a_ptr = nullptr;
+	B* b_ptr = nullptr;
 
 	reg.Register<A>();
 
-	EXPECT_EQ(ErrorCode::kInvalidDocument, DeserializeObjects(root, reg, refs, p));
+	EXPECT_EQ(ErrorCode::kInvalidDocument, DeserializeObjects(root, reg, refs, a_ptr));
 
 	root = Json::objectValue;
 	root[str::kDocType] = "";
@@ -96,19 +96,10 @@ TEST(SerialTest, DeserializeObjects) {
 
 	refs.push_back(nullptr);
 	refs.push_back(nullptr);
-	EXPECT_EQ(ErrorCode::kMissingObjectField, DeserializeObjects(root, reg, refs, p));
+	EXPECT_EQ(ErrorCode::kMissingObjectField, DeserializeObjects(root, reg, refs, a_ptr));
 	EXPECT_EQ(2, refs.size());
 
 	root[str::kObjects][0][str::kObjectFields]["value"] = 17;
-	EXPECT_EQ(ErrorCode::kNone, DeserializeObjects(root, reg, refs, p));
-	EXPECT_EQ(1, refs.size());
-	EXPECT_EQ(refs[0].get(), p.Get());
-
-	A* a_ptr = nullptr;
-	B* b_ptr = nullptr;
-	TypedRef<A> a_ref;
-	TypedRef<B> b_ref;
-
 	EXPECT_EQ(ErrorCode::kNone, DeserializeObjects(root, reg, refs, a_ptr));
 	EXPECT_EQ(1, refs.size());
 	EXPECT_EQ(refs[0].get(), a_ptr);
@@ -117,15 +108,6 @@ TEST(SerialTest, DeserializeObjects) {
 	EXPECT_EQ(1, refs.size());
 	EXPECT_EQ(refs[0].get(), a_ptr);
 
-	EXPECT_EQ(ErrorCode::kNone, DeserializeObjects(root, reg, refs, a_ref));
-	EXPECT_EQ(1, refs.size());
-	EXPECT_EQ(refs[0].get(), a_ref.Get());
-
-	refs.push_back(nullptr);
-	EXPECT_EQ(ErrorCode::kInvalidRootType, DeserializeObjects(root, reg, refs, b_ref));
-	EXPECT_EQ(2, refs.size());
-
 	root[str::kRootId] = "ref_2";
-	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ref));
 	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ptr));
 }

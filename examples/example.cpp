@@ -246,7 +246,7 @@ void TestPrimitives() {
 
 // return;
 	RefContainer refs;
-	BasicRef obj;
+	All* obj = nullptr;
 	ec = DeserializeObjects(root, reg, refs, obj);
 	if (ec != ErrorCode::kNone) {
 		return;
@@ -358,11 +358,6 @@ public:
 	template<typename T>
 	void VisitValue(const T& value, EnumTag) {
 		DeclareType("enum");
-	}
-
-	template<typename T>
-	void VisitValue(const T& value, BasicRefTag) {
-		DeclareType("ref");
 	}
 
 	template<typename T>

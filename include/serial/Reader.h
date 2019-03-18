@@ -47,7 +47,6 @@ private:
 	template<typename T> void VisitValue(T& value, OptionalTag);
 	template<typename T> void VisitValue(T& value, ObjectTag);
 	template<typename T> void VisitValue(T& value, EnumTag);
-	template<typename T> void VisitValue(T& value, BasicRefTag);
 	template<typename T> void VisitValue(T& value, TypedRefTag);
 	template<typename T> void VisitValue(T& value, UserTag);
 
@@ -76,8 +75,7 @@ private:
 
 	RefId root_id_ = {};
 	std::unordered_map<RefId, UniqueRef> objects_;
-	std::vector<std::pair<BasicRef*, RefId>> unresolved_basic_refs_;
-	std::vector<std::pair<TypedRefBase*, RefId>> unresolved_typed_refs_;
+	std::vector<std::pair<TypedRefBase*, RefId>> unresolved_refs_;
 };
 
 } // namespace serial
