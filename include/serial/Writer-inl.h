@@ -38,7 +38,7 @@ void Writer::VisitValue(const T& value) {
 }
 
 template<typename T>
-void Writer::VisitValue(const T& value, TypedRefTag) {
+void Writer::VisitValue(const T& value, RefTag) {
 	if (!value) {
 		SetError(ErrorCode::kNullReference);
 		assert(!enable_asserts_ && "Null reference");

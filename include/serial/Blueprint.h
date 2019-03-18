@@ -150,7 +150,7 @@ public:
 	}
 
 	template<typename T>
-	void VisitValue(const T& value, TypedRefTag) {
+	void VisitValue(const T& value, RefTag) {
 		using R = typename detail::ReferableNamesOf<T>::type;
 		std::vector<std::string> vec;
 		R::Add(vec);

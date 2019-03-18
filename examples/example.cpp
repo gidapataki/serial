@@ -361,7 +361,7 @@ public:
 	}
 
 	template<typename T>
-	void VisitValue(const T& value, TypedRefTag) {
+	void VisitValue(const T& value, RefTag) {
 		DeclareType("ref*");
 	}
 

@@ -120,7 +120,7 @@ void Reader::VisitValue(T& value, EnumTag) {
 }
 
 template<typename T>
-void Reader::VisitValue(T& value, TypedRefTag) {
+void Reader::VisitValue(T& value, RefTag) {
 	if (!Current().isString()) {
 		SetError(ErrorCode::kInvalidObjectField);
 		return;

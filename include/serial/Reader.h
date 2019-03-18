@@ -47,7 +47,7 @@ private:
 	template<typename T> void VisitValue(T& value, OptionalTag);
 	template<typename T> void VisitValue(T& value, ObjectTag);
 	template<typename T> void VisitValue(T& value, EnumTag);
-	template<typename T> void VisitValue(T& value, TypedRefTag);
+	template<typename T> void VisitValue(T& value, RefTag);
 	template<typename T> void VisitValue(T& value, UserTag);
 
 	void VisitValue(bool& value, PrimitiveTag);
