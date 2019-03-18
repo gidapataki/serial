@@ -48,7 +48,7 @@ struct Circle : serial::Referable<Circle> {
 };
 
 struct Group : serial::Referable<Group> {
-	serial::Array<serial::TypedRef<Circle, Group>> elements;
+	serial::Array<serial::Ref<Circle, Group>> elements;
 	serial::Optional<std::string> name;
 
 	static constexpr auto kReferableName = "group";

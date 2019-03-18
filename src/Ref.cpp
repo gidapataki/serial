@@ -1,4 +1,4 @@
-#include "serial/TypedRef.h"
+#include "serial/Ref.h"
 
 
 namespace serial {

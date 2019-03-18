@@ -39,7 +39,7 @@ struct TypeTag<Optional<T>> {
 };
 
 template<typename... Ts>
-struct TypeTag<TypedRef<Ts...>> {
+struct TypeTag<Ref<Ts...>> {
 	using Type = RefTag;
 };
 

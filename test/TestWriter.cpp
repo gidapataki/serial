@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "serial/TypedRef.h"
+#include "serial/Ref.h"
 #include "serial/Referable.h"
 #include "serial/Writer.h"
 #include "RgbColor.h"
@@ -24,7 +24,7 @@ struct C;
 struct Leaf;
 struct Opt;
 
-using AnyRef = TypedRef<A, B, C, Leaf, Opt>;
+using AnyRef = Ref<A, B, C, Leaf, Opt>;
 
 struct Data {
 	int x = 0;
@@ -52,7 +52,7 @@ struct A : Referable<A> {
 
 struct B : Referable<B> {
 	Data data;
-	TypedRef<Leaf> leaf;
+	Ref<Leaf> leaf;
 
 	static constexpr auto kReferableName = "b";
 

@@ -5,7 +5,7 @@
 #include "serial/Referable.h"
 #include "serial/Header.h"
 #include "serial/Constants.h"
-#include "serial/TypedRef.h"
+#include "serial/Ref.h"
 #include "jsoncpp/json.h"
 
 

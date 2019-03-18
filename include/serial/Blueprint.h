@@ -34,7 +34,7 @@ struct ReferableNamesOf;
 
 
 template<typename... Ts>
-struct ReferableNamesOf<TypedRef<Ts...>> {
+struct ReferableNamesOf<Ref<Ts...>> {
 	using type = ReferableNames<Ts...>;
 };
 

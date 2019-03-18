@@ -1,7 +1,7 @@
 #include "serial/Reader.h"
 #include "serial/ReferableBase.h"
 #include "serial/Registry.h"
-#include "serial/TypedRef.h"
+#include "serial/Ref.h"
 #include <limits>
 
 namespace serial {

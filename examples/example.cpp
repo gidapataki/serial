@@ -75,7 +75,7 @@ struct PolyLine : Referable<PolyLine> {
 struct Link;
 
 struct Group : Referable<Group> {
-	Array<TypedRef<PolyLine, Segment, Circle, Group, Link>> elements;
+	Array<Ref<PolyLine, Segment, Circle, Group, Link>> elements;
 	std::string name;
 
 	static constexpr auto kReferableName = "group";
@@ -89,7 +89,7 @@ struct Group : Referable<Group> {
 
 
 struct Link : Referable<Link> {
-	TypedRef<Circle, Segment> circ;
+	Ref<Circle, Segment> circ;
 
 	static constexpr auto kReferableName = "link";
 
@@ -163,7 +163,7 @@ void TestSerialize() {
 	}
 #else
 	RefContainer refs;
-	TypedRef<Group>
+	Ref<Group>
 		gx = nullptr;
 
 	// Dump(root);
