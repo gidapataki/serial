@@ -135,7 +135,7 @@ void Reader::ReadObjectInternal(const Registry& reg) {
 		return;
 	}
 
-	auto obj = reg.Create(type);
+	auto obj = reg.CreateReferable(type);
 	if (!obj) {
 		SetError(ErrorCode::kUnregisteredType);
 		return;

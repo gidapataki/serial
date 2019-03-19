@@ -24,6 +24,8 @@ public:
 	virtual UniqueRef Create() const override;
 };
 
+using FactoryPtr = std::unique_ptr<FactoryBase>;
+
 
 class Registrator {
 public:
@@ -58,26 +60,19 @@ public:
 	Registry() = default;
 	Registry(noasserts_t);
 
-	/**
-	 * Returns true if the type is not registered yet and
-	 * there is no duplicated name.
-	 */
 	template<typename T> bool Register();
-	template<typename T> bool RegisterEnum();
-
-	/**
-	 * Returns true if there were no duplicated names.
-	 */
 	template<typename T> bool RegisterAll();
 
 	template<typename T> bool IsRegistered() const;
-	template<typename T> const char* GetName() const;
-	UniqueRef Create(const std::string& name) const;
+	UniqueRef CreateReferable(const std::string& name) const;
 
 	template<typename T> bool EnumFromString(const std::string& name, T& value) const;
 	template<typename T> const char* EnumToString(T value) const;
 
 private:
+	template<typename T> bool Register(ReferableTag);
+	template<typename T> bool Register(EnumTag);
+
 	template<typename T>
 	struct EnumValueCollector {
 		void VisitValue(T value, const char* name);
@@ -89,8 +84,10 @@ private:
 		std::unordered_map<std::string, int> values;
 	};
 
-	std::unordered_map<TypeId, const char*> types_;
-	std::unordered_map<std::string, std::unique_ptr<FactoryBase>> factories_;
+	std::unordered_set<std::string> names_;
+	std::unordered_set<TypeId> typeids_;
+
+	std::unordered_map<std::string, FactoryPtr> ref_factories_;
 	std::unordered_map<TypeId, EnumMapping> enum_maps_;
 
 	bool enable_asserts_ = true;

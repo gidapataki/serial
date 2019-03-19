@@ -27,61 +27,50 @@ UniqueRef Factory<T>::Create() const {
 template<typename T>
 bool Registry::IsRegistered() const {
 	auto id = StaticTypeId<T>::Get();
-	if (std::is_base_of<Enum, T>::value) {
-		return enum_maps_.count(id) > 0;
-	}
-	return types_.count(id) > 0;
+	return typeids_.count(id) > 0;
 }
 
 template<typename T>
 bool Registry::Register() {
-	const char* name = T::kReferableName;
-
-	if (name == nullptr) {
-		assert(!enable_asserts_ && "Cannot register type with nullptr");
-		return false;
-	}
+	static_assert(T::kTypeName != nullptr, "Invalid type name");
 
 	auto id = StaticTypeId<T>::Get();
-	if (factories_.count(name) > 0) {
+	auto name = T::kTypeName;
+
+	if (typeids_.count(id) > 0) {
+		return true;
+	}
+
+	if (names_.count(name) > 0) {
 		assert(!enable_asserts_ && "Duplicate type name");
 		return false;
 	}
-	if (types_.count(id) > 0) {
-		assert(!enable_asserts_ && "Type is already registered");
-		return false;
+
+	using Tag = typename TypeTag<T>::Type;
+	bool success = Register<T>(Tag{});
+	if (success) {
+		typeids_.insert(id);
+		names_.insert(name);
 	}
 
-	types_[id] = name;
+	return success;
+}
+
+template<typename T>
+bool Registry::Register(ReferableTag) {
+	auto name = T::kTypeName;
 #if 1
 	// Note: this is faster to compile
-	factories_[name] = std::unique_ptr<FactoryBase>(new Factory<T>());
+	ref_factories_[name] = std::unique_ptr<FactoryBase>(new Factory<T>());
 #else
-	factories_[name] = std::make_unique<Factory<T>>();
+	ref_factories_[name] = std::make_unique<Factory<T>>();
 #endif
 	return true;
 }
 
 template<typename T>
-const char* Registry::GetName() const {
+bool Registry::Register(EnumTag) {
 	auto id = StaticTypeId<T>::Get();
-	auto it = types_.find(id);
-	if (it == types_.end()) {
-		assert(!enable_asserts_ && "Type is not registered");
-		return nullptr;
-	}
-
-	return it->second;
-}
-
-template<typename T>
-bool Registry::RegisterEnum() {
-	static_assert(std::is_base_of<Enum, T>::value, "Type is derived from Enum");
-	auto id = StaticTypeId<T>::Get();
-	if (enum_maps_.count(id) > 0) {
-		assert(!enable_asserts_ && "Enum is already registered");
-		return false;
-	}
 
 	T enum_value;
 	EnumMapping mapping;
@@ -254,7 +243,7 @@ void Registrator::VisitValue(const T& value, ObjectTag) {
 template<typename T>
 void Registrator::VisitValue(const T& value, EnumTag) {
 	if (success_ && !reg_.IsRegistered<T>()) {
-		success_ &= reg_.RegisterEnum<T>();
+		success_ &= reg_.Register<T>();
 	}
 }
 

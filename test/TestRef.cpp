@@ -9,15 +9,20 @@ namespace {
 
 struct A : Referable<A> {
 	int value = 5;
+
+	static constexpr auto kTypeName = "a";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct B : Referable<B> {
 	std::string value = "hello";
+
+	static constexpr auto kTypeName = "b";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct C : Referable<C> {
+	static constexpr auto kTypeName = "c";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 

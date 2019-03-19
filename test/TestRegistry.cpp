@@ -8,36 +8,31 @@ using namespace serial;
 namespace {
 
 struct A : Referable<A> {
-	static constexpr auto kReferableName = "a";
+	static constexpr auto kTypeName = "a";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct A2 : Referable<A2> {
-	static constexpr auto kReferableName = "a";
-	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
-};
-
-struct A0 : Referable<A0> {
-	static constexpr auto kReferableName = nullptr;
+	static constexpr auto kTypeName = "a";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct B : Referable<B> {
-	static constexpr auto kReferableName = "b";
+	static constexpr auto kTypeName = "b";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct C : Referable<C> {
-	static constexpr auto kReferableName = "c";
+	static constexpr auto kTypeName = "c";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
 struct X : Referable<X> {
-	static const char* kReferableName;
+	static constexpr auto kTypeName ="x";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
-const char* X::kReferableName;
+// const char* X::kTypeName;
 
 enum class Index {
 	kOne,
@@ -78,6 +73,8 @@ struct E : Enum {
 	E() = default;
 	E(Value v) : value(v) {}
 
+	static constexpr auto kTypeName = "E";
+
 	template<typename V>
 	static void AcceptVisitor(V& v) {
 		if (IsEnabled(Index::kOne)) { v.VisitValue(kOne, Name(Index::kOne)); }
@@ -99,6 +96,8 @@ struct F : Enum {
 
 	F() = default;
 	F(SomeOtherName v) : value(v) {}
+
+	static constexpr auto kTypeName = "F";
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
@@ -122,6 +121,8 @@ struct G : Enum {
 	G() = default;
 	G(E::Value v) : value(v) {}
 
+	static constexpr auto kTypeName = "G";
+
 	template<typename V>
 	static void AcceptVisitor(V& v) {
 		v.VisitValue(E::Value::kOne, "one");
@@ -139,11 +140,11 @@ TEST(RegistryTest, Register) {
 	EXPECT_FALSE(reg.Register<A2>());
 	EXPECT_TRUE(reg.Register<B>());
 
-	X::kReferableName = "x1";
-	EXPECT_TRUE(reg.Register<X>());
+	// X::kTypeName = "x1";
+	// EXPECT_TRUE(reg.Register<X>());
 
-	X::kReferableName = "x2";
-	EXPECT_FALSE(reg.Register<X>());
+	// X::kTypeName = "x2";
+	// EXPECT_FALSE(reg.Register<X>());
 }
 
 TEST(RegistryTest, Scoped) {
@@ -158,29 +159,15 @@ TEST(RegistryTest, Scoped) {
 	EXPECT_TRUE(reg2.Register<C>());
 }
 
-TEST(RegistryTest, Name) {
-	Registry reg(noasserts);
-
-	EXPECT_EQ(nullptr, reg.GetName<A>());
-	EXPECT_EQ(nullptr, reg.GetName<B>());
-
-	reg.Register<A>();
-	reg.Register<B>();
-
-	EXPECT_EQ(std::string{"a"}, reg.GetName<A>());
-	EXPECT_EQ(std::string{"b"}, reg.GetName<B>());
-	EXPECT_EQ(nullptr, reg.GetName<C>());
-}
-
 TEST(RegistryTest, Create) {
 	Registry reg(noasserts);
 
 	reg.Register<A>();
 	reg.Register<B>();
 
-	auto a = reg.Create("a");
-	auto b = reg.Create("b");
-	auto c = reg.Create("c");
+	auto a = reg.CreateReferable("a");
+	auto b = reg.CreateReferable("b");
+	auto c = reg.CreateReferable("c");
 
 	EXPECT_NE(nullptr, a);
 	EXPECT_NE(nullptr, b);
@@ -193,43 +180,43 @@ TEST(RegistryTest, Create) {
 TEST(RegistryTest, RegisterNullptr) {
 	Registry reg(noasserts);
 
-	EXPECT_FALSE(reg.Register<A0>());
-
 	E::Reset();
 	Enable(Index::kOne, nullptr);
 	Enable(Index::kTwo, "two");
-	EXPECT_FALSE(reg.RegisterEnum<E>());
+	EXPECT_FALSE(reg.Register<E>());
 
 	E::Reset();
 	Enable(Index::kTwo, "two");
-	EXPECT_TRUE(reg.RegisterEnum<E>());
+	EXPECT_TRUE(reg.Register<E>());
 }
 
 TEST(RegistryTest, RegisterEnum) {
 	Registry reg(noasserts);
 
 	E::Reset();
-	EXPECT_TRUE(reg.RegisterEnum<E>());
-	EXPECT_FALSE(reg.RegisterEnum<E>());
+	EXPECT_TRUE(reg.Register<E>());
+	EXPECT_TRUE(reg.Register<E>());
 
 	F::Reset();
 	Enable(Index::kRed, "red");
 	Enable(Index::kRed2, "not_red");
-	EXPECT_FALSE(reg.RegisterEnum<F>());
+	EXPECT_FALSE(reg.Register<F>());
 
 	F::Reset();
 	Enable(Index::kRed, "red");
 	Enable(Index::kGreen, "red");
-	EXPECT_FALSE(reg.RegisterEnum<F>());
+	EXPECT_FALSE(reg.Register<F>());
 
 	F::Reset();
 	Enable(Index::kRed, "red");
 	Enable(Index::kGreen, "green");
-	EXPECT_TRUE(reg.RegisterEnum<F>());
+	EXPECT_TRUE(reg.Register<F>());
 
 	F::Reset();
 	Enable(Index::kBlue, "blue");
-	EXPECT_FALSE(reg.RegisterEnum<F>());
+	EXPECT_TRUE(reg.IsRegistered<F>());
+	EXPECT_TRUE(reg.Register<F>());
+	EXPECT_EQ(nullptr, reg.EnumToString(F{F::kBlue}));
 }
 
 TEST(RegistryTest, EnumToString) {
@@ -239,7 +226,7 @@ TEST(RegistryTest, EnumToString) {
 	F::Reset();
 	Enable(Index::kRed, "red");
 	Enable(Index::kBlue, "blue");
-	reg.RegisterEnum<F>();
+	reg.Register<F>();
 
 	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kOne}));
 	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kTwo}));
@@ -251,7 +238,7 @@ TEST(RegistryTest, EnumToString) {
 	E::Reset();
 	Enable(Index::kOne, "one");
 
-	EXPECT_TRUE(reg.RegisterEnum<E>());
+	EXPECT_TRUE(reg.Register<E>());
 	EXPECT_EQ(std::string{"one"}, reg.EnumToString(E{E::kOne}));
 	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kTwo}));
 }
@@ -262,12 +249,12 @@ TEST(RegistryTest, EnumIsScoped) {
 
 	E::Reset();
 	Enable(Index::kOne, "1");
-	reg1.RegisterEnum<E>();
+	reg1.Register<E>();
 
 	E::Reset();
 	Enable(Index::kOne, "one");
 	Enable(Index::kTwo, "two");
-	reg2.RegisterEnum<E>();
+	reg2.Register<E>();
 
 	EXPECT_EQ(std::string{"1"}, reg1.EnumToString(E{E::kOne}));
 	EXPECT_EQ(nullptr, reg1.EnumToString(E{E::kTwo}));
@@ -291,8 +278,8 @@ TEST(RegistryTest, EnumFromString) {
 	Enable(Index::kRed, "first");
 	Enable(Index::kBlue, "blue");
 
-	reg.RegisterEnum<E>();
-	reg.RegisterEnum<F>();
+	reg.Register<E>();
+	reg.Register<F>();
 
 	EXPECT_TRUE(reg.EnumFromString("first", f_value));
 	EXPECT_EQ(F::kRed, f_value.value);
@@ -321,8 +308,8 @@ TEST(RegistryTest, SameEnumType) {
 
 	E::Reset();
 	Enable(Index::kTwo, "2");
-	EXPECT_TRUE(reg.RegisterEnum<E>());
-	EXPECT_TRUE(reg.RegisterEnum<G>());
+	EXPECT_TRUE(reg.Register<E>());
+	EXPECT_TRUE(reg.Register<G>());
 
 	EXPECT_EQ(nullptr, reg.EnumToString(E{E::kOne}));
 	EXPECT_EQ(std::string{"one"}, reg.EnumToString(G{E::kOne}));

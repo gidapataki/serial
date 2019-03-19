@@ -36,7 +36,7 @@ struct Circle : Referable<Circle> {
 	Point center;
 	Winding winding = {};
 
-	static constexpr auto kReferableName = "circle";
+	static constexpr auto kTypeName = "circle";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -51,7 +51,7 @@ struct Segment : Referable<Segment> {
 	Point start;
 	Point end;
 
-	static constexpr auto kReferableName = "segment";
+	static constexpr auto kTypeName = "segment";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -64,7 +64,7 @@ struct Segment : Referable<Segment> {
 struct PolyLine : Referable<PolyLine> {
 	Array<Point> points;
 
-	static constexpr auto kReferableName = "poly";
+	static constexpr auto kTypeName = "poly";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -78,7 +78,7 @@ struct Group : Referable<Group> {
 	Array<Ref<PolyLine, Segment, Circle, Group, Link>> elements;
 	std::string name;
 
-	static constexpr auto kReferableName = "group";
+	static constexpr auto kTypeName = "group";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -91,7 +91,7 @@ struct Group : Referable<Group> {
 struct Link : Referable<Link> {
 	Ref<Circle, Segment> circ;
 
-	static constexpr auto kReferableName = "link";
+	static constexpr auto kTypeName = "link";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -109,7 +109,7 @@ void TestSerialize() {
 	reg.Register<PolyLine>();
 	reg.Register<Link>();
 
-	reg.RegisterEnum<Winding>({
+	reg.Register<Winding>({
 		{Winding::kClockwise, "cw"},
 		{Winding::kCounterClockwise, "ccw"},
 	});
@@ -211,7 +211,7 @@ struct All : Referable<All> {
 	std::string s = "hi mom";
 	Optional<int> o;
 
-	static constexpr auto kReferableName = "all";
+	static constexpr auto kTypeName = "all";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {

@@ -10,9 +10,9 @@ Registry::Registry(noasserts_t) {
 	enable_asserts_ = false;
 }
 
-UniqueRef Registry::Create(const std::string& name) const {
-	auto it = factories_.find(name);
-	if (it == factories_.end()) {
+UniqueRef Registry::CreateReferable(const std::string& name) const {
+	auto it = ref_factories_.find(name);
+	if (it == ref_factories_.end()) {
 		return {};
 	}
 

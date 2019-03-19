@@ -8,7 +8,7 @@ template<int N>
 struct A : Referable<A<N>> {
 	int zero = N;
 
-	static constexpr auto kReferableName = "a";
+	static constexpr auto kTypeName = "a";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {

@@ -40,7 +40,7 @@ struct A : Referable<A> {
 	std::string name;
 	Array<AnyRef> refs;
 
-	static constexpr auto kReferableName = "a";
+	static constexpr auto kTypeName = "a";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -54,7 +54,7 @@ struct B : Referable<B> {
 	Data data;
 	Ref<Leaf> leaf;
 
-	static constexpr auto kReferableName = "b";
+	static constexpr auto kTypeName = "b";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -64,7 +64,7 @@ struct B : Referable<B> {
 };
 
 struct Leaf : Referable<Leaf> {
-	static constexpr auto kReferableName = "leaf";
+	static constexpr auto kTypeName = "leaf";
 
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
@@ -79,6 +79,8 @@ struct Color : Enum {
 	Color() = default;
 	Color(Value v) : value(v) {}
 
+	static constexpr auto kTypeName = "color";
+
 	template<typename V>
 	static void AcceptVisitor(V& v) {
 		v.VisitValue(kRed, "red");
@@ -90,7 +92,7 @@ struct Color : Enum {
 struct C : Referable<C> {
 	Color color = Color::kRed;
 
-	static constexpr auto kReferableName = "c";
+	static constexpr auto kTypeName = "c";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -108,7 +110,7 @@ struct All : Referable<All> {
 	double d = {};
 	std::string s;
 
-	static constexpr auto kReferableName = "all";
+	static constexpr auto kTypeName = "all";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -127,7 +129,7 @@ struct Floats : Referable<Floats> {
 	float f = {};
 	double d = {};
 
-	static constexpr auto kReferableName = "floats";
+	static constexpr auto kTypeName = "floats";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -142,7 +144,7 @@ struct Opt : Referable<Opt> {
 	Optional<Array<int>> a;
 	Optional<AnyRef> ref;
 
-	static constexpr auto kReferableName = "opt";
+	static constexpr auto kTypeName = "opt";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -156,7 +158,7 @@ struct Opt : Referable<Opt> {
 struct U : Referable<U> {
 	RgbColor color;
 
-	static constexpr auto kReferableName = "u";
+	static constexpr auto kTypeName = "u";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -363,7 +365,7 @@ TEST(WriterTest, EnumValue) {
 	C c;
 
 	reg.Register<C>();
-	reg.RegisterEnum<Color>();
+	reg.Register<Color>();
 	c.color = Color::kBlue;
 
 	auto ec = w.Write(h, &c, root);
@@ -394,7 +396,7 @@ TEST(WriterTest, UnregisteredEnum) {
 	reg.Register<C>();
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &c, root));
 
-	reg.RegisterEnum<Color>();
+	reg.Register<Color>();
 	EXPECT_EQ(Color::kGreen, c.color.value);
 	EXPECT_EQ(nullptr, reg.EnumToString(Color{Color::kGreen}));
 

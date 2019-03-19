@@ -13,6 +13,7 @@ struct OptionalTag {};
 struct ObjectTag {};
 struct EnumTag {};
 struct RefTag {};
+struct ReferableTag {};
 struct UserTag {};
 
 template<typename T>
@@ -24,8 +25,11 @@ struct TypeTag {
 		typename std::conditional<
 			std::is_base_of<UserPrimitive, T>::value,
 			UserTag,
+		typename std::conditional<
+			std::is_base_of<ReferableBase, T>::value,
+			ReferableTag,
 			ObjectTag
-		>::type>::type;
+		>::type>::type>::type;
 };
 
 template<typename T>

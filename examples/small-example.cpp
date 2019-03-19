@@ -9,6 +9,8 @@ struct Winding : serial::Enum {
 		kCounterClockwise,
 	} value = {};
 
+	static constexpr auto kTypeName = "winding";
+
 	template<typename Visitor>
 	static void AcceptVisitor(Visitor& v) {
 		v.VisitValue(Value::kClockwise, "cw");
@@ -32,7 +34,7 @@ struct Circle : serial::Referable<Circle> {
 	Point center;
 	Winding winding = {};
 
-	static constexpr auto kReferableName = "circle";
+	static constexpr auto kTypeName = "circle";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
@@ -46,7 +48,7 @@ struct Group : serial::Referable<Group> {
 	serial::Array<serial::Ref<Circle, Group>> elements;
 	serial::Optional<std::string> name;
 
-	static constexpr auto kReferableName = "group";
+	static constexpr auto kTypeName = "group";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {

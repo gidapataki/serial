@@ -20,6 +20,8 @@ struct Color : Enum {
 	Color() = default;
 	Color(Value v) : value(v) {}
 
+	static constexpr auto kTypeName = "color";
+
 	template<typename V>
 	static void AcceptVisitor(V& v) {
 		v.VisitValue(kRed, "red");
@@ -31,7 +33,7 @@ struct A : Referable<A> {
 	std::string name;
 	Optional<Ref<A, B>> opt;
 
-	static constexpr auto kReferableName = "a";
+	static constexpr auto kTypeName = "a";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -44,7 +46,7 @@ struct A : Referable<A> {
 struct B : Referable<B> {
 	Color color = {};
 
-	static constexpr auto kReferableName = "b";
+	static constexpr auto kTypeName = "b";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {

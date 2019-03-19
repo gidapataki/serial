@@ -16,9 +16,9 @@ void Writer::VisitField(const T& value, const char* name) {
 template<typename T>
 void Writer::WriteReferable(const T& value) {
 	auto refid = AddRef(&value);
-	auto name = reg_.GetName<T>();
+	auto name = T::kTypeName;
 
-	if (name == nullptr) {
+	if (!reg_.IsRegistered<T>()) {
 		SetError(ErrorCode::kUnregisteredType);
 		assert(!enable_asserts_ && "Type is not registered");
 		return;
