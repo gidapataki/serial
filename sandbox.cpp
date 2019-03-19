@@ -1,6 +1,7 @@
 #include <iostream>
 #include <type_traits>
 #include <map>
+#include <functional>
 
 
 
@@ -83,11 +84,60 @@ struct Vis {
 
 } // namespace
 
-int main() {
+void CheckEnum() {
 	vis::Vis v;
 	v.Register<Enum<wx::Winding>>();
 
 	// std::cerr << v.to_string[1] << std::endl;
 	Enum<wx::Winding> e;
 	e = wx::Winding::kCounterClockwise;
+}
+
+
+template<typename T>
+void DumpType() {
+	std::cerr << __PRETTY_FUNCTION__ << std::endl;
+}
+
+template<typename... Ts>
+struct InVersion;
+
+template<typename T, typename V>
+struct InVersion<T(V)> {
+	static void DumpIf(std::function<bool(int)> fn) {
+		if (fn(V::value)) {
+			DumpType<T>();
+		}
+	}
+};
+
+template<typename T, typename... Ts>
+struct InVersion<T, Ts...> {
+	static void DumpIf(std::function<bool(int)> fn) {
+		InVersion<T>::DumpIf(fn);
+		InVersion<Ts...>::DumpIf(fn);
+	}
+};
+
+
+template<int N>
+struct Version {
+	static constexpr int value = N;
+};
+
+template<typename... Ts>
+struct List {};
+
+
+using Version1 = Version<1>;
+using Version2 = Version<2>;
+
+
+int main() {
+	List<int(Version1), bool(Version2)> ls;
+
+	InVersion<int(Version1), bool(Version2)>::DumpIf([](int n) -> bool {
+		return n > 0;
+	});
+	return 0;
 }

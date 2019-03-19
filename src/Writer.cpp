@@ -49,7 +49,6 @@ ErrorCode Writer::Write(
 {
 	root_ = Json::Value(Json::objectValue);
 
-
 	StateSentry sentry(this);
 	auto root_id = AddRef(ref);
 

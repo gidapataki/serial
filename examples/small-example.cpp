@@ -1,11 +1,6 @@
 #include "serial/Serial.h"
+// #include "serial/RegistryBuilder.h"
 #include <iostream>
-
-
-// enum class Winding {
-// 	kClockwise,
-// 	kCounterClockwise,
-// };
 
 
 struct Winding : serial::Enum {
@@ -91,28 +86,32 @@ void Example() {
 
 	// Setup registry
 	serial::Registry reg;
+
+#if 1
+	reg.RegisterAll<Group>();
+#else
 	reg.Register<Circle>();
 	reg.Register<Group>();
 	reg.RegisterEnum<Winding>();
-
-	// reg.RegisterEnum<Winding>({
-	// 	{Winding::kClockwise, "cw"},
-	// 	{Winding::kCounterClockwise, "ccw"},
-	// });
-
+#endif
 
 	// Serialize
 	Json::Value json_value;
 	serial::Header header{"example", 1};
 	auto ec = serial::Serialize(g2, header, reg, json_value);
 
+	if (ec != serial::ErrorCode::kNone) {
+		std::cerr << ToString(ec) << std::endl;
+		return;
+	}
+	Dump(json_value);
 
 	// Deserialize
-	serial::RefContainer refs;
-	Group* group = nullptr;
-	auto ec2 = serial::DeserializeObjects(json_value, reg, refs, group);
+	// serial::RefContainer refs;
+	// Group* group = nullptr;
+	// auto ec2 = serial::DeserializeObjects(json_value, reg, refs, group);
 
-	Dump(json_value);
+	// Dump(json_value);
 }
 
 int main() {

@@ -1,10 +1,12 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <initializer_list>
 #include <utility>
 #include "serial/SerialFwd.h"
 #include "serial/TypeId.h"
+#include "serial/TypeTraits.h"
 
 
 namespace serial {
@@ -23,16 +25,55 @@ public:
 };
 
 
+class Registrator {
+public:
+	Registrator(Registry& reg);
+
+	template<typename T> bool RegisterAll();
+	template<typename T> void VisitField(const T& value, const char* name);
+
+private:
+	template<typename... Ts> struct ForEachRef;
+	template<typename T> bool RegisterInternal();
+	template<typename T> bool IsVisited() const;
+	template<typename T> void AddVisited();
+
+	template<typename T> void VisitValue(const T& value);
+	template<typename T> void VisitValue(const T& value, PrimitiveTag);
+	template<typename T> void VisitValue(const Array<T>& value, ArrayTag);
+	template<typename T> void VisitValue(const Optional<T>& value, OptionalTag);
+	template<typename T> void VisitValue(const T& value, ObjectTag);
+	template<typename T> void VisitValue(const T& value, EnumTag);
+	template<typename T> void VisitValue(const T& value, UserTag);
+	template<typename... Ts> void VisitValue(const Ref<Ts...>& value, RefTag);
+
+	Registry& reg_;
+	bool success_ = true;
+	std::unordered_set<TypeId> visited_;
+};
+
+
 class Registry {
 public:
 	Registry() = default;
 	Registry(noasserts_t);
 
+	/**
+	 * Returns true if the type is not registered yet and
+	 * there is no duplicated name.
+	 */
 	template<typename T> bool Register();
+	template<typename T> bool RegisterEnum();
+
+	/**
+	 * Returns true if there were no duplicated names.
+	 */
+	template<typename T> bool RegisterAll();
+
+	template<typename T> bool IsRegistered() const;
 	template<typename T> const char* GetName() const;
 	UniqueRef Create(const std::string& name) const;
 
-	template<typename T> bool RegisterEnum();
 	template<typename T> bool EnumFromString(const std::string& name, T& value) const;
 	template<typename T> const char* EnumToString(T value) const;
 

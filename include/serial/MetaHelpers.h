@@ -27,6 +27,9 @@ struct IsOneOf<T, U, Ts...> {
 template<typename T, typename... Ts>
 using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Ts...>::value>::type;
 
+template<typename T, typename U>
+using EnableIfBaseOf = typename std::enable_if<std::is_base_of<T, U>::value>::type;
+
 
 template<typename... Ts>
 struct IsReferable;

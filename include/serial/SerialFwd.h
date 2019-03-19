@@ -13,6 +13,7 @@ class Writer;
 class ReferableBase;
 class FactoryBase;
 class Registry;
+class Registrator;
 class RefBase;
 
 template<typename T> class Referable;

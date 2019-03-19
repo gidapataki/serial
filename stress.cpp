@@ -8,6 +8,8 @@ template<int N>
 struct A : Referable<A<N>> {
 	int zero = N;
 
+	static constexpr auto kReferableName = "a";
+
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.zero, "zero");
@@ -19,7 +21,7 @@ template<int N>
 void Touch(Registry& reg) {
 	using T = A<N>;
 	T t;
-	reg.Register<T>("x");
+	reg.Register<T>();
 }
 
 
@@ -139,7 +141,7 @@ int main() {
 
 	A<1> a;
 	Json::Value	root;
-	auto ec = Serialize(&a, h, reg, root);
+	auto ec = Serialize(a, h, reg, root);
 
 	return 0;
 }

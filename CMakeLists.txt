@@ -52,6 +52,7 @@ target_include_directories(test-serial
 add_executable(example
     # examples/example.cpp
     examples/small-example.cpp
+    # stress.cpp
 )
 
 target_link_libraries(example
