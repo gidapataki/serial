@@ -439,6 +439,5 @@ bool operator!=(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs) {
 	return !(lhs == rhs);
 }
 
-
 } // namespace variant
 } // namespace serial

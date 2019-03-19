@@ -2,7 +2,7 @@
 #include <type_traits>
 #include <map>
 #include <functional>
-#include "serial/Variant.h"
+#include "serial/variant/Variant.h"
 
 
 template<typename E>
