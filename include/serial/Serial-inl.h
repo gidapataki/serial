@@ -14,7 +14,9 @@ ErrorCode Serialize(
 	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
 
 	Registry reg;
-	reg.RegisterAll<T>();
+	if (!reg.RegisterAll<T>()) {
+		return ErrorCode::kInvalidSchema;
+	}
 	return Writer(reg).Write(header, &obj, value);
 }
 
@@ -39,7 +41,9 @@ ErrorCode DeserializeObjects(
 	}
 
 	Registry reg;
-	reg.RegisterAll<T>();
+	if (!reg.RegisterAll<T>()) {
+		return ErrorCode::kInvalidSchema;
+	}
 	ec = reader.ReadObjects(reg, result, result_ref);
 	if (ec != ErrorCode::kNone) {
 		return ec;
