@@ -734,8 +734,11 @@ TEST(ReaderTest, UserType) {
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "u");
 	auto& fields = root[str::kObjects][0][str::kObjectFields];
-	fields["color"] = "#hello_";
 
+	fields["color"] = "#hello_";
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	fields["color"] = 5;
 	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
 
 	fields["color"] = "#0102ff";

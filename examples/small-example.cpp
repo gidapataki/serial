@@ -83,22 +83,10 @@ void Example() {
 	Group g2;
 	g2.elements.push_back(&g1);
 
-
-	// Setup registry
-	serial::Registry reg;
-
-#if 1
-	reg.RegisterAll<Group>();
-#else
-	reg.Register<Circle>();
-	reg.Register<Group>();
-	reg.RegisterEnum<Winding>();
-#endif
-
 	// Serialize
 	Json::Value json_value;
 	serial::Header header{"example", 1};
-	auto ec = serial::Serialize(g2, header, reg, json_value);
+	auto ec = serial::Serialize(g2, header, json_value);
 
 	if (ec != serial::ErrorCode::kNone) {
 		std::cerr << ToString(ec) << std::endl;
@@ -109,7 +97,7 @@ void Example() {
 	// Deserialize
 	// serial::RefContainer refs;
 	// Group* group = nullptr;
-	// auto ec2 = serial::DeserializeObjects(json_value, reg, refs, group);
+	// auto ec2 = serial::DeserializeObjects(json_value, refs, group);
 
 	// Dump(json_value);
 }

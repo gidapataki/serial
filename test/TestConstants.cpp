@@ -30,6 +30,7 @@ TEST(ConstantTest, UniqueErrorCodes) {
 		ErrorCode::kInvalidObjectField,
 		ErrorCode::kInvalidRootType,
 		ErrorCode::kInvalidReferenceType,
+		ErrorCode::kInvalidSchema,
 		ErrorCode::kUnexpectedHeaderField,
 		ErrorCode::kUnexpectedObjectField,
 		ErrorCode::kUnexpectedValue,

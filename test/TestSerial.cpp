@@ -7,6 +7,9 @@ using namespace serial;
 
 namespace {
 
+struct A;
+struct B;
+
 struct Color : Enum {
 	enum Value : int {
 		kRed,
@@ -26,6 +29,7 @@ struct Color : Enum {
 struct A : Referable<A> {
 	int value;
 	std::string name;
+	Optional<Ref<A, B>> opt;
 
 	static constexpr auto kReferableName = "a";
 
@@ -33,6 +37,7 @@ struct A : Referable<A> {
 	static void AcceptVisitor(S& self, V& v) {
 		v.VisitField(self.value, "value");
 		v.VisitField(self.name, "name");
+		v.VisitField(self.opt, "opt");
 	}
 };
 
@@ -51,17 +56,10 @@ struct B : Referable<B> {
 
 TEST(SerialTest, Serialize) {
 	Json::Value root = 1;
-	Registry reg(noasserts);
 	Header h;
 	B b;
 
-	reg.Register<B>();
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Serialize(b, h, reg, root));
-	EXPECT_TRUE(root.isInt());
-	EXPECT_EQ(1, root.asInt());
-
-	reg.RegisterEnum<Color>();
-	EXPECT_EQ(ErrorCode::kNone, Serialize(b, h, reg, root));
+	EXPECT_EQ(ErrorCode::kNone, Serialize(b, h, root));
 }
 
 TEST(SerialTest, DeserializeHeader) {
@@ -74,14 +72,12 @@ TEST(SerialTest, DeserializeHeader) {
 TEST(SerialTest, DeserializeObjects) {
 	Json::Value root;
 	RefContainer refs;
-	Registry reg;
 	Header h;
 	A* a_ptr = nullptr;
 	B* b_ptr = nullptr;
 
-	reg.Register<A>();
 
-	EXPECT_EQ(ErrorCode::kInvalidDocument, DeserializeObjects(root, reg, refs, a_ptr));
+	EXPECT_EQ(ErrorCode::kInvalidDocument, DeserializeObjects(root, refs, a_ptr));
 
 	root = Json::objectValue;
 	root[str::kDocType] = "";
@@ -93,21 +89,22 @@ TEST(SerialTest, DeserializeObjects) {
 	root[str::kObjects][0][str::kObjectId] = "ref_1";
 	root[str::kObjects][0][str::kObjectFields] = Json::objectValue;
 	root[str::kObjects][0][str::kObjectFields]["name"] = "hello";
+	root[str::kObjects][0][str::kObjectFields]["opt"] = Json::nullValue;
 
 	refs.push_back(nullptr);
 	refs.push_back(nullptr);
-	EXPECT_EQ(ErrorCode::kMissingObjectField, DeserializeObjects(root, reg, refs, a_ptr));
+	EXPECT_EQ(ErrorCode::kMissingObjectField, DeserializeObjects(root, refs, a_ptr));
 	EXPECT_EQ(2, refs.size());
 
 	root[str::kObjects][0][str::kObjectFields]["value"] = 17;
-	EXPECT_EQ(ErrorCode::kNone, DeserializeObjects(root, reg, refs, a_ptr));
+	EXPECT_EQ(ErrorCode::kNone, DeserializeObjects(root, refs, a_ptr));
 	EXPECT_EQ(1, refs.size());
 	EXPECT_EQ(refs[0].get(), a_ptr);
 
-	EXPECT_EQ(ErrorCode::kInvalidRootType, DeserializeObjects(root, reg, refs, b_ptr));
+	EXPECT_EQ(ErrorCode::kUnregisteredType, DeserializeObjects(root, refs, b_ptr));
 	EXPECT_EQ(1, refs.size());
 	EXPECT_EQ(refs[0].get(), a_ptr);
 
 	root[str::kRootId] = "ref_2";
-	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, reg, refs, a_ptr));
+	EXPECT_EQ(ErrorCode::kMissingRootObject, DeserializeObjects(root, refs, a_ptr));
 }

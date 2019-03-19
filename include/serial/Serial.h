@@ -20,7 +20,6 @@ template<typename T>
 ErrorCode Serialize(
 	T& obj,
 	const Header& header,
-	const Registry& reg,
 	Json::Value& value);
 
 /**
@@ -41,7 +40,6 @@ ErrorCode DeserializeHeader(
 template<typename T>
 ErrorCode DeserializeObjects(
 	const Json::Value& root,
-	const Registry& reg,
 	RefContainer& refs,
 	T*& root_ref);
 

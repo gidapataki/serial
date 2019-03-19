@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include "serial/Registry.h"
 
 
 namespace serial {
@@ -8,17 +9,18 @@ template<typename T>
 ErrorCode Serialize(
 	T& obj,
 	const Header& header,
-	const Registry& reg,
 	Json::Value& value)
 {
 	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
+
+	Registry reg;
+	reg.RegisterAll<T>();
 	return Writer(reg).Write(header, &obj, value);
 }
 
 template<typename T>
 ErrorCode DeserializeObjects(
 	const Json::Value& root,
-	const Registry& reg,
 	RefContainer& refs,
 	T*& root_ref)
 {
@@ -36,6 +38,8 @@ ErrorCode DeserializeObjects(
 		return ec;
 	}
 
+	Registry reg;
+	reg.RegisterAll<T>();
 	ec = reader.ReadObjects(reg, result, result_ref);
 	if (ec != ErrorCode::kNone) {
 		return ec;
