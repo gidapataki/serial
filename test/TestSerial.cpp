@@ -54,14 +54,52 @@ struct B : Referable<B> {
 	}
 };
 
+struct C : Referable<C> {
+	Optional<Ref<A>> opt;
+
+	static constexpr auto kTypeName = "c";
+
+	template<typename S, typename V>
+	static void AcceptVisitor(S& self, V& v) {
+		v.VisitField(self.opt, "opt");
+	}
+};
+
+struct E : Enum {
+	enum : int { kDefault } value = {};
+
+	static constexpr auto kTypeName = "e";
+
+	template<typename V>
+	static void AcceptVisitor(V& v) {
+		v.VisitValue(kDefault, nullptr);
+	}
+};
+
+struct F : Referable<F> {
+	using EnableAsserts = std::false_type;
+
+	E e;
+
+	static constexpr auto kTypeName = "f";
+
+	template<typename S, typename V>
+	static void AcceptVisitor(S& self, V& v) {
+		v.VisitField(self.e, "e");
+	}
+};
+
+
 } // namespace
 
 TEST(SerialTest, Serialize) {
 	Json::Value root = 1;
 	Header h;
 	B b;
+	F f;
 
 	EXPECT_EQ(ErrorCode::kNone, Serialize(b, h, root));
+	EXPECT_EQ(ErrorCode::kInvalidSchema, Serialize(f, h, root));
 }
 
 TEST(SerialTest, DeserializeHeader) {
@@ -77,7 +115,8 @@ TEST(SerialTest, DeserializeObjects) {
 	Header h;
 	A* a_ptr = nullptr;
 	B* b_ptr = nullptr;
-
+	C* c_ptr = nullptr;
+	F* f_ptr = nullptr;
 
 	EXPECT_EQ(ErrorCode::kInvalidDocument, DeserializeObjects(root, refs, a_ptr));
 
@@ -104,6 +143,15 @@ TEST(SerialTest, DeserializeObjects) {
 	EXPECT_EQ(refs[0].get(), a_ptr);
 
 	EXPECT_EQ(ErrorCode::kUnregisteredType, DeserializeObjects(root, refs, b_ptr));
+	EXPECT_EQ(1, refs.size());
+	EXPECT_EQ(refs[0].get(), a_ptr);
+
+	EXPECT_TRUE(A::EnableAsserts::value);
+	EXPECT_FALSE(F::EnableAsserts::value);
+
+	EXPECT_EQ(ErrorCode::kInvalidRootType, DeserializeObjects(root, refs, c_ptr));
+	EXPECT_EQ(ErrorCode::kInvalidSchema, DeserializeObjects(root, refs, f_ptr));
+
 	EXPECT_EQ(1, refs.size());
 	EXPECT_EQ(refs[0].get(), a_ptr);
 
