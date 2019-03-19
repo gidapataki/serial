@@ -52,7 +52,6 @@ target_include_directories(test-serial
 add_executable(example
     # examples/example.cpp
     examples/small-example.cpp
-    # stress.cpp
 )
 
 target_link_libraries(example
@@ -61,4 +60,8 @@ target_link_libraries(example
 
 add_executable(sandbox
     sandbox.cpp
+)
+
+target_include_directories(sandbox
+    PRIVATE include
 )

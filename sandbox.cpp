@@ -2,7 +2,7 @@
 #include <type_traits>
 #include <map>
 #include <functional>
-
+#include "serial/Variant.h"
 
 
 template<typename E>
@@ -125,6 +125,7 @@ struct Version {
 	static constexpr int value = N;
 };
 
+
 template<typename... Ts>
 struct List {};
 
@@ -133,11 +134,21 @@ using Version1 = Version<1>;
 using Version2 = Version<2>;
 
 
-int main() {
+void CheckVersion() {
 	List<int(Version1), bool(Version2)> ls;
 
 	InVersion<int(Version1), bool(Version2)>::DumpIf([](int n) -> bool {
 		return n > 0;
 	});
-	return 0;
+}
+
+
+int main() {
+	serial::variant::Variant<int, std::string> vs;
+
+	vs = 5;
+	std::cout << vs.Get<int>() << std::endl;
+
+	vs = std::string{"hello"};
+	std::cout << vs.Get<std::string>() << std::endl;
 }
