@@ -71,6 +71,8 @@ public:
 	template<typename T> bool EnumFromString(const std::string& name, T& value) const;
 	template<typename T> const char* EnumToString(T value) const;
 
+	TypeId FindTypeId(const std::string& name) const;
+
 private:
 	template<typename T> bool Register(ReferableTag);
 	template<typename T> bool Register(EnumTag);

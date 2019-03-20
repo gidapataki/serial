@@ -305,6 +305,32 @@ bool Reader::IsError() const {
 	return error_ != ErrorCode::kNone;
 }
 
+bool Reader::CheckVariant() {
+	if (!Current().isObject()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return false;
+	}
+
+	if (!Current().isMember(str::kVariantType) ||
+		!Current().isMember(str::kVariantValue))
+	{
+		SetError(ErrorCode::kMissingObjectField);
+		return false;
+	}
+
+	if (!Current()[str::kVariantType].isString()) {
+		SetError(ErrorCode::kInvalidObjectField);
+		return false;
+	}
+
+	if (Current().size() != 2) {
+		SetError(ErrorCode::kUnexpectedObjectField);
+		return false;
+	}
+
+	return true;
+}
+
 const Json::Value& Reader::Current() {
 	return *state_.current;
 }

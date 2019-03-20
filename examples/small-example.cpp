@@ -135,14 +135,20 @@ void Example() {
 		std::cerr << "error: " << ToString(ec) << std::endl;
 		return;
 	}
+	json_value["objects"][1]["fields"]["w"]["value"]["s"] = "kitty";
 	Dump(json_value);
-
+// return;
 	// Deserialize
-	// serial::RefContainer refs;
-	// Group* group = nullptr;
-	// auto ec2 = serial::DeserializeObjects(json_value, refs, group);
+	serial::RefContainer refs;
+	Group* group = nullptr;
+	auto ec2 = serial::DeserializeObjects(json_value, refs, group);
+	if (ec2 != serial::ErrorCode::kNone) {
+		std::cerr << "error: " << ToString(ec2) << std::endl;
+		return;
+	}
 
-	// Dump(json_value);
+	std::cout << group->elements[0].As<Other>().w.Which() << std::endl;
+	std::cout << group->elements[0].As<Other>().w.Get<B>().s << std::endl;
 }
 
 int main() {

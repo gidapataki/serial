@@ -118,7 +118,11 @@ void Writer::VisitValue(const T& value, EnumTag) {
 
 template<typename T>
 void Writer::VisitValue(const T& value, VariantTag) {
-	value.Write(this);
+	if (value.IsEmpty()) {
+		SetError(ErrorCode::kEmptyVariant);
+	} else {
+		value.Write(this);
+	}
 }
 
 } // namespace serial

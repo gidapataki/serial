@@ -10,7 +10,8 @@
 - schema (aka. blueprint)
 	- kPrimitiveName (user<color>)
 	- register user primitives
-	- sanity check (identifier, no dots)
+	- sanity check (identifiers with no dots)
+	- same field is only used once per acceptvisitor
 
 - nice errors if referable is a field / variant contains invalid types
 - type in refid (ref_0-circle)

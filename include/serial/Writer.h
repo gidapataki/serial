@@ -20,11 +20,10 @@ public:
 	// as it leaves the object in a non-clear state.
 	ErrorCode Write(const Header& header, ReferableBase* ref, Json::Value& output);
 
-	template<typename T> void VisitField(const T& value, const char* name);
 	template<typename T> void WriteReferable(const T& value);
 	template<typename T> void WriteVariant(const T& value);
 
-	void SetError(ErrorCode error);
+	template<typename T> void VisitField(const T& value, const char* name);
 
 private:
 	class StateSentry {
@@ -43,6 +42,7 @@ private:
 	Json::Value& SelectNext();
 	Json::Value& Current();
 
+
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);
 	template<typename T> void VisitValue(const T& value, ArrayTag);
@@ -55,6 +55,7 @@ private:
 
 	void VisitValue(const float& value, PrimitiveTag);
 	void VisitValue(const double& value, PrimitiveTag);
+	void SetError(ErrorCode error);
 
 	const Registry& reg_;
 	ErrorCode error_ = ErrorCode::kNone;

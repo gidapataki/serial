@@ -19,6 +19,14 @@ UniqueRef Registry::CreateReferable(const std::string& name) const {
 	return it->second->Create();
 }
 
+TypeId Registry::FindTypeId(const std::string& name) const {
+	auto it = names_.find(name);
+	if (it == names_.end()) {
+		return kInvalidTypeId;
+	}
+	return it->second;
+}
+
 
 // Registrator
 

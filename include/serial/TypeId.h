@@ -3,6 +3,7 @@
 namespace serial {
 
 using TypeId = int*;
+constexpr TypeId kInvalidTypeId = nullptr;
 
 template<typename T>
 class StaticTypeId {

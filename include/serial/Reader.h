@@ -19,6 +19,8 @@ public:
 		const Registry& reg, RefContainer& refs, ReferableBase*& root);
 
 	template<typename T> void ReadReferable(T& value);
+	template<typename T> void ReadVariant(T& value);
+
 	template<typename T> void VisitField(T& value, const char* name);
 
 private:
@@ -41,6 +43,7 @@ private:
 	void ReadObjectInternal(const Registry& reg);
 	void ResolveRefs();
 	void ExtractRefs(RefContainer& refs, ReferableBase*& root);
+	bool CheckVariant();
 
 	template<typename T> void VisitValue(T& value);
 	template<typename T> void VisitValue(T& value, ArrayTag);
@@ -49,7 +52,7 @@ private:
 	template<typename T> void VisitValue(T& value, EnumTag);
 	template<typename T> void VisitValue(T& value, RefTag);
 	template<typename T> void VisitValue(T& value, UserTag);
-	template<typename T> void VisitValue(T& value, VariantTag) {}
+	template<typename T> void VisitValue(T& value, VariantTag);
 
 	void VisitValue(bool& value, PrimitiveTag);
 	void VisitValue(int& value, PrimitiveTag);

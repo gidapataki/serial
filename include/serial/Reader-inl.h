@@ -16,6 +16,14 @@ void Reader::ReadReferable(T& value) {
 }
 
 template<typename T>
+void Reader::ReadVariant(T& value) {
+	StateSentry sentry(this);
+	assert(Current()[str::kVariantType] == T::kTypeName);
+	Select(str::kVariantValue);
+	VisitValue(value);
+}
+
+template<typename T>
 void Reader::VisitField(T& value, const char* name) {
 	if (IsError()) {
 		return;
@@ -128,6 +136,23 @@ void Reader::VisitValue(T& value, RefTag) {
 
 	auto refid = Current().asString();
 	unresolved_refs_.emplace_back(&value, std::move(refid));
+}
+
+template<typename T>
+void Reader::VisitValue(T& value, VariantTag) {
+	if (!CheckVariant()) {
+		return;
+	}
+
+	StateSentry sentry(this);
+	auto type = Current()[str::kVariantType].asString();
+	auto id = reg_->FindTypeId(type);
+
+	if (id == kInvalidTypeId) {
+		SetError(ErrorCode::kUnregisteredType);
+		return;
+	}
+	value.Read(id, this);
 }
 
 } // namespace serial
