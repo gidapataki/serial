@@ -22,6 +22,9 @@ public:
 
 	template<typename T> void VisitField(const T& value, const char* name);
 	template<typename T> void WriteReferable(const T& value);
+	template<typename T> void WriteVariant(const T& value);
+
+	void SetError(ErrorCode error);
 
 private:
 	class StateSentry {
@@ -39,7 +42,6 @@ private:
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
 	Json::Value& Current();
-	void SetError(ErrorCode error);
 
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);
@@ -49,6 +51,7 @@ private:
 	template<typename T> void VisitValue(const T& value, EnumTag);
 	template<typename T> void VisitValue(const T& value, RefTag);
 	template<typename T> void VisitValue(const T& value, UserTag);
+	template<typename T> void VisitValue(const T& value, VariantTag);
 
 	void VisitValue(const float& value, PrimitiveTag);
 	void VisitValue(const double& value, PrimitiveTag);

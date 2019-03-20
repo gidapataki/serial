@@ -35,7 +35,8 @@ public:
 	template<typename T> void VisitField(const T& value, const char* name);
 
 private:
-	template<typename... Ts> struct ForEachRef;
+	template<typename... Ts> struct ForEachType;
+
 	template<typename T> bool RegisterInternal();
 	template<typename T> bool IsVisited() const;
 	template<typename T> void AddVisited();
@@ -47,6 +48,7 @@ private:
 	template<typename T> void VisitValue(const T& value, ObjectTag);
 	template<typename T> void VisitValue(const T& value, EnumTag);
 	template<typename T> void VisitValue(const T& value, UserTag);
+	template<typename... Ts> void VisitValue(const Variant<Ts...>& value, VariantTag);
 	template<typename... Ts> void VisitValue(const Ref<Ts...>& value, RefTag);
 
 	Registry& reg_;
@@ -72,6 +74,7 @@ public:
 private:
 	template<typename T> bool Register(ReferableTag);
 	template<typename T> bool Register(EnumTag);
+	template<typename T> bool Register(ObjectTag);
 
 	template<typename T>
 	struct EnumValueCollector {
@@ -84,7 +87,7 @@ private:
 		std::unordered_map<std::string, int> values;
 	};
 
-	std::unordered_set<std::string> names_;
+	std::unordered_map<std::string, TypeId> names_;
 	std::unordered_set<TypeId> typeids_;
 
 	std::unordered_map<std::string, FactoryPtr> ref_factories_;

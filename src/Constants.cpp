@@ -25,6 +25,7 @@ const char* ToString(ErrorCode ec) {
 		case ErrorCode::kDuplicateObjectId: return "DuplicateObjectId";
 		case ErrorCode::kUnresolvableReference: return "UnresolvableReference";
 		case ErrorCode::kNullReference: return "NullReference";
+		case ErrorCode::kEmptyVariant: return "EmptyVariant";
 	}
 	return "Unknown";
 }

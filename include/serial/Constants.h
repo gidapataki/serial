@@ -12,6 +12,9 @@ constexpr const char* kObjectType = "type";
 constexpr const char* kObjectFields = "fields";
 constexpr const char* kObjectId = "id";
 constexpr const char* kRootId = "root";
+constexpr const char* kVariantType = "type";
+constexpr const char* kVariantValue = "value";
+
 
 } // namespace str
 
@@ -36,6 +39,7 @@ enum class ErrorCode {
 	kDuplicateObjectId,
 	kUnresolvableReference,
 	kNullReference,
+	kEmptyVariant,
 };
 
 const char* ToString(ErrorCode ec);

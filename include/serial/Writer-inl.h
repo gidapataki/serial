@@ -27,8 +27,18 @@ void Writer::WriteReferable(const T& value) {
 	StateSentry sentry(this);
 	Current()[str::kObjectId] = Json::Value(refid);
 	Current()[str::kObjectType] = Json::Value(name);
-	Select(str::kObjectFields) = Json::Value(Json::objectValue);
+	Select(str::kObjectFields) = Json::objectValue;
 	T::AcceptVisitor(value, *this);
+}
+
+template<typename T>
+void Writer::WriteVariant(const T& value) {
+	auto name = T::kTypeName;
+
+	StateSentry sentry(this);
+	Current()[str::kVariantType] = Json::Value(name);
+	Select(str::kVariantValue) = Json::objectValue;
+	VisitValue(value);
 }
 
 template<typename T>
@@ -104,6 +114,11 @@ void Writer::VisitValue(const T& value, EnumTag) {
 	}
 
 	Current() = Json::Value(name);
+}
+
+template<typename T>
+void Writer::VisitValue(const T& value, VariantTag) {
+	value.Write(this);
 }
 
 } // namespace serial

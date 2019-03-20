@@ -1,5 +1,5 @@
 #include "serial/Serial.h"
-// #include "serial/RegistryBuilder.h"
+#include "serial/Variant.h"
 #include <iostream>
 
 
@@ -44,8 +44,41 @@ struct Circle : serial::Referable<Circle> {
 	}
 };
 
+struct A {
+	int x = 0;
+
+	static constexpr auto kTypeName = "a";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.x, "x");
+	}
+};
+
+struct B {
+	std::string s;
+
+	static constexpr auto kTypeName = "b";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.s, "s");
+	}
+};
+
+struct Other : serial::Referable<Other> {
+	serial::Variant<A, B> w;
+
+	static constexpr auto kTypeName = "other";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.w, "w");
+	}
+};
+
 struct Group : serial::Referable<Group> {
-	serial::Array<serial::Ref<Circle, Group>> elements;
+	serial::Array<serial::Ref<Circle, Group, Other>> elements;
 	serial::Optional<std::string> name;
 
 	static constexpr auto kTypeName = "group";
@@ -85,13 +118,21 @@ void Example() {
 	Group g2;
 	g2.elements.push_back(&g1);
 
+	Other o1;
+	Group g3;
+	g3.elements.push_back(&o1);
+
+	B b;
+	b.s = "hello";
+	o1.w = std::move(b);
+
 	// Serialize
 	Json::Value json_value;
 	serial::Header header{"example", 1};
-	auto ec = serial::Serialize(g2, header, json_value);
+	auto ec = serial::Serialize(g3, header, json_value);
 
 	if (ec != serial::ErrorCode::kNone) {
-		std::cerr << ToString(ec) << std::endl;
+		std::cerr << "error: " << ToString(ec) << std::endl;
 		return;
 	}
 	Dump(json_value);

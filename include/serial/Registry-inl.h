@@ -50,7 +50,7 @@ bool Registry::Register() {
 	bool success = Register<T>(Tag{});
 	if (success) {
 		typeids_.insert(id);
-		names_.insert(name);
+		names_.emplace(name, id);
 	}
 
 	return success;
@@ -103,6 +103,10 @@ bool Registry::Register(EnumTag) {
 	return true;
 }
 
+template<typename T>
+bool Registry::Register(ObjectTag) {
+	return true;
+}
 
 template<typename T>
 const char* Registry::EnumToString(T value) const {
@@ -249,7 +253,12 @@ void Registrator::VisitValue(const T& value, EnumTag) {
 
 template<typename... Ts>
 void Registrator::VisitValue(const Ref<Ts...>& value, RefTag) {
-	ForEachRef<Ts...>::RegisterInternal(this);
+	ForEachType<Ts...>::RegisterInternal(this);
+}
+
+template<typename... Ts>
+void Registrator::VisitValue(const Variant<Ts...>& value, VariantTag) {
+	ForEachType<Ts...>::RegisterInternal(this);
 }
 
 template<typename T>
@@ -258,17 +267,17 @@ void Registrator::VisitValue(const T& value, UserTag) {
 }
 
 template<typename T>
-struct Registrator::ForEachRef<T> {
+struct Registrator::ForEachType<T> {
 	static bool RegisterInternal(Registrator* rx) {
 		return rx->RegisterInternal<T>();
 	}
 };
 
 template<typename T, typename... Ts>
-struct Registrator::ForEachRef<T, Ts...> {
+struct Registrator::ForEachType<T, Ts...> {
 	static bool RegisterInternal(Registrator* rx) {
 		return rx->RegisterInternal<T>() &&
-			ForEachRef<Ts...>::RegisterInternal(rx);
+			ForEachType<Ts...>::RegisterInternal(rx);
 	}
 };
 

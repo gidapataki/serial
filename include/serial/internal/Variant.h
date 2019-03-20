@@ -6,7 +6,7 @@
 
 
 namespace serial {
-namespace variant {
+namespace internal {
 
 template<typename... T>
 struct Typelist;
@@ -109,7 +109,7 @@ public: // Keep the public interface function body free
 
 	template<typename T>
 	struct IndexOf {
-		static constexpr int value = serial::variant::IndexOf<T, Types>::value;
+		static constexpr int value = serial::internal::IndexOf<T, Types>::value;
 
 		static_assert(value != -1, "Type not in typelist");
 	};
@@ -439,5 +439,5 @@ bool operator!=(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs) {
 	return !(lhs == rhs);
 }
 
-} // namespace variant
+} // namespace internal
 } // namespace serial

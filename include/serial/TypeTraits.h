@@ -13,6 +13,7 @@ struct OptionalTag {};
 struct ObjectTag {};
 struct EnumTag {};
 struct RefTag {};
+struct VariantTag {};
 struct ReferableTag {};
 struct UserTag {};
 
@@ -45,6 +46,11 @@ struct TypeTag<Optional<T>> {
 template<typename... Ts>
 struct TypeTag<Ref<Ts...>> {
 	using Type = RefTag;
+};
+
+template<typename... Ts>
+struct TypeTag<Variant<Ts...>> {
+	using Type = VariantTag;
 };
 
 

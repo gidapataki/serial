@@ -2,7 +2,6 @@
 #include <type_traits>
 #include <map>
 #include <functional>
-#include "serial/variant/Variant.h"
 
 
 template<typename E>
@@ -144,11 +143,5 @@ void CheckVersion() {
 
 
 int main() {
-	serial::variant::Variant<int, std::string> vs;
-
-	vs = 5;
-	std::cout << vs.Get<int>() << std::endl;
-
-	vs = std::string{"hello"};
-	std::cout << vs.Get<std::string>() << std::endl;
+	CheckVersion();
 }

@@ -21,6 +21,7 @@ template<typename T> class Factory;
 template<typename T> using Array = std::vector<T>;
 template<typename T> using Optional = boost::optional<T>;
 template<typename... Ts> class Ref;
+template<typename... Ts> class Variant;
 
 using UniqueRef = std::unique_ptr<ReferableBase>;
 using RefContainer = std::vector<UniqueRef>;
