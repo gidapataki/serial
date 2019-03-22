@@ -4,7 +4,7 @@
 namespace serial {
 namespace detail {
 
-struct WriteVisitor : serial::internal::Visitor<> {
+struct WriteVisitor : Visitor<> {
 	WriteVisitor(Writer* writer)
 		: writer_(writer)
 	{}
@@ -16,6 +16,28 @@ struct WriteVisitor : serial::internal::Visitor<> {
 
 private:
 	Writer* writer_;
+};
+
+struct HashVisitor : Visitor<size_t> {
+	template<typename T>
+	size_t operator()(const T& t) const {
+		return std::hash<T>{}(t);
+	}
+};
+
+template<typename... Ts>
+struct EqualityVisitor : Visitor<bool> {
+	EqualityVisitor(const Variant<Ts...>& lhs)
+		: lhs_(lhs)
+	{}
+
+	template<typename T>
+	bool operator()(const T& rhs) {
+		return lhs_.template Get<T>() == rhs;
+	}
+
+private:
+	const Variant<Ts...>& lhs_;
 };
 
 } // namespace detail
@@ -47,29 +69,6 @@ struct Variant<Ts...>::ForEachType<U, Us...> {
 
 
 // Variant
-
-template<typename... Ts>
-Variant<Ts...>::Variant(Variant&& other)
-	: value_(other.value_)
-{}
-
-template<typename... Ts>
-template<typename T>
-Variant<Ts...>::Variant(T&& value)
-	: value_(value)
-{}
-
-template<typename... Ts>
-Variant<Ts...>& Variant<Ts...>::operator=(const Variant& other) {
-	value_ = other.value_;
-	return *this;
-}
-
-template<typename... Ts>
-Variant<Ts...>& Variant<Ts...>::operator=(Variant&& other) {
-	value_ = other.value_;
-	return *this;
-}
 
 template<typename... Ts>
 template<typename T>
@@ -114,7 +113,7 @@ T& Variant<Ts...>::Get() {
 template<typename... Ts>
 void Variant<Ts...>::Write(Writer* writer) const {
 	assert(!value_.IsEmpty() && "Cannot write empty variant");
-	ApplyVisitor(detail::WriteVisitor{writer}, value_);
+	value_.ApplyVisitor(detail::WriteVisitor{writer});
 }
 
 template<typename... Ts>
@@ -128,5 +127,71 @@ constexpr typename Variant<Ts...>::Index Variant<Ts...>::IndexOf() {
 	return Index(internal::IndexOf<T, internal::Typelist<Ts...>>::value);
 }
 
+template<typename... Ts>
+template<typename V>
+typename V::ResultType Variant<Ts...>::ApplyVisitor(V&& visitor) {
+	return value_.ApplyVisitor(std::forward<V>(visitor));
+}
+
+template<typename... Ts>
+template<typename V>
+typename V::ResultType Variant<Ts...>::ApplyVisitor(V&& visitor) const {
+	return value_.ApplyVisitor(std::forward<V>(visitor));
+}
+
+
+// ApplyVisitor
+
+template<typename V, typename... Ts>
+typename V::ResultType ApplyVisitor(V&& visitor, Variant<Ts...>& variant) {
+	return variant.ApplyVisitor(std::forward<V>(visitor));
+}
+
+template<typename V, typename... Ts>
+typename V::ResultType ApplyVisitor(V&& visitor, const Variant<Ts...>& variant) {
+	return variant.ApplyVisitor(std::forward<V>(visitor));
+}
+
+
+// Equality
+
+template<typename... Ts>
+bool operator==(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs) {
+	if (lhs.Which() != rhs.Which()) {
+		return false;
+	}
+
+	if (lhs.IsEmpty()) {
+		return true;
+	}
+
+	return rhs.ApplyVisitor(detail::EqualityVisitor<Ts...>{lhs});
+}
+
+template<typename... Ts>
+bool operator!=(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs) {
+	return !(lhs == rhs);
+}
+
 } // namespace serial
+
+
+namespace std {
+
+template<typename... Ts>
+typename hash<serial::Variant<Ts...>>::result_type
+hash<serial::Variant<Ts...>>::operator()(const argument_type& v) const {
+	size_t seed = 0;
+	if (!v.IsEmpty()) {
+		seed = v.ApplyVisitor(serial::detail::HashVisitor{});
+	}
+
+	// from boost::hash_combine
+	auto w = int(v.Which());
+	seed ^= std::hash<int>()(w) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	return seed;
+}
+
+
+} // namespace std
 

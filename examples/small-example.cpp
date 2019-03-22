@@ -1,6 +1,6 @@
 #include "serial/Serial.h"
-#include "serial/Variant.h"
 #include <iostream>
+#include <unordered_set>
 
 
 struct Winding : serial::Enum {
@@ -149,6 +149,17 @@ void Example() {
 }
 
 int main() {
-	Example();
+	// Example();
+
+	serial::Variant<int, float> x, y;
+	std::unordered_set<serial::Variant<int, float>> xs;
+
+	x = 5;
+	xs.insert(x);
+
+	std::cout << xs.count(y) << std::endl;
+	std::cout << xs.count(x) << std::endl;
+
+	// std::cout << (x == y) << std::endl;
 }
 
