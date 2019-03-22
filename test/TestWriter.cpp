@@ -635,4 +635,3 @@ TEST(WriterTest, Variant) {
 		EXPECT_EQ(13, value_field["x"].asInt());
 	}
 }
-
