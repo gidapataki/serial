@@ -1,7 +1,7 @@
 #pragma once
 #include <cassert>
 #include <type_traits>
-
+#include "serial/TypeName.h"
 
 namespace serial {
 
@@ -32,10 +32,10 @@ bool Registry::IsRegistered() const {
 
 template<typename T>
 bool Registry::Register() {
-	static_assert(T::kTypeName != nullptr, "Invalid type name");
+	static_assert(TypeName<T>::value != nullptr, "Invalid type name");
 
 	auto id = StaticTypeId<T>::Get();
-	auto name = T::kTypeName;
+	auto name = TypeName<T>::value;
 
 	if (typeids_.count(id) > 0) {
 		return true;
@@ -43,6 +43,11 @@ bool Registry::Register() {
 
 	if (names_.count(name) > 0) {
 		assert(!enable_asserts_ && "Duplicate type name");
+		return false;
+	}
+
+	if (IsReserved(name)) {
+		assert(!enable_asserts_ && "Cannot register reserved names");
 		return false;
 	}
 
@@ -58,7 +63,7 @@ bool Registry::Register() {
 
 template<typename T>
 bool Registry::Register(ReferableTag) {
-	auto name = T::kTypeName;
+	auto name = TypeName<T>::value;
 #if 1
 	// Note: this is faster to compile
 	ref_factories_[name] = std::unique_ptr<FactoryBase>(new Factory<T>());
@@ -206,7 +211,7 @@ bool Registrator::RegisterInternal() {
 
 	if (success_) {
 		T elem;
-		T::AcceptVisitor(elem, *this);
+		VisitValue(elem);
 	}
 
 	return success_;
@@ -241,6 +246,11 @@ void Registrator::VisitValue(const Optional<T>& value, OptionalTag) {
 
 template<typename T>
 void Registrator::VisitValue(const T& value, ObjectTag) {
+	T::AcceptVisitor(value, *this);
+}
+
+template<typename T>
+void Registrator::VisitValue(const T& value, ReferableTag) {
 	T::AcceptVisitor(value, *this);
 }
 

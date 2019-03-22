@@ -46,6 +46,28 @@ struct IsReferable<T, Ts...> {
 };
 
 
+template<typename T, typename... Ts>
+struct IndexOf;
+
+template<typename T>
+struct IndexOf<T> {
+	static constexpr int value = -1;
+};
+
+template<typename T, typename... Ts>
+struct IndexOf<T, T, Ts...> {
+	static constexpr int value = 0;
+};
+
+template<typename T, typename U, typename... Ts>
+struct IndexOf<T, U, Ts...> {
+private:
+	static constexpr int res = IndexOf<T, Ts...>::value;
+public:
+	static constexpr int value = res == -1 ? -1 : 1 + res;
+};
+
+
 template<typename... Ts>
 struct MatchTypeId;
 
@@ -60,6 +82,29 @@ template<typename T, typename... Ts>
 struct MatchTypeId<T, Ts...> {
 	static bool Accept(TypeId id) {
 		return id == StaticTypeId<T>::Get() || MatchTypeId<Ts...>::Accept(id);
+	}
+};
+
+
+template<typename... Ts>
+struct IndexOfTypeId;
+
+template<typename T>
+struct IndexOfTypeId<T> {
+	static int Get(TypeId id) {
+		return id == StaticTypeId<T>::Get() ? 0 : -1;
+	}
+};
+
+template<typename T, typename... Ts>
+struct IndexOfTypeId<T, Ts...> {
+	static int Get(TypeId id) {
+		if (id == StaticTypeId<T>::Get()) {
+			return 0;
+		}
+
+		auto index = IndexOfTypeId<Ts...>::Get(id);
+		return index == -1 ? -1 : index + 1;
 	}
 };
 

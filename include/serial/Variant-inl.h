@@ -89,8 +89,8 @@ bool Variant<Ts...>::IsEmpty() const {
 }
 
 template<typename... Ts>
-int Variant<Ts...>::Which() const {
-	return value_.Which();
+typename Variant<Ts...>::Index Variant<Ts...>::Which() const {
+	return Index(value_.Which());
 }
 
 template<typename... Ts>
@@ -120,6 +120,12 @@ void Variant<Ts...>::Write(Writer* writer) const {
 template<typename... Ts>
 void Variant<Ts...>::Read(TypeId id, Reader* reader) {
 	ForEachType<Ts...>::ReadIf(*this, id, reader);
+}
+
+template<typename... Ts>
+template<typename T, typename>
+constexpr typename Variant<Ts...>::Index Variant<Ts...>::IndexOf() {
+	return Index(internal::IndexOf<T, internal::Typelist<Ts...>>::value);
 }
 
 } // namespace serial

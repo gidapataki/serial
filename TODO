@@ -1,6 +1,8 @@
 # TODO
 
-- variant
+
+- test variant
+- variant visitor (Laci?)
 
 --
 
@@ -17,3 +19,4 @@
 - type in refid (ref_0-circle)
 - test object order stability
 - test registator with all types
+

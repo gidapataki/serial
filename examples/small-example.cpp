@@ -137,7 +137,7 @@ void Example() {
 	}
 	json_value["objects"][1]["fields"]["w"]["value"]["s"] = "kitty";
 	Dump(json_value);
-// return;
+
 	// Deserialize
 	serial::RefContainer refs;
 	Group* group = nullptr;
@@ -146,9 +146,6 @@ void Example() {
 		std::cerr << "error: " << ToString(ec2) << std::endl;
 		return;
 	}
-
-	std::cout << group->elements[0].As<Other>().w.Which() << std::endl;
-	std::cout << group->elements[0].As<Other>().w.Get<B>().s << std::endl;
 }
 
 int main() {

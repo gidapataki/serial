@@ -1,12 +1,18 @@
 #pragma once
 #include "serial/internal/Variant.h"
 #include "serial/SerialFwd.h"
+#include "serial/MetaHelpers.h"
 
 namespace serial {
 
 template<typename... Ts>
 class Variant {
 public:
+	enum class Index {};
+
+	template<typename T, typename = detail::EnableIfOneOf<T, Ts...>>
+	static constexpr Index IndexOf();
+
 	Variant() = default;
 	Variant(Variant&& other);
 	template<typename T> Variant(T&& value);
@@ -18,7 +24,7 @@ public:
 
 	void Clear();
 	bool IsEmpty() const;
-	int Which() const;
+	Index Which() const;
 
 	template<typename T> bool Is() const;
 	template<typename T> const T& Get() const;

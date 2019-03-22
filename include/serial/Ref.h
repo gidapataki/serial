@@ -20,6 +20,8 @@ protected:
 template<typename... Ts>
 class Ref : public RefBase {
 public:
+	enum class Index {};
+
 	Ref() = default;
 	Ref(std::nullptr_t);
 	~Ref();
@@ -33,12 +35,15 @@ public:
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> U& As();
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> const U& As() const;
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> bool Is() const;
+	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> static constexpr Index IndexOf();
 
 	bool operator==(const Ref& other) const;
 	bool operator!=(const Ref& other) const;
 
 	explicit operator bool() const;
 	virtual bool Set(ReferableBase* ref) override;
+
+	Index Which() const;
 };
 
 } // namespace serial

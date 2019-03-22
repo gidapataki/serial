@@ -48,6 +48,7 @@ private:
 	template<typename T> void VisitValue(const T& value, ObjectTag);
 	template<typename T> void VisitValue(const T& value, EnumTag);
 	template<typename T> void VisitValue(const T& value, UserTag);
+	template<typename T> void VisitValue(const T& value, ReferableTag);
 	template<typename... Ts> void VisitValue(const Variant<Ts...>& value, VariantTag);
 	template<typename... Ts> void VisitValue(const Ref<Ts...>& value, RefTag);
 
@@ -74,6 +75,8 @@ public:
 	TypeId FindTypeId(const std::string& name) const;
 
 private:
+	static bool IsReserved(const std::string& name);
+
 	template<typename T> bool Register(ReferableTag);
 	template<typename T> bool Register(EnumTag);
 	template<typename T> bool Register(ObjectTag);

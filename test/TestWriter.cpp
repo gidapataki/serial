@@ -2,6 +2,7 @@
 #include "serial/Ref.h"
 #include "serial/Referable.h"
 #include "serial/Writer.h"
+#include "serial/Variant.h"
 #include "RgbColor.h"
 #include <limits>
 
@@ -28,6 +29,8 @@ using AnyRef = Ref<A, B, C, Leaf, Opt>;
 
 struct Data {
 	int x = 0;
+
+	static constexpr auto kTypeName = "data";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -163,6 +166,18 @@ struct U : Referable<U> {
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.color, "color");
+	}
+};
+
+
+struct Vx : Referable<Vx> {
+	Variant<Data, Color> var;
+
+	static constexpr auto kTypeName = "vx";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.var, "var");
 	}
 };
 
@@ -569,3 +584,55 @@ TEST(WriterTest, UserType) {
 	u.color.invalid = true;
 	EXPECT_EQ(ErrorCode::kUnexpectedValue, Writer(reg, noasserts).Write(h, &u, root));
 }
+
+TEST(WriterTest, Variant) {
+	Registry reg(noasserts);
+	Header h;
+	Json::Value root;
+	Vx vx;
+
+	reg.RegisterAll<Vx>();
+	vx.var = Color{Color::kGreen};
+	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &vx, root));
+
+	vx.var = Color{Color::kBlue};
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &vx, root));
+	{
+		auto& var_field = FirstObjectField(root, "var");
+
+		EXPECT_TRUE(var_field.isObject());
+		EXPECT_TRUE(var_field.isMember(str::kVariantType));
+		EXPECT_TRUE(var_field.isMember(str::kVariantValue));
+
+		auto& type_field = var_field[str::kVariantType];
+		auto& value_field = var_field[str::kVariantValue];
+		EXPECT_TRUE(type_field.isString());
+		EXPECT_TRUE(value_field.isString());
+
+		EXPECT_EQ(std::string{"color"}, type_field.asString());
+		EXPECT_EQ(std::string{"blue"}, value_field.asString());
+	}
+
+	vx.var = Data{};
+	vx.var.Get<Data>().x = 13;
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &vx, root));
+
+	{
+		auto& var_field = FirstObjectField(root, "var");
+
+		EXPECT_TRUE(var_field.isObject());
+		EXPECT_TRUE(var_field.isMember(str::kVariantType));
+		EXPECT_TRUE(var_field.isMember(str::kVariantValue));
+
+		auto& type_field = var_field[str::kVariantType];
+		auto& value_field = var_field[str::kVariantValue];
+		EXPECT_TRUE(type_field.isString());
+		EXPECT_TRUE(value_field.isObject());
+		EXPECT_TRUE(value_field.isMember("x"));
+		EXPECT_TRUE(value_field["x"].isInt());
+
+		EXPECT_EQ(std::string{"data"}, type_field.asString());
+		EXPECT_EQ(13, value_field["x"].asInt());
+	}
+}
+

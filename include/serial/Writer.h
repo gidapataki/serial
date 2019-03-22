@@ -20,6 +20,17 @@ public:
 	// as it leaves the object in a non-clear state.
 	ErrorCode Write(const Header& header, ReferableBase* ref, Json::Value& output);
 
+	template<typename T> ErrorCode WriteValue(const T& value, Json::Value& output) {
+		error_ = ErrorCode::kNone;
+		root_.clear();
+		VisitValue(value);
+		if (error_ == ErrorCode::kNone) {
+			output = root_;
+		}
+		return error_;
+	}
+
+
 	template<typename T> void WriteReferable(const T& value);
 	template<typename T> void WriteVariant(const T& value);
 
@@ -41,7 +52,6 @@ private:
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
 	Json::Value& Current();
-
 
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);

@@ -183,16 +183,16 @@ private:
 template<typename Visitor, typename... Ts>
 typename Visitor::ResultType ApplyVisitor(
 	Visitor&& visitor,
-	Variant<Ts...>& variant
-) {
+	Variant<Ts...>& variant)
+{
 	return variant.ApplyVisitor(std::forward<Visitor>(visitor));
 }
 
 template<typename Visitor, typename... Ts>
 typename Visitor::ResultType ApplyVisitor(
 	Visitor&& visitor,
-	const Variant<Ts...>& variant
-) {
+	const Variant<Ts...>& variant)
+{
 	return variant.ApplyVisitor(std::forward<Visitor>(visitor));
 }
 

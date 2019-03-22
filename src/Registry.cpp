@@ -27,6 +27,9 @@ TypeId Registry::FindTypeId(const std::string& name) const {
 	return it->second;
 }
 
+bool Registry::IsReserved(const std::string& name) {
+	return name.size() > 2 && name.front() == '_' && name.back() == '_';
+}
 
 // Registrator
 

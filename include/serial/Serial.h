@@ -6,6 +6,7 @@
 #include "serial/Header.h"
 #include "serial/Constants.h"
 #include "serial/Ref.h"
+#include "serial/Variant.h"
 #include "jsoncpp/json.h"
 
 

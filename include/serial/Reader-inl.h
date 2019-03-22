@@ -18,7 +18,7 @@ void Reader::ReadReferable(T& value) {
 template<typename T>
 void Reader::ReadVariant(T& value) {
 	StateSentry sentry(this);
-	assert(Current()[str::kVariantType] == T::kTypeName);
+	assert(Current()[str::kVariantType] == TypeName<T>::value);
 	Select(str::kVariantValue);
 	VisitValue(value);
 }

@@ -1,6 +1,7 @@
 #pragma once
-#include "serial/ReferableBase.h"
 #include <cassert>
+#include "serial/ReferableBase.h"
+#include "serial/MetaHelpers.h"
 
 
 namespace serial {
@@ -54,6 +55,12 @@ bool Ref<Ts...>::Is() const {
 }
 
 template<typename... Ts>
+template<typename U, typename>
+constexpr typename Ref<Ts...>::Index Ref<Ts...>::IndexOf() {
+	return Index(detail::IndexOf<U, Ts...>::value);
+}
+
+template<typename... Ts>
 bool Ref<Ts...>::operator==(const Ref& other) const {
 	return ref_ == other.ref_;
 }
@@ -77,6 +84,15 @@ bool Ref<Ts...>::Set(ReferableBase* ref) {
 		return true;
 	}
 	return false;
+}
+
+template<typename... Ts>
+typename Ref<Ts...>::Index Ref<Ts...>::Which() const {
+	if (ref_ == nullptr) {
+		return Index(-1);
+	}
+
+	return Index(detail::IndexOfTypeId<Ts...>::Get(ref_->GetTypeId()));
 }
 
 } // namespace serial

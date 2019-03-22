@@ -144,3 +144,36 @@ TEST(TypedRefTest, Set) {
 	EXPECT_TRUE(ref1.Set(nullptr));
 	EXPECT_EQ(nullptr, ref1.Get());
 }
+
+TEST(TypedRefTest, WhichIndex) {
+	A a;
+	B b;
+	C c;
+
+	using Rx = Ref<A, B, C>;
+	Rx ref;
+
+	EXPECT_EQ(Rx::Index(-1), ref.Which());
+
+	ref = &a;
+	EXPECT_EQ(Rx::IndexOf<A>(), ref.Which());
+	EXPECT_NE(Rx::Index(-1), ref.Which());
+
+	int count = 0;
+	switch(ref.Which()) {
+		case Rx::IndexOf<B>(): count |= 1; break;
+		case Rx::IndexOf<C>(): count |= 2; break;
+		default: count |= 4; break;
+	}
+
+	EXPECT_EQ(4, count);
+
+	ref = nullptr;
+	EXPECT_EQ(Rx::Index(-1), ref.Which());
+
+	ref = &b;
+	EXPECT_EQ(Rx::IndexOf<B>(), ref.Which());
+
+	ref = &c;
+	EXPECT_EQ(Rx::IndexOf<C>(), ref.Which());
+}

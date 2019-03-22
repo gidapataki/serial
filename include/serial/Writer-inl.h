@@ -2,6 +2,7 @@
 #include <cassert>
 #include "serial/Constants.h"
 #include "serial/Registry.h"
+#include "serial/TypeName.h"
 
 
 namespace serial {
@@ -16,7 +17,7 @@ void Writer::VisitField(const T& value, const char* name) {
 template<typename T>
 void Writer::WriteReferable(const T& value) {
 	auto refid = AddRef(&value);
-	auto name = T::kTypeName;
+	auto name = TypeName<T>::value;
 
 	if (!reg_.IsRegistered<T>()) {
 		SetError(ErrorCode::kUnregisteredType);
@@ -33,7 +34,7 @@ void Writer::WriteReferable(const T& value) {
 
 template<typename T>
 void Writer::WriteVariant(const T& value) {
-	auto name = T::kTypeName;
+	auto name = TypeName<T>::value;
 
 	StateSentry sentry(this);
 	Current()[str::kVariantType] = Json::Value(name);
