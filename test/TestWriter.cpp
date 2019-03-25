@@ -171,7 +171,7 @@ struct U : Referable<U> {
 
 
 struct Vx : Referable<Vx> {
-	Variant<Data, Color> var;
+	Variant<Data, Color, int32_t> var;
 
 	static constexpr auto kTypeName = "vx";
 
@@ -591,6 +591,10 @@ TEST(WriterTest, Variant) {
 	Json::Value root;
 	Vx vx;
 
+	reg.Register<Vx>();
+	vx.var = 5;
+	EXPECT_EQ(ErrorCode::kUnregisteredType, Writer(reg, noasserts).Write(h, &vx, root));
+
 	reg.RegisterAll<Vx>();
 	vx.var = Color{Color::kGreen};
 	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &vx, root));
@@ -633,5 +637,27 @@ TEST(WriterTest, Variant) {
 
 		EXPECT_EQ(std::string{"data"}, type_field.asString());
 		EXPECT_EQ(13, value_field["x"].asInt());
+	}
+
+	vx.var.Clear();
+	EXPECT_EQ(ErrorCode::kEmptyVariant, Writer(reg, noasserts).Write(h, &vx, root));
+
+	vx.var = 27;
+	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &vx, root));
+
+	{
+		auto& var_field = FirstObjectField(root, "var");
+
+		EXPECT_TRUE(var_field.isObject());
+		EXPECT_TRUE(var_field.isMember(str::kVariantType));
+		EXPECT_TRUE(var_field.isMember(str::kVariantValue));
+
+		auto& type_field = var_field[str::kVariantType];
+		auto& value_field = var_field[str::kVariantValue];
+		EXPECT_TRUE(type_field.isString());
+		EXPECT_TRUE(value_field.isInt());
+
+		EXPECT_EQ(std::string{"_i32_"}, type_field.asString());
+		EXPECT_EQ(27, value_field.asInt());
 	}
 }

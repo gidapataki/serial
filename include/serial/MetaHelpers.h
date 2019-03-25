@@ -1,6 +1,7 @@
 #pragma once
 #include <type_traits>
 #include "serial/TypeId.h"
+#include "serial/TypeTraits.h"
 
 
 namespace serial {

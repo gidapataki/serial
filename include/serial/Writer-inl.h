@@ -33,7 +33,24 @@ void Writer::WriteReferable(const T& value) {
 }
 
 template<typename T>
+ErrorCode Writer::WriteValue(const T& value, Json::Value& output) {
+	error_ = ErrorCode::kNone;
+	root_.clear();
+	VisitValue(value);
+	if (error_ == ErrorCode::kNone) {
+		output = root_;
+	}
+	return error_;
+}
+
+template<typename T>
 void Writer::WriteVariant(const T& value) {
+	if (!reg_.IsRegistered<T>()) {
+		SetError(ErrorCode::kUnregisteredType);
+		assert(!enable_asserts_ && "Type is not registered");
+		return;
+	}
+
 	auto name = TypeName<T>::value;
 
 	StateSentry sentry(this);

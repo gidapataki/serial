@@ -71,9 +71,15 @@ struct Variant<Ts...>::ForEachType<U, Us...> {
 // Variant
 
 template<typename... Ts>
-template<typename T>
+template<typename T, typename>
+Variant<Ts...>::Variant(T&& value)
+	: value_(value)
+{}
+
+template<typename... Ts>
+template<typename T, typename>
 Variant<Ts...>& Variant<Ts...>::operator=(T&& value) {
-	value_ = value;
+	value_ = std::forward<T>(value);
 	return *this;
 }
 

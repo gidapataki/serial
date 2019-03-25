@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "serial/Registry.h"
 #include "serial/Referable.h"
+#include "serial/Variant.h"
+#include "serial/SerialFwd.h"
 #include <map>
 
 using namespace serial;
@@ -14,6 +16,21 @@ struct A : Referable<A> {
 
 struct A2 : Referable<A2> {
 	static constexpr auto kTypeName = "a";
+	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
+};
+
+struct A3 : Referable<A3> {
+	static constexpr auto kTypeName = "_a_";
+	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
+};
+
+struct A4 : Referable<A4> {
+	static constexpr auto kTypeName = "_a";
+	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
+};
+
+struct A5 : Referable<A5> {
+	static constexpr auto kTypeName = "a_";
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
@@ -32,7 +49,38 @@ struct X : Referable<X> {
 	template<typename S, typename V> static void AcceptVisitor(S&, V&) {}
 };
 
-// const char* X::kTypeName;
+struct U : UserPrimitive {
+	static constexpr auto kTypeName ="u";
+	bool FromString(const std::string&) { return true; }
+	bool ToString(std::string& v) const { return true; }
+};
+
+struct Point {
+	int x;
+	int y;
+
+	static constexpr auto kTypeName ="point";
+
+	template<typename S, typename V>
+	static void AcceptVisitor(S& self, V& v) {
+		v.VisitField(self.x, "x");
+		v.VisitField(self.y, "y");
+	}
+
+};
+
+struct Container : Referable<Container> {
+	Optional<U> u;
+	Array<Variant<int32_t, Point, U>> v;
+
+	static constexpr auto kTypeName = "container";
+
+	template<typename S, typename V>
+	static void AcceptVisitor(S& self, V& v) {
+		v.VisitField(self.u, "u");
+		v.VisitField(self.v, "v");
+	}
+};
 
 enum class Index {
 	kOne,
@@ -136,15 +184,19 @@ struct G : Enum {
 TEST(RegistryTest, Register) {
 	Registry reg(noasserts);
 
+	EXPECT_EQ(kInvalidTypeId, reg.FindTypeId(A::kTypeName));
+
 	EXPECT_TRUE(reg.Register<A>());
+	EXPECT_EQ(StaticTypeId<A>::Get(), reg.FindTypeId(A::kTypeName));
+
 	EXPECT_FALSE(reg.Register<A2>());
+	EXPECT_FALSE(reg.Register<A3>());
+	EXPECT_TRUE(reg.Register<A4>());
+	EXPECT_TRUE(reg.Register<A5>());
+
+	EXPECT_EQ(kInvalidTypeId, reg.FindTypeId(B::kTypeName));
 	EXPECT_TRUE(reg.Register<B>());
-
-	// X::kTypeName = "x1";
-	// EXPECT_TRUE(reg.Register<X>());
-
-	// X::kTypeName = "x2";
-	// EXPECT_FALSE(reg.Register<X>());
+	EXPECT_EQ(StaticTypeId<B>::Get(), reg.FindTypeId(B::kTypeName));
 }
 
 TEST(RegistryTest, Scoped) {
@@ -316,4 +368,11 @@ TEST(RegistryTest, SameEnumType) {
 
 	EXPECT_EQ(std::string{"2"}, reg.EnumToString(E{E::kTwo}));
 	EXPECT_EQ(std::string{"two"}, reg.EnumToString(G{E::kTwo}));
+}
+
+TEST(RegistryTest, RegisterAll) {
+	Registry reg(noasserts);
+
+	EXPECT_TRUE(reg.RegisterAll<Container>());
+	EXPECT_TRUE(reg.IsRegistered<U>());
 }

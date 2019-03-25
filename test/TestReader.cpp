@@ -2,6 +2,7 @@
 #include "serial/Ref.h"
 #include "serial/Referable.h"
 #include "serial/Reader.h"
+#include "serial/Variant.h"
 #include "RgbColor.h"
 #include <limits>
 
@@ -34,12 +35,20 @@ struct D;
 struct E;
 struct F;
 struct G;
+struct U;
+struct V;
 struct Leaf;
 struct Point;
+struct Opt;
+struct Floats;
+struct All;
+
 
 struct Point {
 	int x = 0;
 	int y = 0;
+
+	static constexpr auto kTypeName = "point";
 
 	template<typename S, typename V>
 	static void AcceptVisitor(S& self, V& v) {
@@ -160,6 +169,17 @@ struct U : Referable<U> {
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.color, "color");
+	}
+};
+
+struct V : Referable<V> {
+	Variant<Point, Color, int32_t> v;
+
+	static constexpr auto kTypeName = "v";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.v, "v");
 	}
 };
 
@@ -751,3 +771,38 @@ TEST(ReaderTest, UserType) {
 	EXPECT_EQ(2, color.g);
 	EXPECT_EQ(255, color.b);
 }
+
+TEST(ReaderTest, Variant) {
+	Json::Value root;
+	RefContainer refs;
+	ReferableBase* p = nullptr;
+	Registry reg(noasserts);
+
+	reg.Register<V>();
+
+	root = MakeHeader(0);
+	root[str::kObjects][0] = MakeObject(0, "v");
+	auto& fields = root[str::kObjects][0][str::kObjectFields];
+	fields["v"] = Json::objectValue;
+	EXPECT_EQ(ErrorCode::kMissingObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	fields["v"][str::kVariantType] = Json::arrayValue;
+	fields["v"][str::kVariantValue] = 22;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
+	fields["v"][str::kVariantType] = "_i32_";
+	EXPECT_EQ(ErrorCode::kUnregisteredType, Reader(root).ReadObjects(reg, refs, p));
+
+	reg.RegisterAll<V>();
+	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
+
+	Ref<V> ref;
+	EXPECT_TRUE(ref.Set(p));
+	EXPECT_TRUE(bool(ref));
+
+	auto& v = ref->v;
+	EXPECT_TRUE(v.Is<int32_t>());
+	EXPECT_EQ(22, v.Get<int32_t>());
+}
+
+

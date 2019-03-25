@@ -20,13 +20,13 @@ public:
 	static constexpr Index IndexOf();
 
 	Variant() = default;
-	Variant(const Variant&) = default;
-	Variant(Variant&&) = default;
-	Variant& operator=(const Variant&) = default;
-	Variant& operator=(Variant&&) = default;
+	Variant(const Variant& other) = default;
+	Variant(Variant&& other) = default;
+	Variant& operator=(const Variant& other) = default;
+	Variant& operator=(Variant&& other) = default;
 
-	template<typename T> Variant(T&& value);
-	template<typename T> Variant& operator=(T&& value);
+	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Ts...>> Variant(T&& value);
+	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Ts...>> Variant& operator=(T&& value);
 
 	void Clear();
 	bool IsEmpty() const;

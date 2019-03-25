@@ -46,12 +46,13 @@ bool Registry::Register() {
 		return false;
 	}
 
-	if (IsReserved(name)) {
+	using Tag = typename TypeTag<T>::Type;
+
+	if (!std::is_same<PrimitiveTag, Tag>::value && IsReserved(name)) {
 		assert(!enable_asserts_ && "Cannot register reserved names");
 		return false;
 	}
 
-	using Tag = typename TypeTag<T>::Type;
 	bool success = Register<T>(Tag{});
 	if (success) {
 		typeids_.insert(id);
@@ -110,6 +111,16 @@ bool Registry::Register(EnumTag) {
 
 template<typename T>
 bool Registry::Register(ObjectTag) {
+	return true;
+}
+
+template<typename T>
+bool Registry::Register(PrimitiveTag) {
+	return true;
+}
+
+template<typename T>
+bool Registry::Register(UserTag) {
 	return true;
 }
 
@@ -273,7 +284,9 @@ void Registrator::VisitValue(const Variant<Ts...>& value, VariantTag) {
 
 template<typename T>
 void Registrator::VisitValue(const T& value, UserTag) {
-	// todo: register user types
+	if (success_ && !reg_.IsRegistered<T>()) {
+		success_ &= reg_.Register<T>();
+	}
 }
 
 template<typename T>

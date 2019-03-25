@@ -28,7 +28,7 @@ struct C : Referable<C> {
 
 } // namespace
 
-TEST(TypedRefTest, Ctor) {
+TEST(RefTest, Ctor) {
 	A a;
 	B b;
 	Ref<A> ref1;
@@ -52,7 +52,7 @@ TEST(TypedRefTest, Ctor) {
 	EXPECT_EQ(&b, ref7.Get());
 }
 
-TEST(TypedRefTest, Assign) {
+TEST(RefTest, Assign) {
 	A a;
 	B b;
 
@@ -71,7 +71,7 @@ TEST(TypedRefTest, Assign) {
 	EXPECT_EQ(&b, ref1.Get());
 }
 
-TEST(TypedRefTest, Eq) {
+TEST(RefTest, Eq) {
 	A a;
 	B b;
 
@@ -96,7 +96,7 @@ TEST(TypedRefTest, Eq) {
 	EXPECT_FALSE(ref1 == ref2);
 }
 
-TEST(TypedRefTest, IsAs) {
+TEST(RefTest, IsAs) {
 	A a;
 	B b;
 
@@ -124,7 +124,7 @@ TEST(TypedRefTest, IsAs) {
 	EXPECT_EQ(&a, &ref4.As<A>());
 }
 
-TEST(TypedRefTest, Set) {
+TEST(RefTest, Set) {
 	A a;
 	B b;
 	C c;
@@ -145,7 +145,7 @@ TEST(TypedRefTest, Set) {
 	EXPECT_EQ(nullptr, ref1.Get());
 }
 
-TEST(TypedRefTest, WhichIndex) {
+TEST(RefTest, WhichIndex) {
 	A a;
 	B b;
 	C c;
@@ -176,4 +176,16 @@ TEST(TypedRefTest, WhichIndex) {
 
 	ref = &c;
 	EXPECT_EQ(Rx::IndexOf<C>(), ref.Which());
+}
+
+TEST(RefTest, SingleType) {
+	A a;
+	Ref<A> ref;
+	const auto& cref = ref;
+
+	ref = &a;
+	ref->value = 13;
+	EXPECT_EQ(13, cref->value);
+	EXPECT_EQ(13, (*ref).value);
+	EXPECT_EQ(13, (*cref).value);
 }

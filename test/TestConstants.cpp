@@ -30,6 +30,7 @@ TEST(ConstantTest, UniqueErrorCodes) {
 		ErrorCode::kInvalidObjectField,
 		ErrorCode::kInvalidRootType,
 		ErrorCode::kInvalidReferenceType,
+		ErrorCode::kInvalidVariantType,
 		ErrorCode::kInvalidSchema,
 		ErrorCode::kUnexpectedHeaderField,
 		ErrorCode::kUnexpectedObjectField,
@@ -40,6 +41,7 @@ TEST(ConstantTest, UniqueErrorCodes) {
 		ErrorCode::kDuplicateObjectId,
 		ErrorCode::kUnresolvableReference,
 		ErrorCode::kNullReference,
+		ErrorCode::kEmptyVariant,
 	}) {
 		names.push_back(ToString(ec));
 		max_value = std::max(max_value, int(ec));
