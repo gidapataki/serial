@@ -13,7 +13,9 @@ struct A {};
 struct B {};
 struct C : Referable<C> {
 	static constexpr auto kTypeName = "c";
-	template<typename S, typename V>void AcceptVisitor(S& self, V& v) {}
+
+	template<typename S, typename V>
+	static void AcceptVisitor(S& self, V& v) {}
 };
 
 } // namespace
