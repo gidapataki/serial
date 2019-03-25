@@ -73,7 +73,7 @@ struct Variant<Ts...>::ForEachType<U, Us...> {
 template<typename... Ts>
 template<typename T, typename>
 Variant<Ts...>::Variant(T&& value)
-	: value_(value)
+	: value_(std::forward<T>(value))
 {}
 
 template<typename... Ts>
