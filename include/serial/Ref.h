@@ -19,6 +19,7 @@ protected:
 
 template<typename... Ts>
 class Ref : public RefBase {
+	using FirstType = typename detail::FirstType<Ts...>::type;
 public:
 	enum class Index {};
 
@@ -29,6 +30,11 @@ public:
 	Ref& operator=(std::nullptr_t);
 
 	using RefBase::Get;
+
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> U& operator*();
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> const U& operator*() const;
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> U* operator->();
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> const U* operator->() const;
 
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> Ref(U* u);
 	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> Ref& operator=(U* u);

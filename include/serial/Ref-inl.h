@@ -56,6 +56,30 @@ bool Ref<Ts...>::Is() const {
 
 template<typename... Ts>
 template<typename U, typename>
+U& Ref<Ts...>::operator*() {
+	return *static_cast<U*>(ref_);
+}
+
+template<typename... Ts>
+template<typename U, typename>
+const U& Ref<Ts...>::operator*() const {
+	return *static_cast<const U*>(ref_);
+}
+
+template<typename... Ts>
+template<typename U, typename>
+U* Ref<Ts...>::operator->() {
+	return static_cast<U*>(ref_);
+}
+
+template<typename... Ts>
+template<typename U, typename>
+const U* Ref<Ts...>::operator->() const {
+	return static_cast<const U*>(ref_);
+}
+
+template<typename... Ts>
+template<typename U, typename>
 constexpr typename Ref<Ts...>::Index Ref<Ts...>::IndexOf() {
 	return Index(detail::IndexOf<U, Ts...>::value);
 }

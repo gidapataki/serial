@@ -2,7 +2,6 @@
 
 
 - test variant
-- variant visitor, hash (Laci?)
 
 --
 
@@ -19,4 +18,4 @@
 - type in refid (ref_0-circle)
 - test object order stability
 - test registator with all types
-
+- force write ?

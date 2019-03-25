@@ -9,6 +9,11 @@ class ReferableBase;
 
 namespace detail {
 
+template<typename T, typename... Ts>
+struct FirstType {
+	using type = T;
+};
+
 template<typename... Ts>
 struct IsOneOf;
 
@@ -29,6 +34,9 @@ using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Ts...>::value>::type;
 
 template<typename T, typename U>
 using EnableIfBaseOf = typename std::enable_if<std::is_base_of<T, U>::value>::type;
+
+template<typename U, typename... Ts>
+using EnableIfSingle = typename std::enable_if<sizeof...(Ts) == 1, U>::type;
 
 
 template<typename... Ts>
