@@ -8,6 +8,20 @@
 namespace serial {
 
 template<typename T>
+void Writer::VariantWriter::operator()(
+	const T& value, const MinVersion& v0, const MaxVersion& v1) const
+{
+	if (writer_->IsVersionInRange(v0, v1)) {
+		writer_->WriteVariant(value);
+	} else {
+		writer_->SetError(ErrorCode::kInvalidVariantType);
+	}
+}
+
+
+// Writer
+
+template<typename T>
 void Writer::VisitField(
 	const T& value, const char* name, MinVersion v0, MaxVersion v1)
 {
@@ -134,7 +148,7 @@ void Writer::VisitValue(const T& value, VariantTag) {
 	if (value.IsEmpty()) {
 		SetError(ErrorCode::kEmptyVariant);
 	} else {
-		value.Write(this);
+		value.ApplyVersionedVisitor(VariantWriter{this});
 	}
 }
 

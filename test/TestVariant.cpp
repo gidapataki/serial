@@ -209,15 +209,15 @@ TEST(VariantTest, Visitor) {
 	EXPECT_FALSE(v1.IsEmpty());
 	EXPECT_EQ(5, v1.Get<A>().value);
 
-	ApplyVisitor(Modify{}, v1);
+	v1.ApplyVisitor(Modify{});
 	EXPECT_EQ(6, v1.Get<A>().value);
-	EXPECT_EQ(1, ApplyVisitor(Check{}, v2));
+	EXPECT_EQ(1, v2.ApplyVisitor(Check{}));
 
 	v1 = E{};
 	v1.Get<E>().value = E::kOne;
-	ApplyVisitor(Modify{}, v1);
+	v1.ApplyVisitor(Modify{});
 	EXPECT_EQ(E::kTwo, v1.Get<E>().value);
-	EXPECT_EQ(3, ApplyVisitor(Check{}, v2));
+	EXPECT_EQ(3, v2.ApplyVisitor(Check{}));
 }
 
 TEST(VariantTest, Hash) {

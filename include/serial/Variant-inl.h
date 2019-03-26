@@ -6,24 +6,6 @@
 namespace serial {
 namespace detail {
 
-struct WriteVisitor : Visitor<> {
-	WriteVisitor(Writer* writer)
-		: writer_(writer)
-	{}
-
-	template<typename T>
-	void operator()(const T& value, const MinVersion& v0, const MaxVersion& v1) const {
-		if (writer_->IsVersionInRange(v0, v1)) {
-			writer_->WriteVariant(value);
-		} else {
-			writer_->SetError(ErrorCode::kInvalidVariantType);
-		}
-	}
-
-private:
-	Writer* writer_;
-};
-
 struct HashVisitor : Visitor<size_t> {
 	template<typename T>
 	size_t operator()(const T& t) const {
@@ -56,38 +38,6 @@ typename VisitorT::ResultType VersionedInvoker(
 }
 
 } // namespace detail
-
-
-// Variant::ForEachType
-
-template<typename... Ts>
-template<typename U>
-struct Variant<Ts...>::ForEachType<U> {
-	static bool ReadIf(Variant<Ts...>& variant, TypeId id, Reader* reader) {
-		using Info = VersionedTypeInfo<U>;
-		using Type = typename Info::Type;
-
-		if (StaticTypeId<Type>::Get() == id) {
-			if (!reader->IsVersionInRange(Info::Min(), Info::Max())) {
-				return false;
-			}
-
-			variant = Type{};
-			reader->ReadVariant(variant.Get<Type>());
-			return true;
-		}
-		return false;
-	}
-};
-
-template<typename... Ts>
-template<typename U, typename... Us>
-struct Variant<Ts...>::ForEachType<U, Us...> {
-	static bool ReadIf(Variant<Ts...>& variant, TypeId id, Reader* reader) {
-		return ForEachType<U>::ReadIf(variant, id, reader) ||
-			ForEachType<Us...>::ReadIf(variant, id, reader);
-	}
-};
 
 
 // Variant
@@ -139,20 +89,6 @@ T& Variant<Ts...>::Get() {
 }
 
 template<typename... Ts>
-void Variant<Ts...>::Write(Writer* writer) const {
-	assert(!value_.IsEmpty() && "Cannot write empty variant");
-	ApplyVersionedVisitor(detail::WriteVisitor{writer});
-}
-
-template<typename... Ts>
-void Variant<Ts...>::Read(TypeId id, Reader* reader) {
-	auto success = ForEachType<Ts...>::ReadIf(*this, id, reader);
-	if (!success) {
-		reader->SetError(ErrorCode::kInvalidVariantType);
-	}
-}
-
-template<typename... Ts>
 template<typename T, typename>
 constexpr typename Variant<Ts...>::Index Variant<Ts...>::IndexOf() {
 	return Index(internal::IndexOf<T, Types>::value);
@@ -200,19 +136,6 @@ typename V::ResultType Variant<Ts...>::ApplyVersionedVisitor(V&& visitor) const 
 
 	auto which = int(Which());
 	return invokers[which](std::forward<V>(visitor), *this);
-}
-
-
-// ApplyVisitor
-
-template<typename V, typename... Ts>
-typename V::ResultType ApplyVisitor(V&& visitor, Variant<Ts...>& variant) {
-	return variant.ApplyVisitor(std::forward<V>(visitor));
-}
-
-template<typename V, typename... Ts>
-typename V::ResultType ApplyVisitor(V&& visitor, const Variant<Ts...>& variant) {
-	return variant.ApplyVisitor(std::forward<V>(visitor));
 }
 
 

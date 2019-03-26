@@ -3,6 +3,39 @@
 
 namespace serial {
 
+template<typename... Ts, typename U>
+struct Reader::ForEachVariantType<Variant<Ts...>, detail::Typelist<U>> {
+	using V = Variant<Ts...>;
+
+	static bool ReadIf(V& variant, TypeId id, Reader* reader) {
+		using Info = VersionedTypeInfo<U>;
+		using Type = typename Info::Type;
+
+		if (StaticTypeId<Type>::Get() == id) {
+			if (!reader->IsVersionInRange(Info::Min(), Info::Max())) {
+				return false;
+			}
+
+			variant = Type{};
+			reader->ReadVariant(variant.template Get<Type>());
+			return true;
+		}
+		return false;
+	}
+};
+
+template<typename... Ts, typename U, typename... Us>
+struct Reader::ForEachVariantType<Variant<Ts...>, detail::Typelist<U, Us...>> {
+	using V = Variant<Ts...>;
+	static bool ReadIf(V& variant, TypeId id, Reader* reader) {
+		return
+			ForEachVariantType<V, detail::Typelist<U>>::ReadIf(variant, id, reader) ||
+			ForEachVariantType<V, detail::Typelist<Us...>>::ReadIf(variant, id, reader);
+	}
+};
+
+// Reader
+
 template<typename T>
 void Reader::VisitField(
 	T& value, const char* name, MinVersion v0, MaxVersion v1)
@@ -158,7 +191,11 @@ void Reader::VisitValue(T& value, VariantTag) {
 		SetError(ErrorCode::kUnregisteredType);
 		return;
 	}
-	value.Read(id, this);
+
+	auto success = ForEachVariantType<T, typename T::VersionedTypes>::ReadIf(value, id, this);
+	if (!success) {
+		SetError(ErrorCode::kInvalidVariantType);
+	}
 }
 
 } // namespace serial

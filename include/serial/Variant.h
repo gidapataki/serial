@@ -5,22 +5,14 @@
 
 namespace serial {
 
-template<typename T = void>
-struct Visitor {
-	using ResultType = T;
-};
-
-
 template<typename... Ts>
 class Variant {
 public:
+	using VersionedTypes = detail::Typelist<Ts...>;
 	using Types = typename detail::ReturnTypesOf<Ts...>::Types;
-	// using Types = detail::Typelist<Ts...>;
 
 	enum class Index {};
-
-	template<typename T, typename = detail::EnableIfOneOf<T, Types>>
-	static constexpr Index IndexOf();
+	template<typename T, typename = detail::EnableIfOneOf<T, Types>> static constexpr Index IndexOf();
 
 	Variant() = default;
 	Variant(const Variant& other) = default;
@@ -39,21 +31,14 @@ public:
 	template<typename T> const T& Get() const;
 	template<typename T> T& Get();
 
-	void Write(Writer* writer) const;
-	void Read(TypeId id, Reader* reader);
-
 	template<typename V> typename V::ResultType ApplyVisitor(V&& visitor);
 	template<typename V> typename V::ResultType ApplyVisitor(V&& visitor) const;
 	template<typename V> typename V::ResultType ApplyVersionedVisitor(V&& visitor);
 	template<typename V> typename V::ResultType ApplyVersionedVisitor(V&& visitor) const;
 
 private:
-	template<typename... Us> struct ForEachType;
 	typename internal::VariantFrom<Types>::Type value_;
 };
-
-template<typename V, typename... Ts> typename V::ResultType ApplyVisitor(V&& visitor, Variant<Ts...>& variant);
-template<typename V, typename... Ts> typename V::ResultType ApplyVisitor(V&& visitor, const Variant<Ts...>& variant);
 
 template<typename... Ts> bool operator==(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs);
 template<typename... Ts> bool operator!=(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs);

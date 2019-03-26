@@ -12,6 +12,7 @@
 
 namespace serial {
 
+
 class Writer {
 public:
 	Writer(const Registry& reg);
@@ -26,9 +27,6 @@ public:
 
 	template<typename T> void VisitField(const T& value, const char* name, MinVersion = {}, MaxVersion = {});
 
-	bool IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const; // fixme - private
-	void SetError(ErrorCode error); // fixme - private
-
 private:
 	class StateSentry {
 	public:
@@ -40,12 +38,23 @@ private:
 		Json::Value* current_;
 	};
 
+	class VariantWriter : public Visitor<> {
+	public:
+		VariantWriter(Writer* writer);
+		template<typename T> void operator()(const T& value, const MinVersion& v0, const MaxVersion& v1) const;
+
+	private:
+		Writer* writer_;
+	};
+
 	std::string AddRef(const ReferableBase* ref);
 
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
 	Json::Value& Current();
-	bool InRange(const MinVersion& v0, const MaxVersion& v1) const;
+
+	bool IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const;
+	void SetError(ErrorCode error);
 
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);

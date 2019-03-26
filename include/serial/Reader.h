@@ -43,6 +43,9 @@ private:
 		State state_;
 	};
 
+	template<typename V, typename... Us>
+	struct ForEachVariantType;
+
 	void ReadObjectsInternal(const Registry& reg);
 	void ReadObjectInternal(const Registry& reg);
 	void ResolveRefs();

@@ -22,6 +22,13 @@ Writer::StateSentry::~StateSentry() {
 	writer_->current_ = current_;
 }
 
+Writer::VariantWriter::VariantWriter(Writer* writer)
+	: writer_(writer)
+{}
+
+
+// Writer
+
 Writer::Writer(const Registry& reg)
 	: reg_(reg)
 {}

@@ -37,4 +37,9 @@ struct MaxVersion;
 struct VersionBase;
 template<int N> struct Version;
 
+template<typename T = void>
+struct Visitor {
+	using ResultType = T;
+};
+
 } // namespace serial
