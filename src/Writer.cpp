@@ -48,6 +48,7 @@ ErrorCode Writer::Write(
 	const Header& header, ReferableBase* ref, Json::Value& output)
 {
 	root_ = Json::Value(Json::objectValue);
+	version_ = header.version;
 
 	StateSentry sentry(this);
 	auto root_id = AddRef(ref);
@@ -109,6 +110,10 @@ Json::Value& Writer::Current() {
 
 void Writer::SetError(ErrorCode error) {
 	error_ = error;
+}
+
+bool Writer::InRange(const MinVersion& v0, const MaxVersion& v1) const {
+	return InVersionRange(v0, v1, version_);
 }
 
 } // namespace serial

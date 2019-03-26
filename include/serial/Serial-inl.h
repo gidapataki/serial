@@ -14,8 +14,8 @@ ErrorCode Serialize(
 	static_assert(std::is_base_of<ReferableBase, T>::value, "Invalid type");
 
 	Registry reg = T::EnableAsserts::value
-		? Registry()
-		: Registry(noasserts);
+		? Registry(header.version)
+		: Registry(header.version, noasserts);
 
 	if (!reg.RegisterAll<T>()) {
 		return ErrorCode::kInvalidSchema;
@@ -44,8 +44,8 @@ ErrorCode DeserializeObjects(
 	}
 
 	Registry reg = T::EnableAsserts::value
-		? Registry()
-		: Registry(noasserts);
+		? Registry(h.version)
+		: Registry(h.version, noasserts);
 
 	if (!reg.RegisterAll<T>()) {
 		return ErrorCode::kInvalidSchema;

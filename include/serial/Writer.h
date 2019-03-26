@@ -6,6 +6,7 @@
 #include "serial/TypeTraits.h"
 #include "serial/Header.h"
 #include "serial/Constants.h"
+#include "serial/Version.h"
 #include "jsoncpp/json.h"
 
 
@@ -20,11 +21,10 @@ public:
 	// as it leaves the object in a non-clear state.
 	ErrorCode Write(const Header& header, ReferableBase* ref, Json::Value& output);
 
-	template<typename T> ErrorCode WriteValue(const T& value, Json::Value& output);
 	template<typename T> void WriteReferable(const T& value);
 	template<typename T> void WriteVariant(const T& value);
 
-	template<typename T> void VisitField(const T& value, const char* name);
+	template<typename T> void VisitField(const T& value, const char* name, MinVersion = {}, MaxVersion = {});
 
 private:
 	class StateSentry {
@@ -42,6 +42,7 @@ private:
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
 	Json::Value& Current();
+	bool InRange(const MinVersion& v0, const MaxVersion& v1) const;
 
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);
@@ -60,6 +61,7 @@ private:
 	const Registry& reg_;
 	ErrorCode error_ = ErrorCode::kNone;
 	int next_refid_ = 0;
+	int version_ = 0;
 	bool enable_asserts_ = true;
 
 	std::unordered_map<const ReferableBase*, std::string> refids_;

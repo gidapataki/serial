@@ -58,6 +58,12 @@ ErrorCode Reader::ReadObjects(
 		return ErrorCode::kInvalidDocument;
 	}
 
+	auto& version_value = Current()[str::kDocVersion];
+	if (!version_value.isInt()) {
+		return ErrorCode::kInvalidHeader;
+	}
+	version_ = version_value.asInt();
+
 	SetError(ErrorCode::kNone);
 	ReadObjectsInternal(reg);
 	if (IsError()) {
@@ -343,6 +349,10 @@ const Json::Value& Reader::Select(const char* name) {
 const Json::Value& Reader::Select(const Json::Value& value) {
 	state_.current = &value;
 	return Current();
+}
+
+bool Reader::InRange(const MinVersion& v0, const MaxVersion& v1) const {
+	return InVersionRange(v0, v1, version_);
 }
 
 } // namespace serial

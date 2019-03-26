@@ -229,8 +229,12 @@ bool Registrator::RegisterInternal() {
 }
 
 template<typename T>
-void Registrator::VisitField(const T& value, const char* name) {
-	VisitValue(value);
+void Registrator::VisitField(
+	const T& value, const char* name, MinVersion v0, MaxVersion v1)
+{
+	if (InVersionRange(v0, v1, version_)) {
+		VisitValue(value);
+	}
 }
 
 template<typename T>

@@ -3,6 +3,11 @@
 #include <unordered_set>
 
 
+using Version1 = serial::Version<1>;
+using Version2 = serial::Version<2>;
+using Version3 = serial::Version<3>;
+
+
 struct Winding : serial::Enum {
 	enum class Value {
 		kClockwise,
@@ -86,10 +91,9 @@ struct Group : serial::Referable<Group> {
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.elements, "elements");
-		v.VisitField(self.name, "name");
+		v.VisitField(self.name, "name", Version2(), Version3());
 	}
 };
-
 
 
 // Dump
@@ -121,6 +125,7 @@ void Example() {
 	Other o1;
 	Group g3;
 	g3.elements.push_back(&o1);
+	g3.name = "three";
 
 	B b;
 	b.s = "hello";
@@ -128,14 +133,14 @@ void Example() {
 
 	// Serialize
 	Json::Value json_value;
-	serial::Header header{"example", 1};
+	serial::Header header{"example", 2};
 	auto ec = serial::Serialize(g3, header, json_value);
 
 	if (ec != serial::ErrorCode::kNone) {
 		std::cerr << "error: " << ToString(ec) << std::endl;
 		return;
 	}
-	json_value["objects"][1]["fields"]["w"]["value"]["s"] = "kitty";
+
 	Dump(json_value);
 
 	// Deserialize
@@ -148,18 +153,8 @@ void Example() {
 	}
 }
 
+
 int main() {
-	// Example();
-
-	serial::Variant<int, float> x, y;
-	std::unordered_set<serial::Variant<int, float>> xs;
-
-	x = 5;
-	xs.insert(x);
-
-	std::cout << xs.count(y) << std::endl;
-	std::cout << xs.count(x) << std::endl;
-
-	// std::cout << (x == y) << std::endl;
+	Example();
 }
 

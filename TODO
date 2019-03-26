@@ -1,12 +1,14 @@
 # TODO
 
 
-- test variant
+registered types ~ min_version, max_version
 
---
+
 
 - versioning
 	- eg. Ref<X(version1_t), Y(version2_t), Z(version2_t)>
+
+--
 
 - schema (aka. blueprint)
 	- kPrimitiveName (user<color>)

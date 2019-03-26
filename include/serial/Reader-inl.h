@@ -4,6 +4,29 @@
 namespace serial {
 
 template<typename T>
+void Reader::VisitField(
+	T& value, const char* name, MinVersion v0, MaxVersion v1)
+{
+	if (IsError()) {
+		return;
+	}
+
+	if (!InRange(v0, v1)) {
+		return;
+	}
+
+	if (!Current().isMember(name)) {
+		SetError(ErrorCode::kMissingObjectField);
+		return;
+	}
+
+	++state_.processed;
+	StateSentry sentry(this);
+	Select(name);
+	VisitValue(value);
+}
+
+template<typename T>
 void Reader::ReadReferable(T& value) {
 	auto input_count = Current().size();
 	StateSentry sentry(this);
@@ -20,23 +43,6 @@ void Reader::ReadVariant(T& value) {
 	StateSentry sentry(this);
 	assert(Current()[str::kVariantType] == TypeName<T>::value);
 	Select(str::kVariantValue);
-	VisitValue(value);
-}
-
-template<typename T>
-void Reader::VisitField(T& value, const char* name) {
-	if (IsError()) {
-		return;
-	}
-
-	if (!Current().isMember(name)) {
-		SetError(ErrorCode::kMissingObjectField);
-		return;
-	}
-
-	++state_.processed;
-	StateSentry sentry(this);
-	Select(name);
 	VisitValue(value);
 }
 

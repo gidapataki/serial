@@ -5,6 +5,7 @@
 #include "serial/Constants.h"
 #include "serial/TypeTraits.h"
 #include "serial/Header.h"
+#include "serial/Version.h"
 #include "jsoncpp/json.h"
 
 
@@ -21,7 +22,8 @@ public:
 	template<typename T> void ReadReferable(T& value);
 	template<typename T> void ReadVariant(T& value);
 
-	template<typename T> void VisitField(T& value, const char* name);
+	template<typename T> void VisitField(
+		T& value, const char* name, MinVersion = {}, MaxVersion = {});
 
 private:
 	struct State {
@@ -63,6 +65,7 @@ private:
 	void VisitValue(double& value, PrimitiveTag);
 	void VisitValue(std::string& value, PrimitiveTag);
 
+	bool InRange(const MinVersion& v0, const MaxVersion& v1) const;
 	void SetError(ErrorCode error);
 	bool IsError() const;
 
@@ -74,6 +77,7 @@ private:
 	const Registry* reg_ = nullptr;
 	State state_;
 	ErrorCode error_;
+	int version_ = 0;
 
 	using RefId = std::string;
 

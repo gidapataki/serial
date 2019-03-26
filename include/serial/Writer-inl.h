@@ -8,7 +8,11 @@
 namespace serial {
 
 template<typename T>
-void Writer::VisitField(const T& value, const char* name) {
+void Writer::VisitField(const T& value, const char* name, MinVersion v0, MaxVersion v1) {
+	if (!InRange(v0, v1)) {
+		return;
+	}
+
 	StateSentry sentry(this);
 	Select(name);
 	VisitValue(value);
@@ -30,17 +34,6 @@ void Writer::WriteReferable(const T& value) {
 	Current()[str::kObjectType] = Json::Value(name);
 	Select(str::kObjectFields) = Json::objectValue;
 	T::AcceptVisitor(value, *this);
-}
-
-template<typename T>
-ErrorCode Writer::WriteValue(const T& value, Json::Value& output) {
-	error_ = ErrorCode::kNone;
-	root_.clear();
-	VisitValue(value);
-	if (error_ == ErrorCode::kNone) {
-		output = root_;
-	}
-	return error_;
 }
 
 template<typename T>

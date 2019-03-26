@@ -8,6 +8,7 @@
 #include "serial/TypeId.h"
 #include "serial/TypeTraits.h"
 #include "serial/MetaHelpers.h"
+#include "serial/Version.h"
 
 
 namespace serial {
@@ -33,7 +34,8 @@ public:
 	Registrator(Registry& reg);
 
 	template<typename T> bool RegisterAll();
-	template<typename T> void VisitField(const T& value, const char* name);
+	template<typename T> void VisitField(
+		const T& value, const char* name, MinVersion = {}, MaxVersion = {});
 
 private:
 	template<typename... Ts> struct ForEachType;
@@ -56,6 +58,7 @@ private:
 
 	Registry& reg_;
 	bool success_ = true;
+	int version_ = 0;
 	std::unordered_set<TypeId> visited_;
 };
 
@@ -63,7 +66,9 @@ private:
 class Registry {
 public:
 	Registry() = default;
+	Registry(int version);
 	Registry(noasserts_t);
+	Registry(int version, noasserts_t);
 
 	template<typename T> bool Register();
 	template<typename T> bool RegisterAll();
@@ -75,6 +80,7 @@ public:
 	template<typename T> const char* EnumToString(T value) const;
 
 	TypeId FindTypeId(const std::string& name) const;
+	int GetVersion() const;
 
 private:
 	static bool IsReserved(const std::string& name);
@@ -103,6 +109,7 @@ private:
 	std::unordered_map<TypeId, EnumMapping> enum_maps_;
 
 	bool enable_asserts_ = true;
+	int version_ = 0;
 };
 
 } // namespace serial
