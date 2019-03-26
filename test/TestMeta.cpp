@@ -29,12 +29,12 @@ TEST(MetaTest, FirstType) {
 
 TEST(MetaTest, OneOf) {
 	// Note: some linker error with EXPECT_TRUE without the explicit conversion
-	EXPECT_FALSE(bool(IsOneOf<A>::value));
-	EXPECT_FALSE(bool(IsOneOf<A, B>::value));
-	EXPECT_TRUE(bool(IsOneOf<A, A>::value));
-	EXPECT_FALSE(bool(IsOneOf<A, B>::value));
-	EXPECT_FALSE(bool(IsOneOf<A, B>::value));
-	EXPECT_TRUE(bool(IsOneOf<A, B, C, A>::value));
+	EXPECT_FALSE(bool(IsOneOf<A, Typelist<>>::value));
+	EXPECT_FALSE(bool(IsOneOf<A, Typelist<B>>::value));
+	EXPECT_TRUE(bool(IsOneOf<A, Typelist<A>>::value));
+	EXPECT_FALSE(bool(IsOneOf<A, Typelist<B>>::value));
+	EXPECT_FALSE(bool(IsOneOf<A, Typelist<B>>::value));
+	EXPECT_TRUE(bool(IsOneOf<A, Typelist<B, C, A>>::value));
 }
 
 TEST(MetaTest, IsReferable) {

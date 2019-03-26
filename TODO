@@ -5,6 +5,8 @@
 
 --
 
+- move variant read / write to reader / writer
+- version adaptor for visitors
 - __FILE__ and __LINE__ on Errors, maybe json location
 - schema (aka. blueprint)
 	- kPrimitiveName (user<color>)

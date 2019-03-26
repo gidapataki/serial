@@ -1,6 +1,6 @@
-#include "serial/Serial.h"
 #include <iostream>
 #include <unordered_set>
+#include "serial/Serial.h"
 
 
 using Version1 = serial::Version<1>;
@@ -72,7 +72,7 @@ struct B {
 };
 
 struct Other : serial::Referable<Other> {
-	serial::Variant<A, B> w;
+	serial::Variant<A, B(Version3)> w;
 
 	static constexpr auto kTypeName = "other";
 
@@ -91,7 +91,7 @@ struct Group : serial::Referable<Group> {
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.elements, "elements");
-		v.VisitField(self.name, "name", Version2(), Version3());
+		v.VisitField(self.name, "name", Version2());
 	}
 };
 
@@ -134,7 +134,7 @@ void Example() {
 
 	// Serialize
 	Json::Value json_value;
-	serial::Header header{"example", 2};
+	serial::Header header{"example", 3};
 	auto ec = serial::Serialize(g3, header, json_value);
 
 	if (ec != serial::ErrorCode::kNone) {
@@ -143,7 +143,7 @@ void Example() {
 	}
 
 	Dump(json_value);
-	// json_value["version"] = 1;
+	// json_value["version"] = 2;
 
 	// Deserialize
 	serial::RefContainer refs;
@@ -155,6 +155,10 @@ void Example() {
 	}
 }
 
+template<typename T>
+void func() {
+	std::cerr << __PRETTY_FUNCTION__ << std::endl;
+}
 
 int main() {
 	Example();

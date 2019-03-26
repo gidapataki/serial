@@ -8,8 +8,10 @@
 namespace serial {
 
 template<typename T>
-void Writer::VisitField(const T& value, const char* name, MinVersion v0, MaxVersion v1) {
-	if (!InRange(v0, v1)) {
+void Writer::VisitField(
+	const T& value, const char* name, MinVersion v0, MaxVersion v1)
+{
+	if (!IsVersionInRange(v0, v1)) {
 		return;
 	}
 
@@ -120,7 +122,7 @@ template<typename T>
 void Writer::VisitValue(const T& value, EnumTag) {
 	auto name = reg_.EnumToString(value);
 	if (name == nullptr) {
-		SetError(ErrorCode::kUnregisteredEnum);
+		SetError(ErrorCode::kInvalidEnumValue);
 		return;
 	}
 

@@ -23,7 +23,7 @@ TEST(ConstantTest, UniqueErrorCodes) {
 	for (auto ec : std::vector<ErrorCode>{
 		ErrorCode::kNone,
 		ErrorCode::kUnregisteredType,
-		ErrorCode::kUnregisteredEnum,
+		ErrorCode::kInvalidEnumValue,
 		ErrorCode::kInvalidDocument,
 		ErrorCode::kInvalidHeader,
 		ErrorCode::kInvalidObjectHeader,

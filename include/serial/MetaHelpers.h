@@ -10,34 +10,50 @@ class ReferableBase;
 
 namespace detail {
 
+template<typename... Ts>
+struct Typelist;
+
+
+template<typename T>
+struct Count;
+
+template<>
+struct Count<Typelist<>> {
+	static constexpr int value = 0;
+};
+
+template<typename T, typename... Ts>
+struct Count<Typelist<T, Ts...>> {
+	static constexpr int value = 1 + Count<Typelist<Ts...>>::value;
+};
+
 template<typename T, typename... Ts>
 struct FirstType {
 	using type = T;
 };
 
-template<typename... Ts>
+template<typename T, typename Types>
 struct IsOneOf;
 
 template<typename T>
-struct IsOneOf<T> {
+struct IsOneOf<T, Typelist<>> {
 	static const bool value = false;
 };
 
 template<typename T, typename U, typename... Ts>
-struct IsOneOf<T, U, Ts...> {
+struct IsOneOf<T, Typelist<U, Ts...>> {
 	static const bool value =
-		std::is_same<T, U>::value || IsOneOf<T, Ts...>::value;
+		std::is_same<T, U>::value || IsOneOf<T, Typelist<Ts...>>::value;
 };
 
-
-template<typename T, typename... Ts>
-using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Ts...>::value>::type;
+template<typename T, typename Types>
+using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Types>::value>::type;
 
 template<typename T, typename U>
 using EnableIfBaseOf = typename std::enable_if<std::is_base_of<T, U>::value>::type;
 
-template<typename U, typename... Ts>
-using EnableIfSingle = typename std::enable_if<sizeof...(Ts) == 1, U>::type;
+template<typename T, typename Types>
+using EnableIfSingle = typename std::enable_if<Count<Types>::value == 1, T>::type;
 
 
 template<typename... Ts>
@@ -115,6 +131,40 @@ struct IndexOfTypeId<T, Ts...> {
 		auto index = IndexOfTypeId<Ts...>::Get(id);
 		return index == -1 ? -1 : index + 1;
 	}
+};
+
+
+template<typename T, typename Types>
+struct Prepend;
+
+template<typename T, typename... Ts>
+struct Prepend<T, Typelist<Ts...>> {
+	using Types = Typelist<T, Ts...>;
+};
+
+template<typename T>
+struct ReturnTypeOf {
+	using Type = T;
+};
+
+template<typename T, typename... Ts>
+struct ReturnTypeOf<T(Ts...)> {
+	using Type = T;
+};
+
+template<typename... Ts>
+struct ReturnTypesOf;
+
+template<typename T>
+struct ReturnTypesOf<T> {
+	using Types = Typelist<typename ReturnTypeOf<T>::Type>;
+};
+
+template<typename T, typename U, typename... Ts>
+struct ReturnTypesOf<T, U, Ts...> {
+	using Types = typename Prepend<
+		typename ReturnTypeOf<T>::Type,
+		typename ReturnTypesOf<U, Ts...>::Types>::Types;
 };
 
 } // namespace detail

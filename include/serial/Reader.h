@@ -22,8 +22,10 @@ public:
 	template<typename T> void ReadReferable(T& value);
 	template<typename T> void ReadVariant(T& value);
 
-	template<typename T> void VisitField(
-		T& value, const char* name, MinVersion = {}, MaxVersion = {});
+	template<typename T> void VisitField(T& value, const char* name, MinVersion = {}, MaxVersion = {});
+
+	bool IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const; // fixme - private
+	void SetError(ErrorCode error); // fixme - private
 
 private:
 	struct State {
@@ -65,8 +67,6 @@ private:
 	void VisitValue(double& value, PrimitiveTag);
 	void VisitValue(std::string& value, PrimitiveTag);
 
-	bool InRange(const MinVersion& v0, const MaxVersion& v1) const;
-	void SetError(ErrorCode error);
 	bool IsError() const;
 
 	const Json::Value& Current();

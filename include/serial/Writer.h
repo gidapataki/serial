@@ -26,6 +26,9 @@ public:
 
 	template<typename T> void VisitField(const T& value, const char* name, MinVersion = {}, MaxVersion = {});
 
+	bool IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const; // fixme - private
+	void SetError(ErrorCode error); // fixme - private
+
 private:
 	class StateSentry {
 	public:
@@ -56,7 +59,6 @@ private:
 
 	void VisitValue(const float& value, PrimitiveTag);
 	void VisitValue(const double& value, PrimitiveTag);
-	void SetError(ErrorCode error);
 
 	const Registry& reg_;
 	ErrorCode error_ = ErrorCode::kNone;

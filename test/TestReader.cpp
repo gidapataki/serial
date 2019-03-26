@@ -548,14 +548,14 @@ TEST(ReaderTest, ReadObjectsWithEnum) {
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "g");
 	root[str::kObjects][0][str::kObjectFields]["color"] = "green";
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, Reader(root).ReadObjects(reg, refs, p));
 
 	reg.Register<Color>();
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "g");
 	root[str::kObjects][0][str::kObjectFields]["color"] = "green";
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, Reader(root).ReadObjects(reg, refs, p));
 
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "g");

@@ -1,15 +1,14 @@
 #pragma once
-
 #include <new>
 #include <cassert>
 #include <type_traits>
+#include "serial/MetaHelpers.h"
 
 
 namespace serial {
 namespace internal {
 
-template<typename... T>
-struct Typelist;
+template<typename... T> using Typelist = serial::detail::Typelist<T...>;
 
 template<typename Type, typename... T>
 struct IndexOf;
@@ -177,6 +176,18 @@ private:
 	int which_ = -1;
 	Storage storage_;
 };
+
+
+// VariantFrom
+
+template<typename T>
+struct VariantFrom;
+
+template<typename... Ts>
+struct VariantFrom<Typelist<Ts...>> {
+	using Type = Variant<Ts...>;
+};
+
 
 // Free function version of ApplyVisitor
 

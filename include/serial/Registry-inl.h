@@ -191,7 +191,7 @@ void Registry::EnumValueCollector<T>::VisitEnumValue(
 		std::is_same<int, typename std::underlying_type<T>::type>::value,
 		"Underlying type should be int");
 
-	if (InVersionRange(v0, v1, version)) {
+	if (IsVersionInRange(version, v0, v1)) {
 		mapping.emplace_back(static_cast<int>(value), name);
 	}
 }
@@ -240,7 +240,7 @@ template<typename T>
 void Registrator::VisitField(
 	const T& value, const char* name, MinVersion v0, MaxVersion v1)
 {
-	if (InVersionRange(v0, v1, version_)) {
+	if (IsVersionInRange(version_, v0, v1)) {
 		VisitValue(value);
 	}
 }
@@ -303,6 +303,13 @@ void Registrator::VisitValue(const T& value, UserTag) {
 
 template<typename T>
 struct Registrator::ForEachType<T> {
+	static bool RegisterInternal(Registrator* rx) {
+		return rx->RegisterInternal<T>();
+	}
+};
+
+template<typename T, typename V>
+struct Registrator::ForEachType<T(V)> {
 	static bool RegisterInternal(Registrator* rx) {
 		return rx->RegisterInternal<T>();
 	}

@@ -8,7 +8,7 @@ const char* ToString(ErrorCode ec) {
 	switch (ec) {
 		case ErrorCode::kNone: return "NoError";
 		case ErrorCode::kUnregisteredType: return "UnregisteredType";
-		case ErrorCode::kUnregisteredEnum: return "UnregisteredEnum";
+		case ErrorCode::kInvalidEnumValue: return "InvalidEnumValue";
 		case ErrorCode::kInvalidDocument: return "InvalidDocument";
 		case ErrorCode::kInvalidHeader: return "InvalidHeader";
 		case ErrorCode::kInvalidObjectHeader: return "InvalidObjectHeader";

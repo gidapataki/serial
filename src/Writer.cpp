@@ -12,6 +12,7 @@ std::string MakeRefString(int id) {
 
 } // namespace
 
+
 Writer::StateSentry::StateSentry(Writer* writer)
 	: writer_(writer)
 	, current_(writer->current_)
@@ -112,8 +113,8 @@ void Writer::SetError(ErrorCode error) {
 	error_ = error;
 }
 
-bool Writer::InRange(const MinVersion& v0, const MaxVersion& v1) const {
-	return InVersionRange(v0, v1, version_);
+bool Writer::IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const {
+	return serial::IsVersionInRange(version_, v0, v1);
 }
 
 } // namespace serial

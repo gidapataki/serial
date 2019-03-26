@@ -14,9 +14,12 @@ struct Visitor {
 template<typename... Ts>
 class Variant {
 public:
+	using Types = typename detail::ReturnTypesOf<Ts...>::Types;
+	// using Types = detail::Typelist<Ts...>;
+
 	enum class Index {};
 
-	template<typename T, typename = detail::EnableIfOneOf<T, Ts...>>
+	template<typename T, typename = detail::EnableIfOneOf<T, Types>>
 	static constexpr Index IndexOf();
 
 	Variant() = default;
@@ -25,8 +28,8 @@ public:
 	Variant& operator=(const Variant& other) = default;
 	Variant& operator=(Variant&& other) = default;
 
-	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Ts...>> Variant(T&& value);
-	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Ts...>> Variant& operator=(T&& value);
+	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Types>> Variant(T&& value);
+	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Types>> Variant& operator=(T&& value);
 
 	void Clear();
 	bool IsEmpty() const;
@@ -41,10 +44,12 @@ public:
 
 	template<typename V> typename V::ResultType ApplyVisitor(V&& visitor);
 	template<typename V> typename V::ResultType ApplyVisitor(V&& visitor) const;
+	template<typename V> typename V::ResultType ApplyVersionedVisitor(V&& visitor);
+	template<typename V> typename V::ResultType ApplyVersionedVisitor(V&& visitor) const;
 
 private:
 	template<typename... Us> struct ForEachType;
-	internal::Variant<Ts...> value_;
+	typename internal::VariantFrom<Types>::Type value_;
 };
 
 template<typename V, typename... Ts> typename V::ResultType ApplyVisitor(V&& visitor, Variant<Ts...>& variant);

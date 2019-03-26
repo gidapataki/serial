@@ -34,6 +34,7 @@ struct Enum {};
 
 struct MinVersion;
 struct MaxVersion;
+struct VersionBase;
 template<int N> struct Version;
 
 } // namespace serial

@@ -409,13 +409,13 @@ TEST(WriterTest, UnregisteredEnum) {
 	c.color.value = Color::kGreen;
 
 	reg.Register<C>();
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &c, root));
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, Writer(reg, noasserts).Write(h, &c, root));
 
 	reg.Register<Color>();
 	EXPECT_EQ(Color::kGreen, c.color.value);
 	EXPECT_EQ(nullptr, reg.EnumToString(Color{Color::kGreen}));
 
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &c, root));
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, Writer(reg, noasserts).Write(h, &c, root));
 
 	c.color = Color::kBlue;
 	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &c, root));
@@ -597,7 +597,7 @@ TEST(WriterTest, Variant) {
 
 	reg.RegisterAll<Vx>();
 	vx.var = Color{Color::kGreen};
-	EXPECT_EQ(ErrorCode::kUnregisteredEnum, Writer(reg, noasserts).Write(h, &vx, root));
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, Writer(reg, noasserts).Write(h, &vx, root));
 
 	vx.var = Color{Color::kBlue};
 	EXPECT_EQ(ErrorCode::kNone, Writer(reg, noasserts).Write(h, &vx, root));

@@ -1,5 +1,7 @@
 #pragma once
 #include <cassert>
+#include "serial/MetaHelpers.h"
+
 
 namespace serial {
 namespace detail {
@@ -10,8 +12,12 @@ struct WriteVisitor : Visitor<> {
 	{}
 
 	template<typename T>
-	void operator()(const T& value) const {
-		writer_->WriteVariant(value);
+	void operator()(const T& value, const MinVersion& v0, const MaxVersion& v1) const {
+		if (writer_->IsVersionInRange(v0, v1)) {
+			writer_->WriteVariant(value);
+		} else {
+			writer_->SetError(ErrorCode::kInvalidVariantType);
+		}
 	}
 
 private:
@@ -40,6 +46,15 @@ private:
 	const Variant<Ts...>& lhs_;
 };
 
+template<typename VisitorT, typename VariantT, typename T>
+typename VisitorT::ResultType VersionedInvoker(
+	VisitorT&& visitor, VariantT variant)
+{
+	using Info = VersionedTypeInfo<T>;
+	return std::forward<VisitorT>(visitor)(
+		variant.template Get<typename Info::Type>(), Info::Min(), Info::Max());
+}
+
 } // namespace detail
 
 
@@ -49,9 +64,16 @@ template<typename... Ts>
 template<typename U>
 struct Variant<Ts...>::ForEachType<U> {
 	static bool ReadIf(Variant<Ts...>& variant, TypeId id, Reader* reader) {
-		if (StaticTypeId<U>::Get() == id) {
-			variant = U{};
-			reader->ReadVariant(variant.Get<U>());
+		using Info = VersionedTypeInfo<U>;
+		using Type = typename Info::Type;
+
+		if (StaticTypeId<Type>::Get() == id) {
+			if (!reader->IsVersionInRange(Info::Min(), Info::Max())) {
+				return false;
+			}
+
+			variant = Type{};
+			reader->ReadVariant(variant.Get<Type>());
 			return true;
 		}
 		return false;
@@ -119,18 +141,21 @@ T& Variant<Ts...>::Get() {
 template<typename... Ts>
 void Variant<Ts...>::Write(Writer* writer) const {
 	assert(!value_.IsEmpty() && "Cannot write empty variant");
-	value_.ApplyVisitor(detail::WriteVisitor{writer});
+	ApplyVersionedVisitor(detail::WriteVisitor{writer});
 }
 
 template<typename... Ts>
 void Variant<Ts...>::Read(TypeId id, Reader* reader) {
-	ForEachType<Ts...>::ReadIf(*this, id, reader);
+	auto success = ForEachType<Ts...>::ReadIf(*this, id, reader);
+	if (!success) {
+		reader->SetError(ErrorCode::kInvalidVariantType);
+	}
 }
 
 template<typename... Ts>
 template<typename T, typename>
 constexpr typename Variant<Ts...>::Index Variant<Ts...>::IndexOf() {
-	return Index(internal::IndexOf<T, internal::Typelist<Ts...>>::value);
+	return Index(internal::IndexOf<T, Types>::value);
 }
 
 template<typename... Ts>
@@ -143,6 +168,38 @@ template<typename... Ts>
 template<typename V>
 typename V::ResultType Variant<Ts...>::ApplyVisitor(V&& visitor) const {
 	return value_.ApplyVisitor(std::forward<V>(visitor));
+}
+
+template<typename... Ts>
+template<typename V>
+typename V::ResultType Variant<Ts...>::ApplyVersionedVisitor(V&& visitor) {
+	assert(!IsEmpty());
+
+	using InvokerType = typename V::ResultType (*)(V&&, Variant<Ts...>&);
+
+	// Emulated virtual dispatch
+	static const InvokerType invokers[] = {
+		&detail::VersionedInvoker<V, Variant<Ts...>&, Ts>...
+	};
+
+	auto which = int(Which());
+	return invokers[which](std::forward<V>(visitor), *this);
+}
+
+template<typename... Ts>
+template<typename V>
+typename V::ResultType Variant<Ts...>::ApplyVersionedVisitor(V&& visitor) const {
+	assert(!IsEmpty());
+
+	using InvokerType = typename V::ResultType (*)(V&&, const Variant<Ts...>&);
+
+	// Emulated virtual dispatch
+	static const InvokerType invokers[] = {
+		&detail::VersionedInvoker<V, const Variant<Ts...>&, Ts>...
+	};
+
+	auto which = int(Which());
+	return invokers[which](std::forward<V>(visitor), *this);
 }
 
 

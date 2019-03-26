@@ -21,6 +21,8 @@ template<typename... Ts>
 class Ref : public RefBase {
 	using FirstType = typename detail::FirstType<Ts...>::type;
 public:
+	using Types = detail::Typelist<Ts...>;
+
 	enum class Index {};
 
 	Ref() = default;
@@ -31,17 +33,17 @@ public:
 
 	using RefBase::Get;
 
-	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> U& operator*();
-	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> const U& operator*() const;
-	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> U* operator->();
-	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Ts...>> const U* operator->() const;
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Types>> U& operator*();
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Types>> const U& operator*() const;
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Types>> U* operator->();
+	template<typename U = FirstType, typename = detail::EnableIfSingle<U, Types>> const U* operator->() const;
 
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> Ref(U* u);
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> Ref& operator=(U* u);
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> U& As();
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> const U& As() const;
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> bool Is() const;
-	template<typename U, typename = detail::EnableIfOneOf<U, Ts...>> static constexpr Index IndexOf();
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> Ref(U* u);
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> Ref& operator=(U* u);
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> U& As();
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> const U& As() const;
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> bool Is() const;
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> static constexpr Index IndexOf();
 
 	bool operator==(const Ref& other) const;
 	bool operator!=(const Ref& other) const;

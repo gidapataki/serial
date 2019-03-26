@@ -351,8 +351,8 @@ const Json::Value& Reader::Select(const Json::Value& value) {
 	return Current();
 }
 
-bool Reader::InRange(const MinVersion& v0, const MaxVersion& v1) const {
-	return InVersionRange(v0, v1, version_);
+bool Reader::IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const {
+	return serial::IsVersionInRange(version_, v0, v1);
 }
 
 } // namespace serial

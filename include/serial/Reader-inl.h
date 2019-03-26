@@ -11,7 +11,7 @@ void Reader::VisitField(
 		return;
 	}
 
-	if (!InRange(v0, v1)) {
+	if (!IsVersionInRange(v0, v1)) {
 		return;
 	}
 
@@ -128,7 +128,7 @@ void Reader::VisitValue(T& value, EnumTag) {
 	}
 
 	if (!reg_->EnumFromString(Current().asString(), value)) {
-		SetError(ErrorCode::kUnregisteredEnum);
+		SetError(ErrorCode::kInvalidEnumValue);
 		return;
 	}
 }
