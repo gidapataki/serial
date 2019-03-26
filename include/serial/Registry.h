@@ -93,8 +93,11 @@ private:
 
 	template<typename T>
 	struct EnumValueCollector {
-		void VisitEnumValue(T value, const char* name);
+		EnumValueCollector(int version);
+		void VisitEnumValue(T value, const char* name, MinVersion = {}, MaxVersion = {});
+
 		std::vector<std::pair<int, const char*>> mapping;
+		int version;
 	};
 
 	struct EnumMapping {

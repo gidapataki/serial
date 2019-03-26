@@ -24,13 +24,13 @@ struct VersionBase {};
 template<int N>
 struct Version : VersionBase {
 	static constexpr int value = N;
-	operator MinVersion() {
+	operator MinVersion() const {
 		MinVersion v;
 		v.value = value;
 		return v;
 	}
 
-	operator MaxVersion() {
+	operator MaxVersion() const {
 		MaxVersion v;
 		v.value = value;
 		return v;

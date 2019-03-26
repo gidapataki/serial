@@ -80,7 +80,7 @@ bool Registry::Register(EnumTag) {
 
 	T enum_value;
 	EnumMapping mapping;
-	EnumValueCollector<decltype(enum_value.value)> cc;
+	EnumValueCollector<decltype(enum_value.value)> cc(version_);
 	T::AcceptVisitor(cc);
 
 	for (auto& item : cc.mapping) {
@@ -165,7 +165,6 @@ bool Registry::EnumFromString(const std::string& name, T& value) const {
 	auto& mapping = it->second;
 	auto it2 = mapping.values.find(name);
 	if (it2 == mapping.values.end()) {
-		assert(!enable_asserts_ && "Enum value name is not registered");
 		return false;
 	}
 
@@ -180,12 +179,21 @@ bool Registry::RegisterAll() {
 }
 
 template<typename T>
-void Registry::EnumValueCollector<T>::VisitEnumValue(T value, const char* name) {
+Registry::EnumValueCollector<T>::EnumValueCollector(int version)
+	: version(version)
+{}
+
+template<typename T>
+void Registry::EnumValueCollector<T>::VisitEnumValue(
+	T value, const char* name, MinVersion v0, MaxVersion v1)
+{
 	static_assert(
 		std::is_same<int, typename std::underlying_type<T>::type>::value,
 		"Underlying type should be int");
 
-	mapping.emplace_back(static_cast<int>(value), name);
+	if (InVersionRange(v0, v1, version)) {
+		mapping.emplace_back(static_cast<int>(value), name);
+	}
 }
 
 

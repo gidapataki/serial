@@ -19,7 +19,7 @@ struct Winding : serial::Enum {
 	template<typename Visitor>
 	static void AcceptVisitor(Visitor& v) {
 		v.VisitEnumValue(Value::kClockwise, "cw");
-		v.VisitEnumValue(Value::kCounterClockwise, "ccw");
+		v.VisitEnumValue(Value::kCounterClockwise, "ccw", Version2());
 	}
 };
 
@@ -125,6 +125,7 @@ void Example() {
 	Other o1;
 	Group g3;
 	g3.elements.push_back(&o1);
+	g3.elements.push_back(&c1);
 	g3.name = "three";
 
 	B b;
@@ -142,6 +143,7 @@ void Example() {
 	}
 
 	Dump(json_value);
+	// json_value["version"] = 1;
 
 	// Deserialize
 	serial::RefContainer refs;
@@ -157,4 +159,3 @@ void Example() {
 int main() {
 	Example();
 }
-
