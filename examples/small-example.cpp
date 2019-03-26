@@ -18,8 +18,8 @@ struct Winding : serial::Enum {
 
 	template<typename Visitor>
 	static void AcceptVisitor(Visitor& v) {
-		v.VisitValue(Value::kClockwise, "cw");
-		v.VisitValue(Value::kCounterClockwise, "ccw");
+		v.VisitEnumValue(Value::kClockwise, "cw");
+		v.VisitEnumValue(Value::kCounterClockwise, "ccw");
 	}
 };
 

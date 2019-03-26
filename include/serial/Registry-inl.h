@@ -180,7 +180,7 @@ bool Registry::RegisterAll() {
 }
 
 template<typename T>
-void Registry::EnumValueCollector<T>::VisitValue(T value, const char* name) {
+void Registry::EnumValueCollector<T>::VisitEnumValue(T value, const char* name) {
 	static_assert(
 		std::is_same<int, typename std::underlying_type<T>::type>::value,
 		"Underlying type should be int");

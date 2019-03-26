@@ -24,7 +24,7 @@ struct Color : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
-		v.VisitValue(kRed, "red");
+		v.VisitEnumValue(kRed, "red");
 	}
 };
 
@@ -72,7 +72,7 @@ struct E : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
-		v.VisitValue(kDefault, nullptr);
+		v.VisitEnumValue(kDefault, nullptr);
 	}
 };
 

@@ -86,8 +86,8 @@ struct Color : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
-		v.VisitValue(kRed, "red");
-		v.VisitValue(kBlue, "blue");
+		v.VisitEnumValue(kRed, "red");
+		v.VisitEnumValue(kBlue, "blue");
 		// Note: green is not registered
 	}
 };

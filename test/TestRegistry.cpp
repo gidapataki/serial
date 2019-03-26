@@ -125,8 +125,8 @@ struct E : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
-		if (IsEnabled(Index::kOne)) { v.VisitValue(kOne, Name(Index::kOne)); }
-		if (IsEnabled(Index::kTwo)) { v.VisitValue(kTwo, Name(Index::kTwo)); }
+		if (IsEnabled(Index::kOne)) { v.VisitEnumValue(kOne, Name(Index::kOne)); }
+		if (IsEnabled(Index::kTwo)) { v.VisitEnumValue(kTwo, Name(Index::kTwo)); }
 	}
 
 	static void Reset() {
@@ -149,10 +149,10 @@ struct F : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
-		if (IsEnabled(Index::kRed)) { v.VisitValue(kRed, Name(Index::kRed)); }
-		if (IsEnabled(Index::kRed2)) { v.VisitValue(kRed, Name(Index::kRed2)); }
-		if (IsEnabled(Index::kGreen)) { v.VisitValue(kGreen, Name(Index::kGreen)); }
-		if (IsEnabled(Index::kBlue)) { v.VisitValue(kBlue, Name(Index::kBlue)); }
+		if (IsEnabled(Index::kRed)) { v.VisitEnumValue(kRed, Name(Index::kRed)); }
+		if (IsEnabled(Index::kRed2)) { v.VisitEnumValue(kRed, Name(Index::kRed2)); }
+		if (IsEnabled(Index::kGreen)) { v.VisitEnumValue(kGreen, Name(Index::kGreen)); }
+		if (IsEnabled(Index::kBlue)) { v.VisitEnumValue(kBlue, Name(Index::kBlue)); }
 	}
 
 	static void Reset() {
@@ -173,8 +173,8 @@ struct G : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
-		v.VisitValue(E::Value::kOne, "one");
-		v.VisitValue(E::Value::kTwo, "two");
+		v.VisitEnumValue(E::Value::kOne, "one");
+		v.VisitEnumValue(E::Value::kTwo, "two");
 	}
 };
 
