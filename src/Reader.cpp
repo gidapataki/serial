@@ -166,7 +166,10 @@ void Reader::ResolveRefs() {
 			return;
 		}
 
-		if (!refptr->Set(it->second.get())) {
+		auto ptr = it->second.get();
+		assert(ptr != nullptr);
+
+		if (!refptr->Resolve(version_, ptr)) {
 			SetError(ErrorCode::kInvalidReferenceType);
 			return;
 		}

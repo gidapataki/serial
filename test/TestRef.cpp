@@ -124,25 +124,25 @@ TEST(RefTest, IsAs) {
 	EXPECT_EQ(&a, &ref4.As<A>());
 }
 
-TEST(RefTest, Set) {
+TEST(RefTest, Resolve) {
 	A a;
 	B b;
 	C c;
 
 	Ref<A, B> ref1;
 
-	EXPECT_TRUE(ref1.Set(nullptr));
-	EXPECT_FALSE(ref1.Set(&c));
+	EXPECT_FALSE(ref1.Resolve(0, nullptr));
+	EXPECT_FALSE(ref1.Resolve(0, &c));
 	EXPECT_EQ(nullptr, ref1.Get());
 
-	EXPECT_TRUE(ref1.Set(&a));
+	EXPECT_TRUE(ref1.Resolve(0, &a));
 	EXPECT_EQ(&a, ref1.Get());
 
-	EXPECT_FALSE(ref1.Set(&c));
+	EXPECT_FALSE(ref1.Resolve(0, &c));
 	EXPECT_EQ(&a, ref1.Get());
 
-	EXPECT_TRUE(ref1.Set(nullptr));
-	EXPECT_EQ(nullptr, ref1.Get());
+	EXPECT_FALSE(ref1.Resolve(0, nullptr));
+	EXPECT_EQ(&a, ref1.Get());
 }
 
 TEST(RefTest, WhichIndex) {

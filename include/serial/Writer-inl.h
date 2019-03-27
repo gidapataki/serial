@@ -81,6 +81,13 @@ void Writer::VisitValue(const T& value, RefTag) {
 		assert(!enable_asserts_ && "Null reference");
 		return;
 	}
+
+	if (!value.IsValidInVersion(version_)) {
+		SetError(ErrorCode::kInvalidReferenceType);
+		assert(!enable_asserts_ && "Type is not valid in this version");
+		return;
+	}
+
 	auto refid = AddRef(value.Get());
 	Current() = Json::Value(refid);
 }

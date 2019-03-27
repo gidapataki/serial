@@ -27,9 +27,13 @@ struct Count<Typelist<T, Ts...>> {
 	static constexpr int value = 1 + Count<Typelist<Ts...>>::value;
 };
 
+
+template<typename T>
+struct Head;
+
 template<typename T, typename... Ts>
-struct FirstType {
-	using type = T;
+struct Head<Typelist<T, Ts...>> {
+	using Type = T;
 };
 
 template<typename T, typename Types>
@@ -56,82 +60,65 @@ template<typename T, typename Types>
 using EnableIfSingle = typename std::enable_if<Count<Types>::value == 1, T>::type;
 
 
-template<typename... Ts>
+template<typename T>
 struct IsReferable;
 
 template<typename T>
-struct IsReferable<T> {
+struct IsReferable<Typelist<T>> {
 	static const bool value = std::is_base_of<ReferableBase, T>::value;
 };
 
 template<typename T, typename... Ts>
-struct IsReferable<T, Ts...> {
+struct IsReferable<Typelist<T, Ts...>> {
 	static const bool value =
-		IsReferable<T>::value && IsReferable<Ts...>::value;
+		IsReferable<Typelist<T>>::value && IsReferable<Typelist<Ts...>>::value;
 };
 
 
-template<typename T, typename... Ts>
+template<typename T, typename U>
 struct IndexOf;
 
 template<typename T>
-struct IndexOf<T> {
+struct IndexOf<T, Typelist<>> {
 	static constexpr int value = -1;
 };
 
 template<typename T, typename... Ts>
-struct IndexOf<T, T, Ts...> {
+struct IndexOf<T, Typelist<T, Ts...>> {
 	static constexpr int value = 0;
 };
 
 template<typename T, typename U, typename... Ts>
-struct IndexOf<T, U, Ts...> {
+struct IndexOf<T, Typelist<U, Ts...>> {
 private:
-	static constexpr int res = IndexOf<T, Ts...>::value;
+	static constexpr int res = IndexOf<T, Typelist<Ts...>>::value;
 public:
 	static constexpr int value = res == -1 ? -1 : 1 + res;
 };
 
-
-template<typename... Ts>
-struct MatchTypeId;
-
 template<typename T>
-struct MatchTypeId<T> {
-	static bool Accept(TypeId id) {
-		return id == StaticTypeId<T>::Get();
-	}
-};
-
-template<typename T, typename... Ts>
-struct MatchTypeId<T, Ts...> {
-	static bool Accept(TypeId id) {
-		return id == StaticTypeId<T>::Get() || MatchTypeId<Ts...>::Accept(id);
-	}
-};
-
-
-template<typename... Ts>
 struct IndexOfTypeId;
 
 template<typename T>
-struct IndexOfTypeId<T> {
+struct IndexOfTypeId<Typelist<T>> {
 	static int Get(TypeId id) {
 		return id == StaticTypeId<T>::Get() ? 0 : -1;
 	}
 };
 
 template<typename T, typename... Ts>
-struct IndexOfTypeId<T, Ts...> {
+struct IndexOfTypeId<Typelist<T, Ts...>> {
 	static int Get(TypeId id) {
 		if (id == StaticTypeId<T>::Get()) {
 			return 0;
 		}
 
-		auto index = IndexOfTypeId<Ts...>::Get(id);
+		auto index = IndexOfTypeId<Typelist<Ts...>>::Get(id);
 		return index == -1 ? -1 : index + 1;
 	}
 };
+
+// --
 
 
 template<typename T, typename Types>

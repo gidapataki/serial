@@ -797,7 +797,7 @@ TEST(ReaderTest, Variant) {
 	EXPECT_EQ(ErrorCode::kNone, Reader(root).ReadObjects(reg, refs, p));
 
 	Ref<V> ref;
-	EXPECT_TRUE(ref.Set(p));
+	EXPECT_TRUE(ref.Resolve(0, p));
 	EXPECT_TRUE(bool(ref));
 
 	auto& v = ref->v;

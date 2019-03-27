@@ -2,13 +2,53 @@
 #include <cassert>
 #include "serial/ReferableBase.h"
 #include "serial/MetaHelpers.h"
+#include "serial/Version.h"
 
 
 namespace serial {
 
+namespace detail {
+
+template<typename T>
+struct RefValidator;
+
+template<typename T>
+struct RefValidator<detail::Typelist<T>> {
+	using Info = VersionedTypeInfo<T>;
+	using Type = typename Info::Type;
+
+	static bool IsSameType(TypeId id) {
+		return StaticTypeId<Type>::Get() == id;
+	}
+
+	static bool IsVersionInRange(int version) {
+		auto res = serial::IsVersionInRange(version, Info::Min(), Info::Max());
+		return res;
+	}
+
+	static bool IsValidInVersion(int version, TypeId id) {
+		return IsSameType(id) && IsVersionInRange(version);
+	}
+};
+
+template<typename T, typename... Ts>
+struct RefValidator<detail::Typelist<T, Ts...>> {
+	static bool IsValidInVersion(int version, TypeId id) {
+		using Head = RefValidator<detail::Typelist<T>>;
+		using Tail = RefValidator<detail::Typelist<Ts...>>;
+		if (Head::IsSameType(id)) {
+			return Head::IsVersionInRange(version);
+		}
+		return Tail::IsValidInVersion(version, id);
+	}
+};
+
+} // namespace detail
+
+
 template<typename... Ts>
 Ref<Ts...>::~Ref() {
-	static_assert(detail::IsReferable<Ts...>::value, "Types should Referable");
+	static_assert(detail::IsReferable<Types>::value, "Types should Referable");
 }
 
 template<typename... Ts>
@@ -81,7 +121,7 @@ const U* Ref<Ts...>::operator->() const {
 template<typename... Ts>
 template<typename U, typename>
 constexpr typename Ref<Ts...>::Index Ref<Ts...>::IndexOf() {
-	return Index(detail::IndexOf<U, Ts...>::value);
+	return Index(detail::IndexOf<U, Types>::value);
 }
 
 template<typename... Ts>
@@ -100,14 +140,18 @@ Ref<Ts...>::operator bool() const {
 }
 
 template<typename... Ts>
-bool Ref<Ts...>::Set(ReferableBase* ref) {
-	if (ref == nullptr ||
-		detail::MatchTypeId<Ts...>::Accept(ref->GetTypeId()))
-	{
-		ref_ = ref;
-		return true;
+bool Ref<Ts...>::Resolve(int version, ReferableBase* ref) {
+	if (ref == nullptr) {
+		return false;
 	}
-	return false;
+
+	auto id = ref->GetTypeId();
+	if (!detail::RefValidator<VersionedTypes>::IsValidInVersion(version, id)) {
+		return false;
+	}
+
+	ref_ = ref;
+	return true;
 }
 
 template<typename... Ts>
@@ -116,7 +160,13 @@ typename Ref<Ts...>::Index Ref<Ts...>::Which() const {
 		return Index(-1);
 	}
 
-	return Index(detail::IndexOfTypeId<Ts...>::Get(ref_->GetTypeId()));
+	return Index(detail::IndexOfTypeId<Types>::Get(ref_->GetTypeId()));
+}
+
+template<typename... Ts>
+bool Ref<Ts...>::IsValidInVersion(int version) const {
+	return detail::RefValidator<VersionedTypes>::IsValidInVersion(
+		version, ref_->GetTypeId());
 }
 
 } // namespace serial

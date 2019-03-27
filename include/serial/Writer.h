@@ -38,6 +38,7 @@ private:
 		Json::Value* current_;
 	};
 
+
 	class VariantWriter : public Visitor<> {
 	public:
 		VariantWriter(Writer* writer);
@@ -47,8 +48,8 @@ private:
 		Writer* writer_;
 	};
 
-	std::string AddRef(const ReferableBase* ref);
 
+	std::string AddRef(const ReferableBase* ref);
 	Json::Value& Select(const char* name);
 	Json::Value& SelectNext();
 	Json::Value& Current();

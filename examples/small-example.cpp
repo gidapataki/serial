@@ -72,7 +72,7 @@ struct B {
 };
 
 struct Other : serial::Referable<Other> {
-	serial::Variant<A, B(Version3)> w;
+	serial::Variant<A, B(Version2)> w;
 
 	static constexpr auto kTypeName = "other";
 
@@ -83,7 +83,7 @@ struct Other : serial::Referable<Other> {
 };
 
 struct Group : serial::Referable<Group> {
-	serial::Array<serial::Ref<Circle, Group, Other>> elements;
+	serial::Array<serial::Ref<Circle, Group, Other(Version3)>> elements;
 	serial::Optional<std::string> name;
 
 	static constexpr auto kTypeName = "group";
@@ -143,6 +143,7 @@ void Example() {
 	}
 
 	Dump(json_value);
+
 	// json_value["version"] = 2;
 
 	// Deserialize

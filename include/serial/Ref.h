@@ -8,7 +8,7 @@ class RefBase {
 public:
 	ReferableBase* Get();
 	const ReferableBase* Get() const;
-	virtual bool Set(ReferableBase* ref) = 0;
+	virtual bool Resolve(int version, ReferableBase* ref) = 0;
 
 protected:
 	virtual ~RefBase() {}
@@ -19,9 +19,10 @@ protected:
 
 template<typename... Ts>
 class Ref : public RefBase {
-	using FirstType = typename detail::FirstType<Ts...>::type;
 public:
-	using Types = detail::Typelist<Ts...>;
+	using VersionedTypes = detail::Typelist<Ts...>;
+	using Types = typename detail::ReturnTypesOf<Ts...>::Types;
+	using FirstType = typename detail::Head<Types>::Type;
 
 	enum class Index {};
 
@@ -49,9 +50,10 @@ public:
 	bool operator!=(const Ref& other) const;
 
 	explicit operator bool() const;
-	virtual bool Set(ReferableBase* ref) override;
+	virtual bool Resolve(int version, ReferableBase* ref) override;
 
 	Index Which() const;
+	bool IsValidInVersion(int version) const;
 };
 
 } // namespace serial
