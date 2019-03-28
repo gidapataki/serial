@@ -38,10 +38,10 @@ TEST(MetaTest, OneOf) {
 }
 
 TEST(MetaTest, IsReferable) {
-	EXPECT_FALSE(bool(detail::IsReferable<Typelist<A>>::value));
-	EXPECT_TRUE(bool(detail::IsReferable<Typelist<C>>::value));
-	EXPECT_FALSE(bool(detail::IsReferable<Typelist<A, C>>::value));
-	EXPECT_TRUE(bool(detail::IsReferable<Typelist<C, C>>::value));
+	EXPECT_FALSE(bool(detail::IsAllReferable<Typelist<A>>::value));
+	EXPECT_TRUE(bool(detail::IsAllReferable<Typelist<C>>::value));
+	EXPECT_FALSE(bool(detail::IsAllReferable<Typelist<A, C>>::value));
+	EXPECT_TRUE(bool(detail::IsAllReferable<Typelist<C, C>>::value));
 }
 
 TEST(MetaTest, IndexOf) {
@@ -52,4 +52,14 @@ TEST(MetaTest, IndexOf) {
 	EXPECT_EQ(2, int(IndexOf<A, Typelist<B, C, A>>::value));
 	EXPECT_EQ(2, int(IndexOf<A, Typelist<B, C, A, C, A>>::value));
 	EXPECT_EQ(-1, int(IndexOf<A, Typelist<B, C, B>>::value));
+}
+
+TEST(MetaTest, IndexOfTypeId) {
+	auto id = StaticTypeId<A>::Get();
+
+	EXPECT_EQ(0, (IndexOfTypeId<Typelist<A>>::Get(id)));
+	EXPECT_EQ(-1, (IndexOfTypeId<Typelist<B>>::Get(id)));
+	EXPECT_EQ(-1, (IndexOfTypeId<Typelist<B, C>>::Get(id)));
+	EXPECT_EQ(2, (IndexOfTypeId<Typelist<B, C, A>>::Get(id)));
+	EXPECT_EQ(1, (IndexOfTypeId<Typelist<C, A, B>>::Get(id)));
 }

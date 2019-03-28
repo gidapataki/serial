@@ -1,16 +1,18 @@
 # TODO
 
 
-- versioning for Ref<T...>
+- update tests for versioned fields / enums / types
 
 --
 
 - version adaptor for visitors
+- rename Min / Max to BeginVersion / EndVersion
 - __FILE__ and __LINE__ on Errors, maybe json location
 - schema (aka. blueprint)
 	- kPrimitiveName (user<color>)
 	- register user primitives
 	- sanity check (identifiers with no dots)
+	- logic error (field is available, butno valid values in a version)
 	- same field is only used once per acceptvisitor
 
 - nice errors if referable is a field / variant contains invalid types

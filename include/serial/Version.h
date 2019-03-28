@@ -59,7 +59,7 @@ struct VersionedTypeInfo<T(V, U)> {
 	using Type = T;
 
 	static MinVersion Min() { return MinVersion::FromInt(V::value); }
-	static MaxVersion Max() { return MaxVersion::FromInt(V::value); }
+	static MaxVersion Max() { return MaxVersion::FromInt(U::value); }
 };
 
 } // namespace serial

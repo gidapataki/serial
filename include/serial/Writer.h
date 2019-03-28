@@ -20,7 +20,7 @@ public:
 
 	// Note: Write() should be only called once,
 	// as it leaves the object in a non-clear state.
-	ErrorCode Write(const Header& header, ReferableBase* ref, Json::Value& output);
+	ErrorCode Write(const Header& header, const ReferableBase* ref, Json::Value& output);
 
 	template<typename T> void WriteReferable(const T& value);
 	template<typename T> void WriteVariant(const T& value);

@@ -40,7 +40,7 @@ public:
 private:
 	template<typename... Ts> struct ForEachType;
 
-	template<typename T> bool RegisterInternal();
+	template<typename T> bool RegisterInternal(MinVersion = {}, MaxVersion = {});
 	template<typename T> bool IsVisited() const;
 	template<typename T> void AddVisited();
 

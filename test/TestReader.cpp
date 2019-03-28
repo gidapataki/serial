@@ -10,6 +10,14 @@ using namespace serial;
 
 namespace {
 
+void Dump(const Json::Value& root) {
+	Json::StreamWriterBuilder builder;
+	builder.settings_["indentation"] = "  ";
+	std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+	writer->write(root, &std::cout);
+	std::cout << std::endl;
+}
+
 Json::Value MakeHeader(int root_id = 0) {
 	Json::Value root;
 	root = Json::Value(Json::objectValue);
@@ -20,6 +28,23 @@ Json::Value MakeHeader(int root_id = 0) {
 	return root;
 }
 
+Json::Value MakeVariant(const char* name) {
+	Json::Value root;
+	root[str::kVariantType] = name;
+	root[str::kVariantValue] = Json::nullValue;
+	return root;
+}
+
+void SetDocVersion(Json::Value& root, int version) {
+	root[str::kDocVersion] = version;
+}
+
+Json::Value& AddObject(Json::Value& root, Json::Value&& obj) {
+	auto& arr = root[str::kObjects];
+	auto index = arr.size();
+	return arr[index] = obj;
+}
+
 Json::Value MakeObject(int id, const char* type) {
 	Json::Value root;
 	root[str::kObjectType] = type;
@@ -27,6 +52,7 @@ Json::Value MakeObject(int id, const char* type) {
 	root[str::kObjectId] = "ref_" + std::to_string(id);
 	return root;
 }
+
 
 struct A;
 struct B;
@@ -43,6 +69,10 @@ struct Opt;
 struct Floats;
 struct All;
 
+using Version1 = serial::Version<1>;
+using Version2 = serial::Version<2>;
+using Version3 = serial::Version<3>;
+
 
 struct Point {
 	int x = 0;
@@ -58,19 +88,27 @@ struct Point {
 };
 
 struct Color : Enum {
-	enum : int {
+	enum Value : int {
 		kRed,
 		kGreen,
 		kBlue,
+		kYellow,
+		kOrange,
 	} value = {};
+
+	Color() = default;
+	Color(Value v) : value(v) {}
 
 	static constexpr auto kTypeName = "color";
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
+		// Note: green is not registered
 		v.VisitEnumValue(kRed, "red");
 		v.VisitEnumValue(kBlue, "blue");
-		// Note: green is not registered
+
+		v.VisitEnumValue(kYellow, "yellow", Version1());
+		v.VisitEnumValue(kOrange, "orange", Version1(), Version2());
 	}
 };
 
@@ -238,6 +276,29 @@ struct Opt : Referable<Opt> {
 	}
 };
 
+struct Versioned : Referable<Versioned> {
+	Color color;
+	Variant<int, std::string(Version1), float(Version1, Version2)> v;
+	Variant<int, std::string, float> w;
+	Ref<Versioned, A(Version1), B(Version1, Version2)> ref;
+	int i1 = -1;
+	int i2 = -1;
+	int i3 = -1;
+
+	static constexpr auto kTypeName = "versioned";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.color, "c");
+		v.VisitField(self.v, "v");
+		v.VisitField(self.w, "w");
+		v.VisitField(self.ref, "r");
+		v.VisitField(self.i1, "i1", Version1());
+		v.VisitField(self.i2, "i2", Version2(), Version3());
+		v.VisitField(self.i3, "i3", {}, Version3());
+	}
+};
+
 } // namespace
 
 TEST(ReaderTest, ReadHeader) {
@@ -311,6 +372,12 @@ TEST(ReaderTest, ReadObjects1) {
 
 	root = MakeHeader();
 	root[str::kRootId] = Json::objectValue;
+	EXPECT_EQ(ErrorCode::kInvalidHeader, Reader(root).ReadObjects(reg, refs, p));
+	EXPECT_EQ(2, refs.size());
+	EXPECT_EQ(&l2, p);
+
+	root = MakeHeader();
+	root[str::kDocVersion] = Json::objectValue;
 	EXPECT_EQ(ErrorCode::kInvalidHeader, Reader(root).ReadObjects(reg, refs, p));
 	EXPECT_EQ(2, refs.size());
 	EXPECT_EQ(&l2, p);
@@ -783,6 +850,9 @@ TEST(ReaderTest, Variant) {
 	root = MakeHeader(0);
 	root[str::kObjects][0] = MakeObject(0, "v");
 	auto& fields = root[str::kObjects][0][str::kObjectFields];
+	fields["v"] = 3;
+	EXPECT_EQ(ErrorCode::kInvalidObjectField, Reader(root).ReadObjects(reg, refs, p));
+
 	fields["v"] = Json::objectValue;
 	EXPECT_EQ(ErrorCode::kMissingObjectField, Reader(root).ReadObjects(reg, refs, p));
 
@@ -803,6 +873,145 @@ TEST(ReaderTest, Variant) {
 	auto& v = ref->v;
 	EXPECT_TRUE(v.Is<int32_t>());
 	EXPECT_EQ(22, v.Get<int32_t>());
+
+	fields["v"]["something"] = 1;
+	EXPECT_EQ(ErrorCode::kUnexpectedObjectField, Reader(root).ReadObjects(reg, refs, p));
 }
 
+TEST(ReaderTest, Versioned) {
+	auto ReadAs = [](int version, Json::Value& root, RefContainer& refs, Versioned*& v) -> ErrorCode {
+		SetDocVersion(root, version);
+		Registry reg(version);
+		reg.RegisterAll<Versioned>();
+		ReferableBase* p = nullptr;
+		auto ec = Reader(root).ReadObjects(reg, refs, p);
+		if (p) {
+			assert(p->GetTypeId() == serial::StaticTypeId<Versioned>::Get());
+			v = static_cast<Versioned*>(p);
+		}
+		return ec;
+	};
 
+	Json::Value root;
+	Json::Value dummy;
+	RefContainer refs;
+	Versioned* v = nullptr;
+
+	root = MakeHeader();
+	auto& vs = AddObject(root, MakeObject(0, "versioned"))[str::kObjectFields];
+
+	vs["c"] = "red";
+	vs["v"] = MakeVariant("_i32_");
+	vs["v"][str::kVariantValue] = 13;
+	vs["w"] = MakeVariant("_i32_");
+	vs["w"][str::kVariantValue] = 37;
+	vs["r"] = "ref_0";
+	vs["i3"] = 3;
+
+	// version-0
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(0, root, refs, v));
+	EXPECT_EQ(Color::kRed, v->color.value);
+	EXPECT_EQ(-1, v->i1);
+	EXPECT_EQ(-1, v->i2);
+	EXPECT_EQ(3, v->i3);
+	EXPECT_TRUE(v->v.Is<int>());
+	EXPECT_EQ(13, v->v.Get<int>());
+	EXPECT_TRUE(v->w.Is<int>());
+	EXPECT_EQ(37, v->w.Get<int>());
+	EXPECT_TRUE(v->ref.Is<Versioned>());
+	EXPECT_EQ(v, v->ref.Get());
+
+	vs["c"] = "orange";
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, ReadAs(0, root, refs, v));
+
+	vs["c"] = "red";
+	vs["v"][str::kVariantType] = "_string_";
+	vs["v"][str::kVariantValue] = "hello";
+	EXPECT_EQ(ErrorCode::kInvalidVariantType, ReadAs(0, root, refs, v));
+
+	// version-1
+	EXPECT_EQ(ErrorCode::kMissingObjectField, ReadAs(1, root, refs, v));
+
+	vs["i1"] = 1;
+	vs["c"] = "orange";
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(1, root, refs, v));
+	EXPECT_EQ(Color::kOrange, v->color.value);
+	EXPECT_EQ(1, v->i1);
+	EXPECT_EQ(-1, v->i2);
+	EXPECT_EQ(3, v->i3);
+	EXPECT_TRUE(v->v.Is<std::string>());
+	EXPECT_EQ(std::string{"hello"}, v->v.Get<std::string>());
+
+	vs["v"][str::kVariantType] = "_f32_";
+	vs["v"][str::kVariantValue] = 1.5;
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(1, root, refs, v));
+	EXPECT_TRUE(v->v.Is<float>());
+	EXPECT_EQ(1.5f, v->v.Get<float>());
+
+	vs["i2"] = 2;
+	EXPECT_EQ(ErrorCode::kUnexpectedObjectField, ReadAs(1, root, refs, v));
+
+	// version-2 (float is not in variant)
+	vs["c"] = "red";
+	EXPECT_EQ(ErrorCode::kInvalidVariantType, ReadAs(2, root, refs, v));
+
+	vs["v"][str::kVariantType] = "_i32_";
+	vs["v"][str::kVariantValue] = 22;
+	vs["c"] = "orange";
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, ReadAs(2, root, refs, v));
+
+	vs["c"] = "red";
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(2, root, refs, v));
+	EXPECT_EQ(Color::kRed, v->color.value);
+	EXPECT_EQ(1, v->i1);
+	EXPECT_EQ(2, v->i2);
+	EXPECT_EQ(3, v->i3);
+	EXPECT_EQ(v, v->ref.Get());
+	EXPECT_TRUE(v->v.Is<int>());
+	EXPECT_EQ(22, v->v.Get<int>());
+
+	// version-3
+	EXPECT_EQ(ErrorCode::kUnexpectedObjectField, ReadAs(3, root, refs, v));
+
+	vs.removeMember("i2");
+	vs.removeMember("i3");
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(3, root, refs, v));
+	EXPECT_EQ(1, v->i1);
+	EXPECT_EQ(-1, v->i2);
+	EXPECT_EQ(-1, v->i3);
+
+	// -- with referables --
+
+	vs.removeMember("i1");
+	vs["i3"] = 3;
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(0, root, refs, v));
+
+	// version-0
+	auto& ax = AddObject(root, MakeObject(1, "a"))[str::kObjectFields];
+	ax["value"] = 12;
+	EXPECT_EQ(ErrorCode::kUnregisteredType, ReadAs(0, root, refs, v));
+
+	// version-1
+	vs["i1"] = 1;
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(1, root, refs, v));
+
+	vs["r"] = "ref_1";
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(1, root, refs, v));
+	EXPECT_TRUE(v->ref.Is<A>());
+	EXPECT_EQ(12, v->ref.As<A>().value);
+
+	auto& bx = AddObject(root, MakeObject(2, "b"))[str::kObjectFields];
+	bx["name"] = "hello";
+	vs["r"] = "ref_2";
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(1, root, refs, v));
+	EXPECT_TRUE(v->ref.Is<B>());
+	EXPECT_EQ(std::string{"hello"}, v->ref.As<B>().name);
+
+	// version-2
+	vs["i2"] = 2;
+	EXPECT_EQ(ErrorCode::kUnregisteredType, ReadAs(2, root, refs, v));
+	root[str::kObjects].removeIndex(2, &dummy);
+	vs["r"] = "ref_1";
+
+	EXPECT_EQ(ErrorCode::kNone, ReadAs(2, root, refs, v));
+}

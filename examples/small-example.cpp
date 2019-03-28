@@ -91,7 +91,7 @@ struct Group : serial::Referable<Group> {
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.elements, "elements");
-		v.VisitField(self.name, "name", Version2());
+		v.VisitField(self.name, "name", Version1());
 	}
 };
 
@@ -124,7 +124,7 @@ void Example() {
 
 	Other o1;
 	Group g3;
-	g3.elements.push_back(&o1);
+	// g3.elements.push_back(&o1);
 	g3.elements.push_back(&c1);
 	g3.name = "three";
 
@@ -144,7 +144,7 @@ void Example() {
 
 	Dump(json_value);
 
-	// json_value["version"] = 2;
+	json_value["version"] = 1;
 
 	// Deserialize
 	serial::RefContainer refs;

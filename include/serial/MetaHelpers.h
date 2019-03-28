@@ -36,6 +36,7 @@ struct Head<Typelist<T, Ts...>> {
 	using Type = T;
 };
 
+
 template<typename T, typename Types>
 struct IsOneOf;
 
@@ -50,6 +51,7 @@ struct IsOneOf<T, Typelist<U, Ts...>> {
 		std::is_same<T, U>::value || IsOneOf<T, Typelist<Ts...>>::value;
 };
 
+
 template<typename T, typename Types>
 using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Types>::value>::type;
 
@@ -61,17 +63,18 @@ using EnableIfSingle = typename std::enable_if<Count<Types>::value == 1, T>::typ
 
 
 template<typename T>
-struct IsReferable;
+struct IsAllReferable;
 
 template<typename T>
-struct IsReferable<Typelist<T>> {
+struct IsAllReferable<Typelist<T>> {
 	static const bool value = std::is_base_of<ReferableBase, T>::value;
 };
 
 template<typename T, typename... Ts>
-struct IsReferable<Typelist<T, Ts...>> {
+struct IsAllReferable<Typelist<T, Ts...>> {
 	static const bool value =
-		IsReferable<Typelist<T>>::value && IsReferable<Typelist<Ts...>>::value;
+		IsAllReferable<Typelist<T>>::value &&
+		IsAllReferable<Typelist<Ts...>>::value;
 };
 
 
@@ -96,6 +99,7 @@ public:
 	static constexpr int value = res == -1 ? -1 : 1 + res;
 };
 
+
 template<typename T>
 struct IndexOfTypeId;
 
@@ -117,8 +121,6 @@ struct IndexOfTypeId<Typelist<T, Ts...>> {
 		return index == -1 ? -1 : index + 1;
 	}
 };
-
-// --
 
 
 template<typename T, typename Types>

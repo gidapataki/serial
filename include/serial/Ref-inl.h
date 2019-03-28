@@ -48,7 +48,8 @@ struct RefValidator<detail::Typelist<T, Ts...>> {
 
 template<typename... Ts>
 Ref<Ts...>::~Ref() {
-	static_assert(detail::IsReferable<Types>::value, "Types should Referable");
+	static_assert(
+		detail::IsAllReferable<Types>::value, "Types should be Referable");
 }
 
 template<typename... Ts>

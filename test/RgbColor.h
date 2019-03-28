@@ -3,7 +3,7 @@
 
 
 struct RgbColor : serial::UserPrimitive {
-	static constexpr auto kPrimitiveName = "color";
+	static constexpr auto kTypeName = "color";
 
 	bool FromString(const std::string& str);
 	bool ToString(std::string& str) const;

@@ -19,7 +19,7 @@ namespace serial {
  */
 template<typename T>
 ErrorCode Serialize(
-	T& obj,
+	const T& obj,
 	const Header& header,
 	Json::Value& value);
 

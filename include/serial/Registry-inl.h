@@ -217,8 +217,12 @@ bool Registrator::RegisterAll() {
 }
 
 template<typename T>
-bool Registrator::RegisterInternal() {
+bool Registrator::RegisterInternal(MinVersion v0, MaxVersion v1) {
 	if (!success_ || IsVisited<T>()) {
+		return success_;
+	}
+
+	if (!IsVersionInRange(version_, v0, v1)) {
 		return success_;
 	}
 
@@ -311,14 +315,24 @@ struct Registrator::ForEachType<T> {
 template<typename T, typename V>
 struct Registrator::ForEachType<T(V)> {
 	static bool RegisterInternal(Registrator* rx) {
-		return rx->RegisterInternal<T>();
+		static_assert(std::is_base_of<VersionBase, V>::value, "Invalid version type");
+		return rx->RegisterInternal<T>(V());
+	}
+};
+
+template<typename T, typename V, typename U>
+struct Registrator::ForEachType<T(V, U)> {
+	static bool RegisterInternal(Registrator* rx) {
+		static_assert(std::is_base_of<VersionBase, V>::value, "Invalid version type");
+		static_assert(std::is_base_of<VersionBase, U>::value, "Invalid version type");
+		return rx->RegisterInternal<T>(V(), U());
 	}
 };
 
 template<typename T, typename... Ts>
 struct Registrator::ForEachType<T, Ts...> {
 	static bool RegisterInternal(Registrator* rx) {
-		return rx->RegisterInternal<T>() &&
+		return ForEachType<T>::RegisterInternal(rx) &&
 			ForEachType<Ts...>::RegisterInternal(rx);
 	}
 };

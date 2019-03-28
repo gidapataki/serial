@@ -53,7 +53,7 @@ std::string Writer::AddRef(const ReferableBase* ref) {
 }
 
 ErrorCode Writer::Write(
-	const Header& header, ReferableBase* ref, Json::Value& output)
+	const Header& header, const ReferableBase* ref, Json::Value& output)
 {
 	root_ = Json::Value(Json::objectValue);
 	version_ = header.version;

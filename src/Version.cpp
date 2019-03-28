@@ -16,9 +16,8 @@ MaxVersion MaxVersion::FromInt(int value) {
 	return v;
 }
 
-
 bool IsVersionInRange(int version, const MinVersion& v0, const MaxVersion& v1) {
-	return v0.value <= version && v1.value > version;
+	return v0.value <= version && version < v1.value;
 }
 
 } // namespace serial

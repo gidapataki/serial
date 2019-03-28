@@ -7,6 +7,10 @@
 #include <limits>
 
 
+using namespace serial;
+
+namespace {
+
 void Dump(const Json::Value& root) {
 	Json::StreamWriterBuilder builder;
 	builder.settings_["indentation"] = "  ";
@@ -15,15 +19,16 @@ void Dump(const Json::Value& root) {
 	std::cout << std::endl;
 }
 
-using namespace serial;
-
-namespace {
-
 struct A;
 struct B;
 struct C;
 struct Leaf;
 struct Opt;
+
+using Version1 = serial::Version<1>;
+using Version2 = serial::Version<2>;
+using Version3 = serial::Version<3>;
+
 
 using AnyRef = Ref<A, B, C, Leaf, Opt>;
 
@@ -77,6 +82,8 @@ struct Color : Enum {
 		kRed,
 		kGreen,
 		kBlue,
+		kYellow,
+		kOrange,
 	} value = {};
 
 	Color() = default;
@@ -86,9 +93,12 @@ struct Color : Enum {
 
 	template<typename V>
 	static void AcceptVisitor(V& v) {
+		// Note: green is not registered
 		v.VisitEnumValue(kRed, "red");
 		v.VisitEnumValue(kBlue, "blue");
-		// Note: green is not registered
+
+		v.VisitEnumValue(kYellow, "yellow", Version1());
+		v.VisitEnumValue(kOrange, "orange", Version1(), Version2());
 	}
 };
 
@@ -182,6 +192,38 @@ struct Vx : Referable<Vx> {
 };
 
 
+struct Embed {
+	int v0 = 0;
+	int v1 = 1;
+	int v2 = 2;
+	int vx = 3;
+
+	static constexpr auto kTypeName = "embed";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.v0, "v0");
+		v.VisitField(self.v1, "v1", Version1(), Version2());
+		v.VisitField(self.v2, "v2", Version2());
+		v.VisitField(self.v2, "vx", {}, Version3());
+	}
+};
+
+
+struct Versioned : Referable<Versioned> {
+	Variant<Embed, std::string(Version1), int(Version1, Version2)> v;
+	Ref<C(Version1, Version3), Opt(Version2), Floats> u;
+
+	static constexpr auto kTypeName = "versioned";
+
+	template<typename Self, typename Visitor>
+	static void AcceptVisitor(Self& self, Visitor& v) {
+		v.VisitField(self.v, "v");
+		v.VisitField(self.u, "u");
+	}
+};
+
+
 void CheckHeader(const Json::Value& root, const Header& h) {
 	EXPECT_TRUE(root.isObject());
 	EXPECT_TRUE(root.isMember(str::kDocType));
@@ -216,6 +258,14 @@ void CheckObject(const Json::Value& obj) {
 void CheckObject(const Json::Value& obj, const std::string& type) {
 	CheckObject(obj);
 	EXPECT_EQ(type, obj[str::kObjectType].asString());
+}
+
+bool FirstObjectHas(const Json::Value& root, const char* name) {
+	return root[str::kObjects][0][str::kObjectFields].isMember(name);
+}
+
+size_t FirstObjectSize(const Json::Value& root) {
+	return root[str::kObjects][0][str::kObjectFields].size();
 }
 
 const Json::Value& FirstObjectField(const Json::Value& root, const char* name) {
@@ -659,5 +709,96 @@ TEST(WriterTest, Variant) {
 
 		EXPECT_EQ(std::string{"_i32_"}, type_field.asString());
 		EXPECT_EQ(27, value_field.asInt());
+	}
+}
+
+TEST(WriterTest, Versioned) {
+	auto WriteAs = [](int version, const Versioned& v, Json::Value& root) -> ErrorCode {
+		Registry reg(version, noasserts);
+		Header h;
+		h.version = version;
+		reg.RegisterAll<Versioned>();
+		return Writer(reg, noasserts).Write(h, &v, root);
+	};
+
+	Json::Value root;
+	Versioned v1;
+	C c1;
+	Opt o1;
+	Floats f1;
+
+	v1.v = Embed{};
+	v1.u = &c1;
+
+	c1.color.value = Color::kRed;
+	EXPECT_EQ(ErrorCode::kInvalidReferenceType, WriteAs(0, v1, root));
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(1, v1, root));
+
+	c1.color.value = Color::kYellow;
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(2, v1, root));
+
+	c1.color.value = Color::kOrange;
+	EXPECT_EQ(ErrorCode::kInvalidEnumValue, WriteAs(2, v1, root));
+
+	c1.color.value = Color::kRed;
+	EXPECT_EQ(ErrorCode::kInvalidReferenceType, WriteAs(3, v1, root));
+
+	v1.u = &o1;
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(2, v1, root));
+	EXPECT_EQ(ErrorCode::kInvalidReferenceType, WriteAs(1, v1, root));
+
+	v1.u = &f1;
+	v1.v = std::string{"hello"};
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(1, v1, root));
+	EXPECT_EQ(ErrorCode::kInvalidVariantType, WriteAs(0, v1, root));
+
+	v1.v = 5;
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(1, v1, root));
+	EXPECT_EQ(ErrorCode::kInvalidVariantType, WriteAs(2, v1, root));
+
+	v1.v = Embed{};
+
+	// version-0
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(0, v1, root));
+	{
+		auto& evs = FirstObjectField(root, "v")["value"];
+		EXPECT_EQ(2, evs.size());
+		EXPECT_TRUE(evs.isMember("v0"));
+		EXPECT_FALSE(evs.isMember("v1"));
+		EXPECT_FALSE(evs.isMember("v2"));
+		EXPECT_TRUE(evs.isMember("vx"));
+	}
+
+	// version-1
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(1, v1, root));
+	{
+		auto& evs = FirstObjectField(root, "v")["value"];
+		EXPECT_EQ(3, evs.size());
+		EXPECT_TRUE(evs.isMember("v0"));
+		EXPECT_TRUE(evs.isMember("v1"));
+		EXPECT_FALSE(evs.isMember("v2"));
+		EXPECT_TRUE(evs.isMember("vx"));
+	}
+
+	// version-2
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(2, v1, root));
+	{
+		auto& evs = FirstObjectField(root, "v")["value"];
+		EXPECT_EQ(3, evs.size());
+		EXPECT_TRUE(evs.isMember("v0"));
+		EXPECT_FALSE(evs.isMember("v1"));
+		EXPECT_TRUE(evs.isMember("v2"));
+		EXPECT_TRUE(evs.isMember("vx"));
+	}
+
+	// version-3
+	EXPECT_EQ(ErrorCode::kNone, WriteAs(3, v1, root));
+	{
+		auto& evs = FirstObjectField(root, "v")["value"];
+		EXPECT_EQ(2, evs.size());
+		EXPECT_TRUE(evs.isMember("v0"));
+		EXPECT_FALSE(evs.isMember("v1"));
+		EXPECT_TRUE(evs.isMember("v2"));
+		EXPECT_FALSE(evs.isMember("vx"));
 	}
 }
