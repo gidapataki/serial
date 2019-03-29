@@ -144,7 +144,7 @@ void Example() {
 
 	Dump(json_value);
 
-	json_value["version"] = 1;
+	// json_value["version"] = 1;
 
 	// Deserialize
 	serial::RefContainer refs;
@@ -162,5 +162,7 @@ void func() {
 }
 
 int main() {
-	Example();
+	// Example();
+	std::cerr << serial::detail::MaxAlignOf<serial::detail::Typelist<int, Point, Winding>>::value << std::endl;
+
 }

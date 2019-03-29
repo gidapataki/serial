@@ -28,6 +28,69 @@ private:
 	const Variant<Ts...>& lhs_;
 };
 
+struct CopyConstructIntoVisitor : Visitor<> {
+	CopyConstructIntoVisitor(void* address)
+		: address_(address)
+	{}
+
+	template<typename T>
+	void operator()(const T& other) {
+		new (address_) T(other);
+	}
+
+private:
+	void* address_;
+};
+
+struct MoveConstructIntoVisitor : Visitor<> {
+	MoveConstructIntoVisitor(void* address)
+		: address_(address)
+	{}
+
+	template<typename T>
+	void operator()(T& other) {
+		new (address_) T(std::move(other));
+	}
+
+private:
+	void* address_;
+};
+
+struct CopyIntoVisitor : Visitor<> {
+	CopyIntoVisitor(void* address)
+		: address_(address)
+	{}
+
+	template<typename T>
+	void operator()(const T& other) {
+		*reinterpret_cast<T*>(address_) = other;
+	}
+
+private:
+	void* address_;
+};
+
+struct MoveIntoVisitor : Visitor<> {
+	MoveIntoVisitor(void* address)
+		: address_(address)
+	{}
+
+	template<typename T>
+	void operator()(T& other) {
+		*reinterpret_cast<T*>(address_) = std::move(other);
+	}
+
+private:
+	void* address_;
+};
+
+struct DestroyerVisitor : Visitor<> {
+	template<typename T>
+	void operator()(T& operand) {
+		operand.~T();
+	}
+};
+
 template<typename VisitorT, typename VariantT, typename T>
 typename VisitorT::ResultType VersionedInvoker(
 	VisitorT&& visitor, VariantT variant)
@@ -37,105 +100,194 @@ typename VisitorT::ResultType VersionedInvoker(
 		variant.template Get<typename Info::Type>(), Info::Min(), Info::Max());
 }
 
+template<typename VisitorT, typename VariantT, typename T>
+typename VisitorT::ResultType Invoker(VisitorT&& visitor, VariantT variant) {
+	using Info = VersionedTypeInfo<T>;
+	return std::forward<VisitorT>(visitor)(
+		variant.template Get<typename Info::Type>());
+}
+
 } // namespace detail
 
 
 // Variant
 
 template<typename... Ts>
+Variant<Ts...>::Variant() {}
+
+template<typename... Ts>
+Variant<Ts...>::Variant(const Variant& other) {
+	if (!other.IsEmpty()) {
+		other.ApplyVisitor(detail::CopyConstructIntoVisitor{GetStorage()});
+		which_ = other.which_;
+	}
+}
+
+template<typename... Ts>
+Variant<Ts...>::Variant(Variant&& other) {
+	if (!other.IsEmpty()) {
+		other.ApplyVisitor(detail::MoveConstructIntoVisitor{GetStorage()});
+		which_ = other.which_;
+	}
+}
+
+template<typename... Ts>
+Variant<Ts...>& Variant<Ts...>::operator=(const Variant& other) {
+	if (other.IsEmpty()) {
+		Clear();
+	} else if (which_ == other.which_) {
+		other.ApplyVisitor(detail::CopyIntoVisitor{GetStorage()});
+	} else {
+		Clear();
+		other.ApplyVisitor(detail::CopyConstructIntoVisitor{GetStorage()});
+		which_ = other.which_;
+	}
+	return *this;
+}
+
+template<typename... Ts>
+Variant<Ts...>& Variant<Ts...>::operator=(Variant&& other) {
+	if (other.IsEmpty()) {
+		Clear();
+	} else if (which_ == other.which_) {
+		other.ApplyVisitor(detail::MoveIntoVisitor{GetStorage()});
+	} else {
+		Clear();
+		other.ApplyVisitor(detail::MoveConstructIntoVisitor{GetStorage()});
+		which_ = other.which_;
+	}
+	return *this;
+}
+
+template<typename... Ts>
 template<typename T, typename>
-Variant<Ts...>::Variant(T&& value)
-	: value_(std::forward<T>(value))
-{}
+Variant<Ts...>::Variant(T&& value) {
+	ConstructFromT(std::forward<T>(value));
+}
+
+template<typename... Ts>
+Variant<Ts...>::~Variant() {
+	Clear();
+}
 
 template<typename... Ts>
 template<typename T, typename>
 Variant<Ts...>& Variant<Ts...>::operator=(T&& value) {
-	value_ = std::forward<T>(value);
+	if (Is<typename std::decay<T>::type>()) {
+		Get<typename std::decay<T>::type>() = std::forward<T>(value);
+	} else {
+		Clear();
+		ConstructFromT(std::forward<T>(value));
+	}
+
 	return *this;
 }
 
 template<typename... Ts>
 void Variant<Ts...>::Clear() {
-	value_.Clear();
+	if (!IsEmpty()) {
+		ApplyVisitor(detail::DestroyerVisitor{});
+		which_ = -1;
+	}
 }
 
 template<typename... Ts>
 bool Variant<Ts...>::IsEmpty() const {
-	return value_.IsEmpty();
+	return which_ == -1;
 }
 
 template<typename... Ts>
 typename Variant<Ts...>::Index Variant<Ts...>::Which() const {
-	return Index(value_.Which());
+	return Index(which_);
 }
 
 template<typename... Ts>
 template<typename T>
 bool Variant<Ts...>::Is() const {
-	return value_.template Is<T>();
+	return which_ == detail::IndexOf<T, Types>::value;
 }
 
 template<typename... Ts>
 template<typename T>
 const T& Variant<Ts...>::Get() const {
-	return value_.template Get<T>();
+	assert(Is<T>());
+	return *reinterpret_cast<const T*>(GetStorage());
 }
 
 template<typename... Ts>
 template<typename T>
 T& Variant<Ts...>::Get() {
-	return value_.template Get<T>();
+	assert(Is<T>());
+	return *reinterpret_cast<T*>(GetStorage());
 }
 
 template<typename... Ts>
 template<typename T, typename>
 constexpr typename Variant<Ts...>::Index Variant<Ts...>::IndexOf() {
-	return Index(internal::IndexOf<T, Types>::value);
+	return Index(detail::IndexOf<T, Types>::value);
 }
 
 template<typename... Ts>
 template<typename V>
 typename V::ResultType Variant<Ts...>::ApplyVisitor(V&& visitor) {
-	return value_.ApplyVisitor(std::forward<V>(visitor));
+	assert(!IsEmpty());
+	using InvokerType = typename V::ResultType (*)(V&&, Variant<Ts...>&);
+	static const InvokerType invokers[] = {
+		&detail::Invoker<V, Variant<Ts...>&, Ts>...
+	};
+	return invokers[which_](std::forward<V>(visitor), *this);
 }
 
 template<typename... Ts>
 template<typename V>
 typename V::ResultType Variant<Ts...>::ApplyVisitor(V&& visitor) const {
-	return value_.ApplyVisitor(std::forward<V>(visitor));
+	assert(!IsEmpty());
+	using InvokerType = typename V::ResultType (*)(V&&, const Variant<Ts...>&);
+	static const InvokerType invokers[] = {
+		&detail::Invoker<V, const Variant<Ts...>&, Ts>...
+	};
+	return invokers[which_](std::forward<V>(visitor), *this);
 }
 
 template<typename... Ts>
 template<typename V>
 typename V::ResultType Variant<Ts...>::ApplyVersionedVisitor(V&& visitor) {
 	assert(!IsEmpty());
-
 	using InvokerType = typename V::ResultType (*)(V&&, Variant<Ts...>&);
-
-	// Emulated virtual dispatch
 	static const InvokerType invokers[] = {
 		&detail::VersionedInvoker<V, Variant<Ts...>&, Ts>...
 	};
-
-	auto which = int(Which());
-	return invokers[which](std::forward<V>(visitor), *this);
+	return invokers[which_](std::forward<V>(visitor), *this);
 }
 
 template<typename... Ts>
 template<typename V>
 typename V::ResultType Variant<Ts...>::ApplyVersionedVisitor(V&& visitor) const {
 	assert(!IsEmpty());
-
 	using InvokerType = typename V::ResultType (*)(V&&, const Variant<Ts...>&);
-
-	// Emulated virtual dispatch
 	static const InvokerType invokers[] = {
 		&detail::VersionedInvoker<V, const Variant<Ts...>&, Ts>...
 	};
+	return invokers[which_](std::forward<V>(visitor), *this);
+}
 
-	auto which = int(Which());
-	return invokers[which](std::forward<V>(visitor), *this);
+template<typename... Ts>
+void* Variant<Ts...>::GetStorage() {
+	return reinterpret_cast<void*>(&storage_);
+}
+
+template<typename... Ts>
+const void* Variant<Ts...>::GetStorage() const {
+	return reinterpret_cast<const void*>(&storage_);
+}
+
+template<typename... Ts>
+template<typename T>
+void Variant<Ts...>::ConstructFromT(T&& value) {
+	assert(IsEmpty());
+	using DecayedT = typename std::decay<T>::type;
+	new (GetStorage()) DecayedT(std::forward<T>(value));
+	which_ = detail::IndexOf<DecayedT, Types>::value;
 }
 
 

@@ -1,15 +1,14 @@
 # TODO
 
 
-- update tests for versioned fields / enums / types
+- special check for unregistered primitives in variant
 
 --
 
-- version adaptor for visitors
+- ? version adaptor for visitors
 - rename Min / Max to BeginVersion / EndVersion
 - __FILE__ and __LINE__ on Errors, maybe json location
 - schema (aka. blueprint)
-	- kPrimitiveName (user<color>)
 	- register user primitives
 	- sanity check (identifiers with no dots)
 	- logic error (field is available, butno valid values in a version)

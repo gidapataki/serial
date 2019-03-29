@@ -37,47 +37,6 @@ struct Head<Typelist<T, Ts...>> {
 };
 
 
-template<typename T, typename Types>
-struct IsOneOf;
-
-template<typename T>
-struct IsOneOf<T, Typelist<>> {
-	static const bool value = false;
-};
-
-template<typename T, typename U, typename... Ts>
-struct IsOneOf<T, Typelist<U, Ts...>> {
-	static const bool value =
-		std::is_same<T, U>::value || IsOneOf<T, Typelist<Ts...>>::value;
-};
-
-
-template<typename T, typename Types>
-using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Types>::value>::type;
-
-template<typename T, typename U>
-using EnableIfBaseOf = typename std::enable_if<std::is_base_of<T, U>::value>::type;
-
-template<typename T, typename Types>
-using EnableIfSingle = typename std::enable_if<Count<Types>::value == 1, T>::type;
-
-
-template<typename T>
-struct IsAllReferable;
-
-template<typename T>
-struct IsAllReferable<Typelist<T>> {
-	static const bool value = std::is_base_of<ReferableBase, T>::value;
-};
-
-template<typename T, typename... Ts>
-struct IsAllReferable<Typelist<T, Ts...>> {
-	static const bool value =
-		IsAllReferable<Typelist<T>>::value &&
-		IsAllReferable<Typelist<Ts...>>::value;
-};
-
-
 template<typename T, typename U>
 struct IndexOf;
 
@@ -97,6 +56,38 @@ private:
 	static constexpr int res = IndexOf<T, Typelist<Ts...>>::value;
 public:
 	static constexpr int value = res == -1 ? -1 : 1 + res;
+};
+
+
+template<typename T, typename Types>
+struct IsOneOf {
+	static constexpr bool value = IndexOf<T, Types>::value != -1;
+};
+
+
+template<typename T, typename Types>
+using EnableIfOneOf = typename std::enable_if<IsOneOf<T, Types>::value>::type;
+
+template<typename T, typename U>
+using EnableIfBaseOf = typename std::enable_if<std::is_base_of<T, U>::value>::type;
+
+template<typename T, typename Types>
+using EnableIfSingle = typename std::enable_if<Count<Types>::value == 1, T>::type;
+
+
+template<typename T>
+struct IsAllReferable;
+
+template<typename T>
+struct IsAllReferable<Typelist<T>> {
+	static constexpr bool value = std::is_base_of<ReferableBase, T>::value;
+};
+
+template<typename T, typename... Ts>
+struct IsAllReferable<Typelist<T, Ts...>> {
+	static constexpr bool value =
+		IsAllReferable<Typelist<T>>::value &&
+		IsAllReferable<Typelist<Ts...>>::value;
 };
 
 
@@ -155,6 +146,43 @@ struct ReturnTypesOf<T, U, Ts...> {
 		typename ReturnTypeOf<T>::Type,
 		typename ReturnTypesOf<U, Ts...>::Types>::Types;
 };
+
+
+template<size_t N, size_t M>
+struct MaxValue {
+	static constexpr size_t value = N > M ? N : M;
+};
+
+
+template<typename T>
+struct MaxSizeOf;
+
+template<>
+struct MaxSizeOf<Typelist<>> {
+	static constexpr size_t value = 0;
+};
+
+template<typename T, typename... Ts>
+struct MaxSizeOf<Typelist<T, Ts...>> {
+	static constexpr size_t value =
+		MaxValue<sizeof(T), MaxSizeOf<Typelist<Ts...>>::value>::value;
+};
+
+
+template<typename T>
+struct MaxAlignOf;
+
+template<>
+struct MaxAlignOf<Typelist<>> {
+	static constexpr size_t value = 0;
+};
+
+template<typename T, typename... Ts>
+struct MaxAlignOf<Typelist<T, Ts...>> {
+	static constexpr size_t value =
+		MaxValue<alignof(T), MaxAlignOf<Typelist<Ts...>>::value>::value;
+};
+
 
 } // namespace detail
 } // namespace serial

@@ -1,5 +1,4 @@
 #pragma once
-#include "serial/internal/Variant.h"
 #include "serial/SerialFwd.h"
 #include "serial/MetaHelpers.h"
 
@@ -14,11 +13,12 @@ public:
 	enum class Index {};
 	template<typename T, typename = detail::EnableIfOneOf<T, Types>> static constexpr Index IndexOf();
 
-	Variant() = default;
-	Variant(const Variant& other) = default;
-	Variant(Variant&& other) = default;
-	Variant& operator=(const Variant& other) = default;
-	Variant& operator=(Variant&& other) = default;
+	Variant();
+	~Variant();
+	Variant(const Variant& other);
+	Variant(Variant&& other);
+	Variant& operator=(const Variant& other);
+	Variant& operator=(Variant&& other);
 
 	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Types>> Variant(T&& value);
 	template<typename T, typename = detail::EnableIfOneOf<typename std::decay<T>::type, Types>> Variant& operator=(T&& value);
@@ -37,7 +37,17 @@ public:
 	template<typename V> typename V::ResultType ApplyVersionedVisitor(V&& visitor) const;
 
 private:
-	typename internal::VariantFrom<Types>::Type value_;
+	static constexpr size_t kSize = detail::MaxSizeOf<Types>::value;
+	static constexpr size_t kAlign = detail::MaxAlignOf<Types>::value;
+
+	using Storage = typename std::aligned_storage<kSize, kAlign>::type;
+
+	void* GetStorage();
+	const void* GetStorage() const;
+	template<typename T> void ConstructFromT(T&& value);
+
+	Storage storage_;
+	int which_ = -1;
 };
 
 template<typename... Ts> bool operator==(const Variant<Ts...>& lhs, const Variant<Ts...>& rhs);
