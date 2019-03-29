@@ -22,9 +22,9 @@ public:
 	template<typename T> void ReadReferable(T& value);
 	template<typename T> void ReadVariant(T& value);
 
-	template<typename T> void VisitField(T& value, const char* name, MinVersion = {}, MaxVersion = {});
+	template<typename T> void VisitField(T& value, const char* name, BeginVersion = {}, EndVersion = {});
 
-	bool IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const; // fixme - private
+	bool IsVersionInRange(const BeginVersion& v0, const EndVersion& v1) const; // fixme - private
 	void SetError(ErrorCode error); // fixme - private
 
 private:

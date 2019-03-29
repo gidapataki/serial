@@ -185,7 +185,7 @@ Registry::EnumValueCollector<T>::EnumValueCollector(int version)
 
 template<typename T>
 void Registry::EnumValueCollector<T>::VisitEnumValue(
-	T value, const char* name, MinVersion v0, MaxVersion v1)
+	T value, const char* name, BeginVersion v0, EndVersion v1)
 {
 	static_assert(
 		std::is_same<int, typename std::underlying_type<T>::type>::value,
@@ -217,7 +217,7 @@ bool Registrator::RegisterAll() {
 }
 
 template<typename T>
-bool Registrator::RegisterInternal(MinVersion v0, MaxVersion v1) {
+bool Registrator::RegisterInternal(BeginVersion v0, EndVersion v1) {
 	if (!success_ || IsVisited<T>()) {
 		return success_;
 	}
@@ -242,7 +242,7 @@ bool Registrator::RegisterInternal(MinVersion v0, MaxVersion v1) {
 
 template<typename T>
 void Registrator::VisitField(
-	const T& value, const char* name, MinVersion v0, MaxVersion v1)
+	const T& value, const char* name, BeginVersion v0, EndVersion v1)
 {
 	if (IsVersionInRange(version_, v0, v1)) {
 		VisitValue(value);

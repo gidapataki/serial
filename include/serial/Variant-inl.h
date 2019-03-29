@@ -97,7 +97,7 @@ typename VisitorT::ResultType VersionedInvoker(
 {
 	using Info = VersionedTypeInfo<T>;
 	return std::forward<VisitorT>(visitor)(
-		variant.template Get<typename Info::Type>(), Info::Min(), Info::Max());
+		variant.template Get<typename Info::Type>(), Info::Begin(), Info::End());
 }
 
 template<typename VisitorT, typename VariantT, typename T>

@@ -12,7 +12,7 @@ struct Reader::ForEachVariantType<Variant<Ts...>, detail::Typelist<U>> {
 		using Type = typename Info::Type;
 
 		if (StaticTypeId<Type>::Get() == id) {
-			if (!reader->IsVersionInRange(Info::Min(), Info::Max())) {
+			if (!reader->IsVersionInRange(Info::Begin(), Info::End())) {
 				return false;
 			}
 
@@ -38,7 +38,7 @@ struct Reader::ForEachVariantType<Variant<Ts...>, detail::Typelist<U, Us...>> {
 
 template<typename T>
 void Reader::VisitField(
-	T& value, const char* name, MinVersion v0, MaxVersion v1)
+	T& value, const char* name, BeginVersion v0, EndVersion v1)
 {
 	if (IsError()) {
 		return;

@@ -25,7 +25,7 @@ public:
 	template<typename T> void WriteReferable(const T& value);
 	template<typename T> void WriteVariant(const T& value);
 
-	template<typename T> void VisitField(const T& value, const char* name, MinVersion = {}, MaxVersion = {});
+	template<typename T> void VisitField(const T& value, const char* name, BeginVersion = {}, EndVersion = {});
 
 private:
 	class StateSentry {
@@ -42,7 +42,7 @@ private:
 	class VariantWriter : public Visitor<> {
 	public:
 		VariantWriter(Writer* writer);
-		template<typename T> void operator()(const T& value, const MinVersion& v0, const MaxVersion& v1) const;
+		template<typename T> void operator()(const T& value, const BeginVersion& v0, const EndVersion& v1) const;
 
 	private:
 		Writer* writer_;
@@ -54,7 +54,7 @@ private:
 	Json::Value& SelectNext();
 	Json::Value& Current();
 
-	bool IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const;
+	bool IsVersionInRange(const BeginVersion& v0, const EndVersion& v1) const;
 	void SetError(ErrorCode error);
 
 	template<typename T> void VisitValue(const T& value);

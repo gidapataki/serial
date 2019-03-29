@@ -4,19 +4,15 @@
 
 namespace serial {
 
-MinVersion MinVersion::FromInt(int value) {
-	MinVersion v;
-	v.value = value;
-	return v;
-}
+BeginVersion::BeginVersion(int v)
+	: value(v)
+{}
 
-MaxVersion MaxVersion::FromInt(int value) {
-	MaxVersion v;
-	v.value = value;
-	return v;
-}
+EndVersion::EndVersion(int v)
+	: value(v)
+{}
 
-bool IsVersionInRange(int version, const MinVersion& v0, const MaxVersion& v1) {
+bool IsVersionInRange(int version, const BeginVersion& v0, const EndVersion& v1) {
 	return v0.value <= version && version < v1.value;
 }
 

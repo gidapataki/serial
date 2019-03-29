@@ -9,7 +9,7 @@ namespace serial {
 
 template<typename T>
 void Writer::VariantWriter::operator()(
-	const T& value, const MinVersion& v0, const MaxVersion& v1) const
+	const T& value, const BeginVersion& v0, const EndVersion& v1) const
 {
 	if (writer_->IsVersionInRange(v0, v1)) {
 		writer_->WriteVariant(value);
@@ -23,7 +23,7 @@ void Writer::VariantWriter::operator()(
 
 template<typename T>
 void Writer::VisitField(
-	const T& value, const char* name, MinVersion v0, MaxVersion v1)
+	const T& value, const char* name, BeginVersion v0, EndVersion v1)
 {
 	if (!IsVersionInRange(v0, v1)) {
 		return;

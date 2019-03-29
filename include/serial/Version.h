@@ -14,33 +14,31 @@ struct Version : VersionBase {
 	static constexpr int value = N;
 };
 
-struct MinVersion {
-	MinVersion() = default;
-	template<int N> MinVersion(Version<N>) : value(N) {}
+struct BeginVersion {
+	BeginVersion() = default;
+	explicit BeginVersion(int value);
+	template<int N> BeginVersion(Version<N>);
 
-	static MinVersion FromInt(int value);
-
-	int value = std::numeric_limits<int>::min();
+	int value = 0;
 };
 
-
-struct MaxVersion {
-	MaxVersion() = default;
-	template<int N> MaxVersion(Version<N>) : value(N) {}
-	static MaxVersion FromInt(int value);
+struct EndVersion {
+	EndVersion() = default;
+	explicit EndVersion(int value);
+	template<int N> EndVersion(Version<N>);
 
 	int value = std::numeric_limits<int>::max();
 };
 
-bool IsVersionInRange(int version, const MinVersion& v0, const MaxVersion& v1);
+bool IsVersionInRange(int version, const BeginVersion& v0, const EndVersion& v1);
 
 
 template<typename T>
 struct VersionedTypeInfo {
 	using Type = T;
 
-	static MinVersion Min() { return {}; }
-	static MaxVersion Max() { return {}; }
+	static BeginVersion Begin();
+	static EndVersion End();
 };
 
 template<typename T, typename V>
@@ -48,18 +46,20 @@ struct VersionedTypeInfo<T(V)> {
 	static_assert(std::is_base_of<VersionBase, V>::value, "Invalid version type");
 	using Type = T;
 
-	static MinVersion Min() { return MinVersion::FromInt(V::value); }
-	static MaxVersion Max() { return {}; }
+	static BeginVersion Begin();
+	static EndVersion End();
 };
 
 template<typename T, typename V, typename U>
 struct VersionedTypeInfo<T(V, U)> {
-	static_assert(std::is_base_of<VersionBase, V>::value, "Invalid MinVersion type");
-	static_assert(std::is_base_of<VersionBase, U>::value, "Invalid MaxVersion type");
+	static_assert(std::is_base_of<VersionBase, V>::value, "Invalid BeginVersion type");
+	static_assert(std::is_base_of<VersionBase, U>::value, "Invalid EndVersion type");
 	using Type = T;
 
-	static MinVersion Min() { return MinVersion::FromInt(V::value); }
-	static MaxVersion Max() { return MaxVersion::FromInt(U::value); }
+	static BeginVersion Begin();
+	static EndVersion End();
 };
 
 } // namespace serial
+
+#include "serial/Version-inl.h"

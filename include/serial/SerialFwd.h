@@ -32,8 +32,8 @@ extern noasserts_t noasserts;
 struct UserPrimitive {};
 struct Enum {};
 
-struct MinVersion;
-struct MaxVersion;
+struct BeginVersion;
+struct EndVersion;
 struct VersionBase;
 template<int N> struct Version;
 

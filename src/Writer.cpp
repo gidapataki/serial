@@ -120,7 +120,7 @@ void Writer::SetError(ErrorCode error) {
 	error_ = error;
 }
 
-bool Writer::IsVersionInRange(const MinVersion& v0, const MaxVersion& v1) const {
+bool Writer::IsVersionInRange(const BeginVersion& v0, const EndVersion& v1) const {
 	return serial::IsVersionInRange(version_, v0, v1);
 }
 

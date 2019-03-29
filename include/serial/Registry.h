@@ -35,12 +35,12 @@ public:
 
 	template<typename T> bool RegisterAll();
 	template<typename T> void VisitField(
-		const T& value, const char* name, MinVersion = {}, MaxVersion = {});
+		const T& value, const char* name, BeginVersion = {}, EndVersion = {});
 
 private:
 	template<typename... Ts> struct ForEachType;
 
-	template<typename T> bool RegisterInternal(MinVersion = {}, MaxVersion = {});
+	template<typename T> bool RegisterInternal(BeginVersion = {}, EndVersion = {});
 	template<typename T> bool IsVisited() const;
 	template<typename T> void AddVisited();
 
@@ -94,7 +94,7 @@ private:
 	template<typename T>
 	struct EnumValueCollector {
 		EnumValueCollector(int version);
-		void VisitEnumValue(T value, const char* name, MinVersion = {}, MaxVersion = {});
+		void VisitEnumValue(T value, const char* name, BeginVersion = {}, EndVersion = {});
 
 		std::vector<std::pair<int, const char*>> mapping;
 		int version;

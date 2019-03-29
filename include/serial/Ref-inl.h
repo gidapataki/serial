@@ -22,7 +22,7 @@ struct RefValidator<detail::Typelist<T>> {
 	}
 
 	static bool IsVersionInRange(int version) {
-		auto res = serial::IsVersionInRange(version, Info::Min(), Info::Max());
+		auto res = serial::IsVersionInRange(version, Info::Begin(), Info::End());
 		return res;
 	}
 
