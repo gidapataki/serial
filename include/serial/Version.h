@@ -3,6 +3,7 @@
 #include <limits>
 #include <type_traits>
 #include "serial/SerialFwd.h"
+#include "serial/MetaHelpers.h"
 
 
 namespace serial {
@@ -59,6 +60,21 @@ struct VersionedTypeInfo<T(V, U)> {
 	static BeginVersion Begin();
 	static EndVersion End();
 };
+
+
+template<typename T>
+struct ForEachVersionedType;
+
+template<typename T>
+struct ForEachVersionedType<detail::Typelist<T>> {
+	template<typename V> static void AcceptVisitor(V&& visitor);
+};
+
+template<typename T, typename U, typename... Ts>
+struct ForEachVersionedType<detail::Typelist<T, U, Ts...>> {
+	template<typename V> static void AcceptVisitor(V&& visitor);
+};
+
 
 } // namespace serial
 

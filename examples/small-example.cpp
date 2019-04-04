@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_set>
 #include "serial/Serial.h"
+#include "serial/Blueprint.h"
 
 
 using Version1 = serial::Version<1>;
@@ -44,7 +45,7 @@ struct Circle : serial::Referable<Circle> {
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.radius, "radius");
-		v.VisitField(self.center, "center");
+		v.VisitField(self.center, "center", Version1(), Version3());
 		v.VisitField(self.winding, "winding");
 	}
 };
@@ -142,7 +143,41 @@ void Example() {
 		return;
 	}
 
-	Dump(json_value);
+	auto bp1 = serial::Blueprint::FromType<Group>(1);
+	auto bp2 = serial::Blueprint::FromType<Group>(2);
+	auto bp3 = serial::Blueprint::FromType<Group>(3);
+	std::cerr << bp1 << std::endl;
+	std::cerr << bp2 << std::endl;
+	std::cerr << bp3 << std::endl;
+
+	// std::cerr << Diff(bp1, bp2) << std::endl;
+	// std::cerr << Diff(bp2, bp3) << std::endl;
+
+	auto x = R"(
+a :: object
+a.x $ _i32_
+b :: object
+b.s $ _string_
+circle :: referable
+circle.radius $ _i32_
+circle.winding enum winding
+group :: referable
+group.elements[] ref circle
+group.elements[] ref group
+group.elements[] ref other
+group.name? $ _string_
+other :: referable
+other.w variant a
+other.w variant b
+winding :: enum
+winding option ccw
+winding option cw
+)";
+
+	std::cerr << Diff(serial::Blueprint::FromString(x), bp2) << std::endl;
+
+	return;
+	// Dump(json_value);
 
 	// json_value["version"] = 1;
 
@@ -162,7 +197,5 @@ void func() {
 }
 
 int main() {
-	// Example();
-	std::cerr << serial::detail::MaxAlignOf<serial::detail::Typelist<int, Point, Winding>>::value << std::endl;
-
+	Example();
 }

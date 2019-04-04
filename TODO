@@ -1,16 +1,12 @@
 # TODO
 
-
 - special check for unregistered primitives in variant
 
 --
 
-- ? version adaptor for visitors
 - rename Min / Max to BeginVersion / EndVersion
 - __FILE__ and __LINE__ on Errors, maybe json location
-- schema (aka. blueprint)
-	- register user primitives
-	- sanity check (identifiers with no dots)
+- sanity check (identifiers with no dots)
 	- logic error (field is available, butno valid values in a version)
 	- same field is only used once per acceptvisitor
 
@@ -18,4 +14,5 @@
 - type in refid (ref_0-circle)
 - test object order stability
 - test registator with all types
-- force write ?
+- ? force write
+- ? version adaptor for visitors

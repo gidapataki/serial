@@ -45,4 +45,19 @@ EndVersion VersionedTypeInfo<T(V, U)>::End() {
 	return EndVersion{U::value};
 }
 
+
+template<typename T>
+template<typename V>
+void ForEachVersionedType<detail::Typelist<T>>::AcceptVisitor(V&& visitor) {
+	using Info = VersionedTypeInfo<T>;
+	visitor.template VisitVersionedType<typename Info::Type>(Info::Begin(), Info::End());
+}
+
+template<typename T, typename U, typename... Ts>
+template<typename V>
+void ForEachVersionedType<detail::Typelist<T, U, Ts...>>::AcceptVisitor(V&& visitor) {
+	ForEachVersionedType<detail::Typelist<T>>::AcceptVisitor(visitor);
+	ForEachVersionedType<detail::Typelist<U, Ts...>>::AcceptVisitor(visitor);
+}
+
 } // namespace serial
