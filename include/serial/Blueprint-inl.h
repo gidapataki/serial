@@ -56,6 +56,9 @@ void BlueprintWriter::Add(EnumTag) {
 }
 
 template<typename T>
+void BlueprintWriter::Add(PrimitiveTag) {}
+
+template<typename T>
 void BlueprintWriter::Add(ObjectTag) {
 	StateSentry sentry(this);
 	state_.prefix = TypeName<T>::value;
@@ -63,6 +66,11 @@ void BlueprintWriter::Add(ObjectTag) {
 	T elem;
 	T::AcceptVisitor(elem, *this);
 	AddTypeName<T>("object");
+}
+
+template<typename T>
+void BlueprintWriter::Add(UserTag) {
+	AddTypeName<T>("usertype");
 }
 
 template<typename T>
@@ -170,6 +178,8 @@ template<typename T>
 void BlueprintWriter::VisitValue(const T& value, UserTag) {
 	std::stringstream ss;
 	ss << state_.prefix << " user " << TypeName<T>::value;
+	blueprint_.AddLine(ss.str());
+	Add<T>();
 }
 
 } // namespace serial

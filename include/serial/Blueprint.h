@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <unordered_set>
+#include <initializer_list>
 #include "serial/SerialFwd.h"
 #include "serial/TypeTraits.h"
 #include "serial/TypeId.h"
@@ -13,19 +14,41 @@ namespace serial {
 
 class Blueprint {
 public:
+	struct Delta {
+		Delta() = default;
+		Delta(const Delta& other) = default;
+		Delta(const std::string& value);
+
+		std::string value;
+	};
+
+	static const Delta kNoDiff;
+
 	Blueprint() = default;
 
 	static Blueprint FromString(const std::string& str);
-	template<typename T> static Blueprint FromType(int version);
+	template<typename T> static Blueprint FromType(int version = 0);
 
-	bool AddLine(const std::string& line);
+	bool AddLine(std::string line);
+	std::size_t Size() const;
 
-	friend std::string Diff(const Blueprint& lhs, const Blueprint& rhs);
+	// Note: comparing Blueprint::Delta in tests shows a nicer error
+	// when two Blueprints are different, this is why there is no comparison
+	// operators on Blueprint itself.
+
+	friend Delta Diff(const Blueprint& lhs, const Blueprint& rhs);
+	friend Blueprint Union(std::initializer_list<Blueprint> bps);
 	friend std::ostream& operator<<(std::ostream& stream, const Blueprint& bp);
+	friend std::string ToString(const Blueprint& bp);
 
 private:
 	std::set<std::string> lines_;
 };
+
+Blueprint Union(std::initializer_list<Blueprint> bps);
+std::ostream& operator<<(std::ostream& stream, const Blueprint::Delta& delta);
+bool operator==(const Blueprint::Delta& lhs, const Blueprint::Delta& rhs);
+bool operator!=(const Blueprint::Delta& lhs, const Blueprint::Delta& rhs);
 
 
 class BlueprintWriter {
@@ -42,6 +65,8 @@ private:
 	template<typename T> void Add(ReferableTag);
 	template<typename T> void Add(EnumTag);
 	template<typename T> void Add(ObjectTag);
+	template<typename T> void Add(UserTag);
+	template<typename T> void Add(PrimitiveTag);
 
 	template<typename T> void VisitValue(const T& value);
 	template<typename T> void VisitValue(const T& value, PrimitiveTag);
