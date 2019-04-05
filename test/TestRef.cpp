@@ -189,3 +189,11 @@ TEST(RefTest, SingleType) {
 	EXPECT_EQ(13, (*ref).value);
 	EXPECT_EQ(13, (*cref).value);
 }
+
+TEST(RefTest, From) {
+	A a;
+	A* ptr = &a;
+	const A* cptr = &a;
+	Ref<A, B, C> ref = Ref<A, B, C>::From(ptr);
+	const Ref<A, B, C> cref = Ref<A, B, C>::From(cptr);
+}

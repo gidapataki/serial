@@ -121,6 +121,18 @@ const U* Ref<Ts...>::operator->() const {
 
 template<typename... Ts>
 template<typename U, typename>
+Ref<Ts...> Ref<Ts...>::From(U* u) {
+	return Ref{u};
+}
+
+template<typename... Ts>
+template<typename U, typename>
+const Ref<Ts...> Ref<Ts...>::From(const U* u) {
+	return Ref{const_cast<U*>(u)};
+}
+
+template<typename... Ts>
+template<typename U, typename>
 constexpr typename Ref<Ts...>::Index Ref<Ts...>::IndexOf() {
 	return Index(detail::IndexOf<U, Types>::value);
 }

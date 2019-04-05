@@ -45,6 +45,8 @@ public:
 	template<typename U, typename = detail::EnableIfOneOf<U, Types>> const U& As() const;
 	template<typename U, typename = detail::EnableIfOneOf<U, Types>> bool Is() const;
 	template<typename U, typename = detail::EnableIfOneOf<U, Types>> static constexpr Index IndexOf();
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> static Ref From(U* u);
+	template<typename U, typename = detail::EnableIfOneOf<U, Types>> static const Ref From(const U* u);
 
 	bool operator==(const Ref& other) const;
 	bool operator!=(const Ref& other) const;
