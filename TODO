@@ -1,5 +1,10 @@
 # TODO
 
+VisitAllTypes<T>(version, V&&);
+
+
+
+
 - special check for unregistered primitives in variant
 
 --

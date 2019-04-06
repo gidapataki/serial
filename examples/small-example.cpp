@@ -2,6 +2,7 @@
 #include <unordered_set>
 #include "serial/Serial.h"
 #include "serial/Blueprint.h"
+#include "serial/Traverse.h"
 
 
 using Version1 = serial::Version<1>;
@@ -146,35 +147,35 @@ void Example() {
 	auto bp1 = serial::Blueprint::FromType<Group>(1);
 	auto bp2 = serial::Blueprint::FromType<Group>(2);
 	auto bp3 = serial::Blueprint::FromType<Group>(3);
-	std::cerr << bp1 << std::endl;
-	std::cerr << bp2 << std::endl;
-	std::cerr << bp3 << std::endl;
+	// std::cerr << bp1 << std::endl;
+	// std::cerr << bp2 << std::endl;
+	// std::cerr << bp3 << std::endl;
 
 	// std::cerr << Diff(bp1, bp2) << std::endl;
 	// std::cerr << Diff(bp2, bp3) << std::endl;
 
 	auto x = R"(
-a :: object
-a.x $ _i32_
-b :: object
-b.s $ _string_
-circle :: referable
-circle.radius $ _i32_
-circle.winding enum winding
-group :: referable
-group.elements[] ref circle
-group.elements[] ref group
-group.elements[] ref other
-group.name? $ _string_
-other :: referable
-other.w variant a
-other.w variant b
-winding :: enum
-winding option ccw
-winding option cw
-)";
+		a :: object
+		a.x $ _i32_
+		b :: object
+		b.s $ _string_
+		circle :: referable
+		circle.radius $ _i32_
+		circle.winding enum winding
+		group :: referable
+		group.elements[] ref circle
+		group.elements[] ref group
+		group.elements[] ref other
+		group.name? $ _string_
+		other :: referable
+		other.w variant a
+		other.w variant b
+		winding :: enum
+		winding option ccw
+		winding option cw
+	)";
 
-	std::cerr << Diff(serial::Blueprint::FromString(x), bp2) << std::endl;
+	// std::cerr << Diff(serial::Blueprint::FromString(x), bp2) << std::endl;
 
 	return;
 	// Dump(json_value);
@@ -196,6 +197,13 @@ void func() {
 	std::cerr << __PRETTY_FUNCTION__ << std::endl;
 }
 
+struct Vis {
+	template<typename T> void VisitType() const {
+		std::cerr << __PRETTY_FUNCTION__ << std::endl;
+	}
+};
+
 int main() {
-	Example();
+	// Example();
+	serial::VisitAllTypes<Group>(Vis{}, 2);
 }

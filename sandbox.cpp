@@ -141,7 +141,29 @@ void CheckVersion() {
 	});
 }
 
+struct Vis {
+	template<typename T>
+	void VisitType() {
+		DumpType<T>();
+	}
+};
+
+template<typename V>
+struct Univ {
+	Univ(V&& v) : v(v) {}
+
+	static void Info() { DumpType<V>(); }
+	V&& v;
+};
+
+template<typename T, typename V>
+void VisitAllTypes(V&& visitor) {
+	visitor.template VisitType<T>();
+	Univ<V>::Info();
+}
+
 
 int main() {
-	CheckVersion();
+	// CheckVersion();
+	VisitAllTypes<int>(Vis{});
 }
