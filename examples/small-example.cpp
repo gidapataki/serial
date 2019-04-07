@@ -73,14 +73,22 @@ struct B {
 	}
 };
 
+struct U : serial::UserPrimitive {
+	static constexpr auto kTypeName = "u";
+	bool ToString(std::string&) const { return true; }
+	bool FromString(const std::string&) { return true; }
+};
+
 struct Other : serial::Referable<Other> {
 	serial::Variant<A, B(Version2)> w;
+	U user;
 
 	static constexpr auto kTypeName = "other";
 
 	template<typename Self, typename Visitor>
 	static void AcceptVisitor(Self& self, Visitor& v) {
 		v.VisitField(self.w, "w");
+		v.VisitField(self.user, "user");
 	}
 };
 
@@ -205,5 +213,7 @@ struct Vis {
 
 int main() {
 	// Example();
-	serial::VisitAllTypes<Group>(Vis{}, 2);
+	Vis vv;
+	// serial::VisitAllTypes<Group>(vv, 3);
+	serial::VisitAllTypes<U>(vv);
 }

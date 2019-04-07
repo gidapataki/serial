@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <set>
-#include <unordered_set>
 #include <initializer_list>
 #include "serial/SerialFwd.h"
 #include "serial/TypeTraits.h"
@@ -55,29 +54,33 @@ class BlueprintWriter {
 public:
 	explicit BlueprintWriter(Blueprint& bp, int version = 0);
 
-	template<typename T> void Add();
+	template<typename T> void VisitType();
+
 	template<typename T> void VisitField(const T& value, const char* name, BeginVersion v0 = {}, EndVersion v1 = {});
 	template<typename T> void VisitEnumValue(const T& value, const char* name, BeginVersion v0 = {}, EndVersion v1 = {});
 	template<typename T> void VisitVersionedType(BeginVersion v0, EndVersion v1);
 
 private:
-	template<typename T> void AddTypeName(const char* info);
-	template<typename T> void Add(ReferableTag);
-	template<typename T> void Add(EnumTag);
-	template<typename T> void Add(ObjectTag);
-	template<typename T> void Add(UserTag);
-	template<typename T> void Add(PrimitiveTag);
+	void Push(const char* str);
+	void PushQualifier(const char* str);
+	void Add(const char* str);
 
-	template<typename T> void VisitValue(const T& value);
-	template<typename T> void VisitValue(const T& value, PrimitiveTag);
-	template<typename T> void VisitValue(const Array<T>& value, ArrayTag);
-	template<typename T> void VisitValue(const Optional<T>& value, OptionalTag);
-	template<typename T> void VisitValue(const T& value, ObjectTag);
-	template<typename T> void VisitValue(const T& value, EnumTag);
-	template<typename T> void VisitValue(const T& value, VariantTag);
+	template<typename T> void AddType(const char* info);
+	template<typename T> void VisitType(ReferableTag);
+	template<typename T> void VisitType(EnumTag);
+	template<typename T> void VisitType(ObjectTag);
+	template<typename T> void VisitType(UserTag);
+	template<typename T> void VisitType(PrimitiveTag);
 
-	template<typename T> void VisitValue(const T& value, RefTag);
-	template<typename T> void VisitValue(const T& value, UserTag);
+	template<typename T> void VisitInternal();
+	template<typename T> void VisitInternal(PrimitiveTag);
+	template<typename T> void VisitInternal(ArrayTag);
+	template<typename T> void VisitInternal(OptionalTag);
+	template<typename T> void VisitInternal(ObjectTag);
+	template<typename T> void VisitInternal(EnumTag);
+	template<typename T> void VisitInternal(VariantTag);
+	template<typename T> void VisitInternal(RefTag);
+	template<typename T> void VisitInternal(UserTag);
 
 private:
 	struct State {
@@ -94,7 +97,6 @@ private:
 		BlueprintWriter* parent_ = nullptr;
 	};
 
-	std::unordered_set<TypeId> visited_;
 	Blueprint& blueprint_;
 	int version_ = 0;
 };

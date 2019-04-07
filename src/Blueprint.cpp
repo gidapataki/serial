@@ -157,4 +157,20 @@ BlueprintWriter::BlueprintWriter(Blueprint& bp, int version)
 	, version_(version)
 {}
 
+void BlueprintWriter::Push(const char* str) {
+	state_.prefix += str;
+}
+
+void BlueprintWriter::PushQualifier(const char* str) {
+	state_.prefix += ' ';
+	state_.prefix += str;
+}
+
+void BlueprintWriter::Add(const char* str) {
+	std::stringstream ss;
+	ss << state_.prefix << " " << str;
+	blueprint_.AddLine(ss.str());
+}
+
+
 } // namespace serial

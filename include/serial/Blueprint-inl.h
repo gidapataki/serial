@@ -1,7 +1,7 @@
 #pragma once
 #include <sstream>
 #include "serial/TypeName.h"
-
+#include "serial/Traverse.h"
 
 namespace serial {
 
@@ -11,7 +11,8 @@ template<typename T>
 Blueprint Blueprint::FromType(int version) {
 	Blueprint bp;
 	BlueprintWriter w(bp, version);
-	w.Add<T>();
+
+	VisitAllTypes<T>(w, version);
 	return bp;
 }
 
@@ -19,58 +20,53 @@ Blueprint Blueprint::FromType(int version) {
 // BlueprintWriter
 
 template<typename T>
-void BlueprintWriter::Add() {
-	auto id = StaticTypeId<T>::Get();
-	if (visited_.count(id) > 0) {
-		return;
-	}
-	visited_.insert(id);
-
+void BlueprintWriter::VisitType() {
 	using Tag = typename TypeTag<T>::Type;
-	Add<T>(Tag{});
+	VisitType<T>(Tag{});
 }
 
 template<typename T>
-void BlueprintWriter::AddTypeName(const char* info) {
+void BlueprintWriter::AddType(const char* info) {
 	std::stringstream ss;
 	ss << TypeName<T>::value << " :: " << info;
 	blueprint_.AddLine(ss.str());
 }
 
 template<typename T>
-void BlueprintWriter::Add(ReferableTag) {
+void BlueprintWriter::VisitType(ReferableTag) {
 	StateSentry sentry(this);
 	state_.prefix = TypeName<T>::value;
 	T elem;
 	T::AcceptVisitor(elem, *this);
-	AddTypeName<T>("referable");
+	AddType<T>("referable");
 }
 
 template<typename T>
-void BlueprintWriter::Add(EnumTag) {
+void BlueprintWriter::VisitType(EnumTag) {
 	StateSentry sentry(this);
 	state_.prefix = TypeName<T>::value;
 
+	PushQualifier("option");
 	T::AcceptVisitor(*this);
-	AddTypeName<T>("enum");
+	AddType<T>("enum");
 }
 
 template<typename T>
-void BlueprintWriter::Add(PrimitiveTag) {}
+void BlueprintWriter::VisitType(PrimitiveTag) {}
 
 template<typename T>
-void BlueprintWriter::Add(ObjectTag) {
+void BlueprintWriter::VisitType(ObjectTag) {
 	StateSentry sentry(this);
 	state_.prefix = TypeName<T>::value;
 
 	T elem;
 	T::AcceptVisitor(elem, *this);
-	AddTypeName<T>("object");
+	AddType<T>("object");
 }
 
 template<typename T>
-void BlueprintWriter::Add(UserTag) {
-	AddTypeName<T>("usertype");
+void BlueprintWriter::VisitType(UserTag) {
+	AddType<T>("usertype");
 }
 
 template<typename T>
@@ -83,9 +79,9 @@ void BlueprintWriter::VisitField(
 	}
 
 	StateSentry sentry(this);
-	state_.prefix += '.';
-	state_.prefix += name;
-	VisitValue(value);
+	Push(".");
+	Push(name);
+	VisitInternal<T>();
 }
 
 template<typename T>
@@ -97,63 +93,44 @@ void BlueprintWriter::VisitEnumValue(
 		return;
 	}
 
-	std::stringstream ss;
-	ss << state_.prefix << " option " << name;
-	blueprint_.AddLine(ss.str());
+	Add(name);
 }
 
 template<typename T>
-void BlueprintWriter::VisitValue(const T& value) {
+void BlueprintWriter::VisitInternal() {
 	using Tag = typename TypeTag<T>::Type;
 	Tag tag;
-	VisitValue(value, tag);
+	VisitInternal<T>(tag);
 }
 
 template<typename T>
-void BlueprintWriter::VisitValue(const T& value, PrimitiveTag) {
-	std::stringstream ss;
-	ss << state_.prefix << " $ " << TypeName<T>::value;
-	blueprint_.AddLine(ss.str());
+void BlueprintWriter::VisitInternal(PrimitiveTag) {
+	PushQualifier("$");
+	Add(TypeName<T>::value);
 }
 
 template<typename T>
-void BlueprintWriter::VisitValue(const Array<T>& value, ArrayTag) {
-	StateSentry sentry(this);
+void BlueprintWriter::VisitInternal(ArrayTag) {
+	Push("[]");
+	VisitInternal<typename T::value_type>();
+}
 
-	state_.prefix += "[]";
+template<typename T>
+void BlueprintWriter::VisitInternal(OptionalTag) {
+	Push("?");
+	VisitInternal<typename T::value_type>();
+}
+
+template<typename T>
+void BlueprintWriter::VisitInternal(ObjectTag) {
 	T elem;
-	VisitValue(elem);
+	T::AcceptVisitor(elem, *this);
 }
 
 template<typename T>
-void BlueprintWriter::VisitValue(const Optional<T>& value, OptionalTag) {
-	StateSentry sentry(this);
-
-	state_.prefix += "?";
-	T elem;
-	VisitValue(elem);
-}
-
-template<typename T>
-void BlueprintWriter::VisitValue(const T& value, ObjectTag) {
-	StateSentry sentry(this);
-	T::AcceptVisitor(value, *this);
-}
-
-template<typename T>
-void BlueprintWriter::VisitValue(const T& value, EnumTag) {
-	std::stringstream ss;
-	ss << state_.prefix << " enum " << TypeName<T>::value;
-	blueprint_.AddLine(ss.str());
-
-	Add<T>();
-}
-
-template<typename T>
-void BlueprintWriter::VisitValue(const T& value, VariantTag) {
-	StateSentry sentry(this);
-	state_.prefix += " variant ";
-	ForEachVersionedType<typename T::VersionedTypes>::AcceptVisitor(*this);
+void BlueprintWriter::VisitInternal(EnumTag) {
+	PushQualifier("enum");
+	Add(TypeName<T>::value);
 }
 
 template<typename T>
@@ -161,25 +138,25 @@ void BlueprintWriter::VisitVersionedType(BeginVersion v0, EndVersion v1) {
 	if (!IsVersionInRange(version_, v0, v1)) {
 		return;
 	}
-	std::stringstream ss;
-	ss << state_.prefix << TypeName<T>::value;
-	blueprint_.AddLine(ss.str());
-	Add<T>();
+	Add(TypeName<T>::value);
 }
 
 template<typename T>
-void BlueprintWriter::VisitValue(const T& value, RefTag) {
-	StateSentry sentry(this);
-	state_.prefix += " ref ";
+void BlueprintWriter::VisitInternal(VariantTag) {
+	PushQualifier("variant");
 	ForEachVersionedType<typename T::VersionedTypes>::AcceptVisitor(*this);
 }
 
 template<typename T>
-void BlueprintWriter::VisitValue(const T& value, UserTag) {
-	std::stringstream ss;
-	ss << state_.prefix << " user " << TypeName<T>::value;
-	blueprint_.AddLine(ss.str());
-	Add<T>();
+void BlueprintWriter::VisitInternal(RefTag) {
+	PushQualifier("ref");
+	ForEachVersionedType<typename T::VersionedTypes>::AcceptVisitor(*this);
+}
+
+template<typename T>
+void BlueprintWriter::VisitInternal(UserTag) {
+	PushQualifier("user");
+	Add(TypeName<T>::value);
 }
 
 } // namespace serial
