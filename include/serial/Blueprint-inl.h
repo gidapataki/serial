@@ -1,5 +1,6 @@
 #pragma once
 #include <sstream>
+#include <cassert>
 #include "serial/TypeName.h"
 
 
@@ -40,7 +41,11 @@ void BlueprintWriter::AddTypeName(const char* info) {
 template<typename T>
 void BlueprintWriter::Add(ReferableTag) {
 	StateSentry sentry(this);
+	PtrSet ptrs;
+
 	state_.prefix = TypeName<T>::value;
+	state_.ptrs = &ptrs;
+
 	T elem;
 	T::AcceptVisitor(elem, *this);
 	AddTypeName<T>("referable");
@@ -61,7 +66,10 @@ void BlueprintWriter::Add(PrimitiveTag) {}
 template<typename T>
 void BlueprintWriter::Add(ObjectTag) {
 	StateSentry sentry(this);
+	PtrSet ptrs;
+
 	state_.prefix = TypeName<T>::value;
+	state_.ptrs = &ptrs;
 
 	T elem;
 	T::AcceptVisitor(elem, *this);
@@ -82,7 +90,15 @@ void BlueprintWriter::VisitField(
 		return;
 	}
 
+	assert(state_.ptrs);
+	auto p = reinterpret_cast<const void*>(&value);
+	if (state_.ptrs->count(p) > 0) {
+		assert(false && "Field is already used");
+	}
+	state_.ptrs->insert(p);
+
 	StateSentry sentry(this);
+	state_.ptrs = nullptr;
 	state_.prefix += '.';
 	state_.prefix += name;
 	VisitValue(value);
@@ -137,6 +153,9 @@ void BlueprintWriter::VisitValue(const Optional<T>& value, OptionalTag) {
 template<typename T>
 void BlueprintWriter::VisitValue(const T& value, ObjectTag) {
 	StateSentry sentry(this);
+	PtrSet ptrs;
+
+	state_.ptrs = &ptrs;
 	T::AcceptVisitor(value, *this);
 }
 

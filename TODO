@@ -4,15 +4,13 @@
 
 --
 
-- rename Min / Max to BeginVersion / EndVersion
 - __FILE__ and __LINE__ on Errors, maybe json location
 - sanity check (identifiers with no dots)
 	- logic error (field is available, butno valid values in a version)
 	- same field is only used once per acceptvisitor
 
-- nice errors if referable is a field / variant contains invalid types
+- nice errors if referable is a field or variant contains invalid types
+
 - type in refid (ref_0-circle)
 - test object order stability
-- test registator with all types
 - ? force write
-- ? version adaptor for visitors

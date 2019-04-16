@@ -80,8 +80,11 @@ private:
 	template<typename T> void VisitValue(const T& value, UserTag);
 
 private:
+	using PtrSet = std::unordered_set<const void*>;
+
 	struct State {
 		std::string prefix;
+		PtrSet* ptrs = nullptr;
 	} state_;
 
 	class StateSentry {
